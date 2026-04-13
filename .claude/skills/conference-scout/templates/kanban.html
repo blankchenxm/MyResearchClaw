@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦀</text></svg>">
+<title>MyResearchClaw — Paper Kanban</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   MyResearchClaw Kanban Dashboard Template v1.0
+   Dark theme · Persistent kanban · Fill {{PLACEHOLDERS}} on each update
+   ============================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg:          #0f1117;
+  --bg-card:     #1a1d27;
+  --bg-header:   #141620;
+  --accent:      #5e8ef5;
+  --accent2:     #00cec9;
+  --accent3:     #fd79a8;
+  --accent4:     #a29bfe;
+  --accent5:     #ffeaa7;
+  --text:        #e2e8f0;
+  --text-dim:    #8892a8;
+  --text-muted:  #4a5568;
+  --border:      rgba(255,255,255,0.06);
+  --border-hover:rgba(94,142,245,0.3);
+}
+
+html { background: var(--bg); }
+body { font-family: 'Noto Sans SC', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+.page-wrap { max-width: 1400px; margin: 0 auto; padding: 0 32px 80px; }
+
+/* ── Top bar ── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 0 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 32px;
+}
+.logo {
+  font-size: 22px; font-weight: 900;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.topbar-date { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); }
+
+/* ── Stats bar ── */
+.stats-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 36px; }
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 20px;
+  display: flex; align-items: center; gap: 14px;
+  transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: var(--border-hover); }
+.stat-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.icon-total   { background: rgba(94,142,245,0.15); }
+.icon-unread  { background: rgba(253,121,168,0.15); }
+.icon-reading { background: rgba(255,234,167,0.15); }
+.icon-done    { background: rgba(0,206,201,0.15); }
+.icon-searches{ background: rgba(162,155,254,0.15); }
+.stat-val { font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+.val-blue   { color: var(--accent); }
+.val-pink   { color: var(--accent3); }
+.val-yellow { color: var(--accent5); }
+.val-cyan   { color: var(--accent2); }
+.val-purple { color: var(--accent4); }
+.stat-label { font-size: 11px; color: var(--text-muted); }
+
+/* ── Search info bar ── */
+.search-info {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 18px;
+  font-size: 12px; color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.search-tag {
+  padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  color: var(--accent4); border: 1px solid rgba(162,155,254,0.25);
+  background: rgba(162,155,254,0.08);
+}
+
+/* ── Kanban ── */
+.kanban { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; align-items: start; }
+.column {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+}
+.column-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px 14px; border-bottom: 1px solid var(--border);
+}
+.col-title-row { display: flex; align-items: center; gap: 10px; }
+.col-dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot-unread  { background: var(--accent3); box-shadow: 0 0 8px rgba(253,121,168,0.4); }
+.dot-reading { background: var(--accent5); box-shadow: 0 0 8px rgba(255,234,167,0.4); }
+.dot-done    { background: var(--accent2); box-shadow: 0 0 8px rgba(0,206,201,0.4); }
+.col-name { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; font-family: 'JetBrains Mono', monospace; }
+.name-unread  { color: var(--accent3); }
+.name-reading { color: var(--accent5); }
+.name-done    { color: var(--accent2); }
+.col-count { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,0.04); padding: 3px 10px; border-radius: 20px; }
+.column-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ── Paper card ── */
+.paper-card {
+  background: rgba(255,255,255,0.025); border: 1px solid var(--border);
+  border-radius: 12px; padding: 15px 16px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.paper-card:hover { border-color: var(--border-hover); background: rgba(94,142,245,0.04); }
+.paper-card.is-arxiv { border-left: 3px solid #d69e2e; }
+.paper-card.is-confirmed { border-left: 3px solid var(--accent); }
+
+.card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.card-title { font-size: 13px; font-weight: 600; line-height: 1.4; color: var(--text); flex: 1; }
+.card-title a { color: inherit; text-decoration: none; }
+.card-title a:hover { color: var(--accent); }
+.citations { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; flex-shrink: 0; }
+.cite-high   { color: var(--accent2); background: rgba(0,206,201,0.1); border: 1px solid rgba(0,206,201,0.2); }
+.cite-mid    { color: var(--accent4); background: rgba(162,155,254,0.1); border: 1px solid rgba(162,155,254,0.2); }
+.cite-low    { color: var(--text-muted); background: rgba(255,255,255,0.04); border: 1px solid var(--border); }
+.cite-none   { color: var(--text-muted); background: rgba(255,255,255,0.04); border: 1px solid var(--border); }
+
+.card-authors { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; font-style: italic; }
+
+.card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.venue-badge { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 600; color: var(--accent); border: 1px solid rgba(94,142,245,0.25); background: rgba(94,142,245,0.08); }
+.venue-badge.arxiv { color: #d69e2e; border-color: rgba(214,158,46,0.25); background: rgba(214,158,46,0.08); }
+.year-badge { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+.card-tag { font-size: 10px; padding: 2px 7px; border-radius: 5px; border: 1px solid; font-weight: 500; }
+.tag-cyan   { color: var(--accent2); border-color: rgba(0,206,201,0.2);   background: rgba(0,206,201,0.06); }
+.tag-purple { color: var(--accent4); border-color: rgba(162,155,254,0.2); background: rgba(162,155,254,0.06); }
+.tag-pink   { color: var(--accent3); border-color: rgba(253,121,168,0.2); background: rgba(253,121,168,0.06); }
+
+/* ── Summary section ── */
+.summary-block { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px; }
+.summary-en { font-size: 11.5px; color: var(--text-dim); line-height: 1.5; margin-bottom: 6px; }
+.summary-zh { font-size: 11.5px; color: #6b7a99; line-height: 1.5; border-left: 2px solid rgba(94,142,245,0.3); padding-left: 8px; }
+.summary-label { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 3px; }
+
+/* ── Action buttons ── */
+.card-actions { display: flex; gap: 8px; margin-top: 10px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600;
+  padding: 4px 11px; border-radius: 6px;
+  text-decoration: none; cursor: pointer;
+  border: 1px solid; transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-view {
+  color: var(--accent); border-color: rgba(94,142,245,0.3);
+  background: rgba(94,142,245,0.08);
+}
+.btn-view:hover { background: rgba(94,142,245,0.15); border-color: rgba(94,142,245,0.5); }
+.btn-read {
+  color: var(--accent4); border-color: rgba(162,155,254,0.3);
+  background: rgba(162,155,254,0.08);
+}
+.btn-read:hover { background: rgba(162,155,254,0.2); border-color: rgba(162,155,254,0.5); }
+.btn-done {
+  color: var(--accent2); border-color: rgba(0,206,201,0.25);
+  background: rgba(0,206,201,0.06);
+}
+.btn-done:hover { background: rgba(0,206,201,0.15); }
+
+/* ── Note link ── */
+.note-link { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--accent2); font-family: 'JetBrains Mono', monospace; text-decoration: none; margin-top: 6px; }
+.note-link:hover { color: #fff; }
+
+/* ── Command toast ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: #1e2333; border: 1px solid rgba(162,155,254,0.4);
+  border-radius: 12px; padding: 14px 18px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent4);
+  max-width: 480px; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  z-index: 9999; display: none;
+}
+.toast.show { display: block; animation: slideIn 0.2s ease; }
+.toast-title { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+.toast-cmd { background: rgba(255,255,255,0.06); border-radius: 6px; padding: 8px 12px; word-break: break-all; color: #fff; cursor: text; user-select: all; }
+.toast-note { font-size: 10px; color: var(--text-muted); margin-top: 6px; }
+@keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* ── Empty state ── */
+.empty-state { text-align: center; padding: 28px 16px; color: var(--text-muted); font-size: 13px; }
+.empty-icon { font-size: 28px; margin-bottom: 8px; }
+
+/* ── Footer ── */
+.kanban-footer {
+  margin-top: 40px; padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+.footer-brand { font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+/* ── Light mode ── */
+body.light {
+  --bg: #f8f9fa; --bg-card: #ffffff; --text: #1a1a2e;
+  --text-dim: #4a5568; --text-muted: #718096; --border: rgba(0,0,0,0.08);
+}
+body { transition: background .3s, color .3s; }
+
+/* ── Responsive ── */
+@media (max-width: 1100px) { .kanban { grid-template-columns: 1fr; } .stats-bar { grid-template-columns: repeat(3, 1fr); } }
+</style>
+</head>
+<body>
+
+<!-- Theme toggle -->
+<button onclick="toggleTheme()" title="Toggle theme" style="position:fixed;top:16px;right:16px;z-index:9999;width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--bg-card);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;">🌙</button>
+
+<!-- Command toast overlay -->
+<div class="toast" id="toast">
+  <div class="toast-title">📋 Run this in Claude Code terminal:</div>
+  <div class="toast-cmd" id="toast-cmd"></div>
+  <div class="toast-note">Click the command to select all · Press Esc to close</div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- Top bar -->
+  <nav class="topbar">
+    <span class="logo">🦀 MyResearchClaw</span>
+    <div class="topbar-right">
+      <span class="topbar-date">Updated: {{LAST_UPDATED}}</span>
+    </div>
+  </nav>
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-icon icon-total">📚</div>
+      <div>
+        <div class="stat-val val-blue">{{TOTAL_PAPERS}}</div>
+        <div class="stat-label">Total Papers</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-unread">📥</div>
+      <div>
+        <div class="stat-val val-pink">{{UNREAD_COUNT}}</div>
+        <div class="stat-label">To Read</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-reading">📖</div>
+      <div>
+        <div class="stat-val val-yellow">{{READING_COUNT}}</div>
+        <div class="stat-label">Reading</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-done">✅</div>
+      <div>
+        <div class="stat-val val-cyan">{{DONE_COUNT}}</div>
+        <div class="stat-label">Done</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-searches">🔍</div>
+      <div>
+        <div class="stat-val val-purple">{{SEARCH_COUNT}}</div>
+        <div class="stat-label">Searches Run</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent search info -->
+  <div class="search-info">
+    <span>🏛️ Recent searches:</span>
+    {{SEARCH_TAGS}}
+  </div>
+
+  <!-- Kanban board -->
+  <div class="kanban">
+
+    <!-- To Read column -->
+    <div class="column">
+      <div class="column-header">
+        <div class="col-title-row">
+          <div class="col-dot dot-unread"></div>
+          <span class="col-name name-unread">To Read</span>
+        </div>
+        <span class="col-count">{{UNREAD_COUNT}}</span>
+      </div>
+      <div class="column-body">
+        <!-- UNREAD_PAPERS_START -->
+        {{UNREAD_PAPERS}}
+        <!-- UNREAD_PAPERS_END -->
+        {{UNREAD_EMPTY}}
+      </div>
+    </div>
+
+    <!-- Reading column -->
+    <div class="column">
+      <div class="column-header">
+        <div class="col-title-row">
+          <div class="col-dot dot-reading"></div>
+          <span class="col-name name-reading">Reading</span>
+        </div>
+        <span class="col-count">{{READING_COUNT}}</span>
+      </div>
+      <div class="column-body">
+        <!-- READING_PAPERS_START -->
+        {{READING_PAPERS}}
+        <!-- READING_PAPERS_END -->
+        {{READING_EMPTY}}
+      </div>
+    </div>
+
+    <!-- Done column -->
+    <div class="column">
+      <div class="column-header">
+        <div class="col-title-row">
+          <div class="col-dot dot-done"></div>
+          <span class="col-name name-done">Done</span>
+        </div>
+        <span class="col-count">{{DONE_COUNT}}</span>
+      </div>
+      <div class="column-body">
+        <!-- DONE_PAPERS_START -->
+        {{DONE_PAPERS}}
+        <!-- DONE_PAPERS_END -->
+        {{DONE_EMPTY}}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="kanban-footer">
+    <span>Powered by <span class="footer-brand">MyResearchClaw</span></span>
+    <span>{{TOTAL_PAPERS}} papers · Last updated {{LAST_UPDATED}}</span>
+  </footer>
+
+</div>
+
+<script>
+/* ── Theme toggle ── */
+(function(){
+  if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light');
+    document.querySelector('button').textContent = '☀️';
+  }
+})();
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.querySelector('button').textContent = isLight ? '☀️' : '🌙';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+
+/* ── Read Paper command popup ── */
+const toast = document.getElementById('toast');
+const toastCmd = document.getElementById('toast-cmd');
+
+function readPaper(url, title) {
+  const cmd = url.includes('arxiv.org')
+    ? `/paper-reader ${url}`
+    : `/paper-reader ${url}`;
+  toastCmd.textContent = cmd;
+  toast.classList.add('show');
+  // Auto-select text
+  setTimeout(() => {
+    const range = document.createRange();
+    range.selectNodeContents(toastCmd);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    // Try clipboard
+    try { navigator.clipboard.writeText(cmd); } catch(e) {}
+  }, 100);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') toast.classList.remove('show'); });
+document.addEventListener('click', e => { if (e.target === toast) toast.classList.remove('show'); });
+</script>
+</body>
+</html>
