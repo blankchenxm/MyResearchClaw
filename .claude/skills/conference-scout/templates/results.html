@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conference Scout — {{TOPIC}}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+
+  .header { background: linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%); border-bottom: 1px solid #2d3748; padding: 32px 48px; }
+  .header h1 { font-size: 1.6rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .header h1 span { color: #63b3ed; }
+  .meta { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 12px; }
+  .badge { background: #2d3748; border: 1px solid #4a5568; border-radius: 6px; padding: 4px 12px; font-size: 0.78rem; color: #a0aec0; }
+  .badge strong { color: #e2e8f0; }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 36px 24px; }
+
+  .section-title { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #4a5568; margin: 32px 0 16px; display: flex; align-items: center; gap: 8px; }
+  .section-title::after { content: ""; flex: 1; height: 1px; background: #2d3748; }
+
+  .paper-card { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; transition: border-color 0.2s; }
+  .paper-card:hover { border-color: #4a5568; }
+  .paper-card.arxiv { border-left: 3px solid #d69e2e; }
+  .paper-card.confirmed { border-left: 3px solid #3182ce; }
+
+  .paper-rank { font-size: 0.72rem; color: #4a5568; font-weight: 600; margin-bottom: 6px; }
+  .paper-title { font-size: 1rem; font-weight: 600; color: #e2e8f0; line-height: 1.4; margin-bottom: 8px; }
+  .paper-title a { color: inherit; text-decoration: none; }
+  .paper-title a:hover { color: #63b3ed; }
+
+  .paper-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center; }
+  .venue-tag { background: #2a4365; color: #90cdf4; border-radius: 4px; padding: 2px 8px; font-size: 0.73rem; font-weight: 600; }
+  .venue-tag.arxiv-tag { background: #744210; color: #fbd38d; }
+  .year-tag { color: #718096; font-size: 0.78rem; }
+  .citation-tag { color: #68d391; font-size: 0.78rem; font-weight: 600; }
+  .citation-tag::before { content: "★ "; }
+  .authors { color: #718096; font-size: 0.80rem; }
+
+  .paper-summary { color: #a0aec0; font-size: 0.85rem; line-height: 1.6; margin-top: 8px; border-top: 1px solid #2d3748; padding-top: 8px; }
+
+  .link-row { margin-top: 10px; }
+  .link-btn { display: inline-block; font-size: 0.75rem; color: #63b3ed; text-decoration: none; border: 1px solid #2b4c7e; border-radius: 4px; padding: 3px 10px; }
+  .link-btn:hover { background: #2b4c7e; }
+
+  .footer { text-align: center; color: #4a5568; font-size: 0.75rem; padding: 32px; border-top: 1px solid #2d3748; margin-top: 48px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📡 Conference Scout — <span>{{TOPIC}}</span></h1>
+  <div class="meta">
+    <div class="badge">📅 <strong>{{YEAR_START}} – {{YEAR_END}}</strong></div>
+    <div class="badge">🏛️ <strong>{{VENUES}}</strong></div>
+    <div class="badge">📄 <strong>{{TOTAL_CONFIRMED}}</strong> venue-confirmed papers</div>
+    <div class="badge">🗂️ <strong>{{TOTAL_ARXIV}}</strong> arXiv supplements</div>
+    <div class="badge">🕒 Generated {{DATE}}</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="section-title">Venue-Confirmed Papers</div>
+
+  <!-- CONFIRMED_PAPERS_START -->
+  <div class="paper-card confirmed">
+    <div class="paper-rank">#{{RANK}} · Venue Confirmed</div>
+    <div class="paper-title"><a href="{{URL}}" target="_blank">{{TITLE}}</a></div>
+    <div class="paper-meta">
+      <span class="venue-tag">{{VENUE}} {{YEAR}}</span>
+      <span class="citation-tag">{{CITATIONS}} citations</span>
+      <span class="authors">{{AUTHORS}}</span>
+    </div>
+    <div class="paper-summary">{{SUMMARY}}</div>
+    <div class="link-row"><a class="link-btn" href="{{URL}}" target="_blank">View Paper →</a></div>
+  </div>
+  <!-- CONFIRMED_PAPERS_END -->
+
+  <div class="section-title">arXiv Supplements <span style="font-weight:400;color:#d69e2e;margin-left:6px;">venue unconfirmed</span></div>
+
+  <!-- ARXIV_PAPERS_START -->
+  <div class="paper-card arxiv">
+    <div class="paper-rank">arXiv Supplement</div>
+    <div class="paper-title"><a href="{{ARXIV_URL}}" target="_blank">{{ARXIV_TITLE}}</a></div>
+    <div class="paper-meta">
+      <span class="venue-tag arxiv-tag">arXiv {{ARXIV_YEAR}}</span>
+      <span class="authors">{{ARXIV_AUTHORS}}</span>
+    </div>
+    <div class="paper-summary">{{ARXIV_SUMMARY}}</div>
+    <div class="link-row"><a class="link-btn" href="{{ARXIV_URL}}" target="_blank">View on arXiv →</a></div>
+  </div>
+  <!-- ARXIV_PAPERS_END -->
+
+</div>
+
+<div class="footer">
+  MyResearchClaw · Conference Scout · Data from Semantic Scholar + arXiv
+</div>
+
+</body>
+</html>
