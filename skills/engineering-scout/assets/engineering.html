@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engineering Scout — {{TOPIC}}</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#0d1117; --panel:#151b24; --panel-2:#101620; --text:#e8eef8; --dim:#91a0b8;
+  --muted:#66748a; --line:rgba(255,255,255,0.08); --blue:#67a4ff; --cyan:#38d9c7; --amber:#ffd66e;
+}
+body { font-family:'Noto Sans SC',sans-serif; background:radial-gradient(circle at top right, rgba(103,164,255,0.12), transparent 28%), var(--bg); color:var(--text); min-height:100vh; }
+body.light {
+  --bg:#f4f7fb; --panel:#ffffff; --panel-2:#eef3f8; --text:#18202c; --dim:#516277;
+  --muted:#66768c; --line:rgba(15,23,42,0.10); --blue:#2364d2; --cyan:#0f9f90; --amber:#b98911;
+}
+.wrap { max-width: 1320px; margin: 0 auto; padding: 28px 28px 80px; }
+.theme-toggle {
+  position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font-size:16px;
+}
+.hero { background:linear-gradient(145deg, rgba(103,164,255,0.14), rgba(56,217,199,0.06)); border:1px solid var(--line); border-radius:24px; padding:28px 30px; margin-bottom:24px; }
+.eyebrow { font:600 12px 'JetBrains Mono',monospace; color:var(--amber); letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
+.hero h1 { font-size:42px; line-height:1.08; font-weight:900; max-width:980px; }
+.hero p { margin-top:14px; color:var(--dim); font-size:15px; max-width:900px; line-height:1.8; }
+.meta { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+.badge { border:1px solid var(--line); background:rgba(255,255,255,0.04); border-radius:999px; padding:8px 14px; font:500 12px 'JetBrains Mono',monospace; color:var(--dim); }
+.nav { display:flex; gap:10px; margin-bottom:22px; }
+.nav a { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; }
+.grid { display:grid; grid-template-columns:1fr; gap:18px; }
+.section { background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:22px; }
+.section-title { display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:16px; }
+.section-title h2 { font-size:24px; font-weight:800; }
+.section-title span { color:var(--dim); font:500 12px 'JetBrains Mono',monospace; }
+.items { display:grid; gap:14px; }
+.item { background:var(--panel-2); border:1px solid var(--line); border-radius:16px; padding:18px; }
+.item-top { display:flex; justify-content:space-between; gap:12px; align-items:start; margin-bottom:10px; }
+.item h3 { font-size:18px; line-height:1.35; }
+.item h3 a { color:inherit; text-decoration:none; }
+.item h3 a:hover { color:var(--blue); }
+.tag { white-space:nowrap; border:1px solid var(--line); border-radius:999px; padding:5px 10px; font:600 11px 'JetBrains Mono',monospace; color:var(--blue); }
+.org { color:var(--dim); font-size:13px; margin-bottom:10px; }
+.summary { color:var(--text); font-size:14px; line-height:1.85; margin-bottom:10px; }
+.how { color:#b7c5da; font-size:14px; line-height:1.85; border-left:3px solid rgba(103,164,255,0.35); padding-left:12px; }
+.takeaways { display:grid; gap:12px; }
+.takeaway { background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:16px 18px; color:var(--text); line-height:1.8; }
+.status-card { margin-bottom:18px; background:rgba(56,217,199,0.07); border:1px solid rgba(56,217,199,0.16); border-radius:16px; padding:14px 16px; color:var(--dim); }
+.status-card.error { background:rgba(255,141,107,0.08); border-color:rgba(255,141,107,0.18); }
+@media (max-width: 900px) {
+  .wrap { padding:16px 16px 60px; }
+  .hero h1 { font-size:32px; }
+}
+</style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+  <div class="wrap">
+    <div class="nav">
+      <a href="/kanban.html">← Back to Papers</a>
+    </div>
+
+    <section class="hero">
+      <div class="eyebrow">Engineering Scout</div>
+      <h1>{{TOPIC}}</h1>
+      <p>这一页聚焦“论文之外”的工程落地信息：GitHub 开源实现、现实产品与功能、以及相关新闻与实际部署信号，帮助你判断一个研究主题距离工程可用还有多远。</p>
+      <div class="meta">
+        <div class="badge">Range: {{YEAR_RANGE}}</div>
+        <div class="badge">Updated: {{LAST_UPDATED}}</div>
+        <div class="badge">Open source: {{OPEN_SOURCE_COUNT}}</div>
+        <div class="badge">Products: {{PRODUCT_COUNT}}</div>
+        <div class="badge">News: {{NEWS_COUNT}}</div>
+      </div>
+    </section>
+
+    <div id="status-card" class="status-card" style="display:none"></div>
+
+    <div class="grid">
+      <section class="section">
+        <div class="section-title">
+          <h2>Key Takeaways</h2>
+          <span>High-level engineering readout</span>
+        </div>
+        <div class="takeaways">
+          {{KEY_TAKEAWAYS}}
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <h2>Open Source</h2>
+          <span>{{OPEN_SOURCE_COUNT}} repos / projects</span>
+        </div>
+        <div class="items">
+          {{OPEN_SOURCE_ITEMS}}
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <h2>Products</h2>
+          <span>{{PRODUCT_COUNT}} products / features</span>
+        </div>
+        <div class="items">
+          {{PRODUCT_ITEMS}}
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <h2>News & Deployment Signals</h2>
+          <span>{{NEWS_COUNT}} recent signals</span>
+        </div>
+        <div class="items">
+          {{NEWS_ITEMS}}
+        </div>
+      </section>
+    </div>
+  </div>
+<script>
+const API = 'http://localhost:5678';
+
+async function init() {
+  applyTheme();
+  await ensureEngineeringReady();
+}
+
+async function ensureEngineeringReady() {
+  try {
+    const status = await fetchStatus();
+    const shouldStart = !status.page_ready || status.status === 'idle' || status.status === 'error' || status.topic !== status.expected_topic;
+    if (shouldStart) {
+      showStatus('正在生成 Engineering View：自动收集 GitHub 开源实现、产品与新闻信号。');
+      await fetch(`${API}/api/generate-engineering`, { method:'POST' });
+      pollStatus();
+    } else if (status.status === 'running') {
+      showStatus(status.message || 'Engineering scout 正在运行中。');
+      pollStatus();
+    }
+  } catch {
+    showStatus('无法连接本地服务。启动 `python serve.py` 后刷新页面即可自动生成。', true);
+  }
+}
+
+async function fetchStatus() {
+  const r = await fetch(`${API}/api/engineering-status`);
+  if (!r.ok) throw new Error('status failed');
+  return await r.json();
+}
+
+function pollStatus() {
+  const timer = setInterval(async () => {
+    try {
+      const status = await fetchStatus();
+      if (status.status === 'ready' && status.page_ready) {
+        clearInterval(timer);
+        showStatus('Engineering View 已准备好，页面即将刷新。');
+        setTimeout(() => location.reload(), 800);
+        return;
+      }
+      if (status.status === 'error') {
+        clearInterval(timer);
+        showStatus(status.message || 'Engineering scout 生成失败。', true);
+        return;
+      }
+      showStatus(status.message || 'Engineering scout 正在运行中。');
+    } catch {
+      clearInterval(timer);
+      showStatus('读取 engineering 状态失败。', true);
+    }
+  }, 3000);
+}
+
+function showStatus(text, isError=false) {
+  const el = document.getElementById('status-card');
+  el.style.display = 'block';
+  el.className = 'status-card' + (isError ? ' error' : '');
+  el.textContent = text;
+}
+
+function applyTheme() {
+  const light = localStorage.getItem('theme') === 'light';
+  document.body.classList.toggle('light', light);
+  document.querySelector('.theme-toggle').textContent = light ? '☀️' : '🌙';
+}
+
+function toggleTheme() {
+  const light = !document.body.classList.contains('light');
+  localStorage.setItem('theme', light ? 'light' : 'dark');
+  applyTheme();
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>

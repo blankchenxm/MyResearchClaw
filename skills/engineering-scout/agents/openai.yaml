@@ -1,0 +1,4 @@
+agent:
+  name: engineering-scout
+  short_description: "Search engineering implementations, products, and deployment signals for a topic"
+  default_prompt: "Use engineering-scout to search GitHub implementations, products, and real-world deployment signals for the topic, then generate output/engineering.html."

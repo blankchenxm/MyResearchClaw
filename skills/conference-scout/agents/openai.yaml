@@ -1,0 +1,4 @@
+interface:
+  display_name: "Conference Scout"
+  short_description: "Search top-venue papers and update the research kanban"
+  default_prompt: "Use conference-scout to search top-conference papers by topic, rank the strongest matches, update output/papers.json, and regenerate output/kanban.html."

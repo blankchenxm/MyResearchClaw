@@ -1,61 +1,35 @@
 ---
 name: my-research-claw
 description: >
-  Research assistant for finding top conference papers by topic. Core skill: conference-scout.
-  Trigger words: 搜论文, find papers, conference papers, 顶会论文, paper search, scout papers.
-metadata:
-  version: "0.1.0"
-  author: meng
+  Codex skill index for academic paper scouting and deep reading. Use when the user wants
+  to search top-conference papers by topic, track them in a persistent kanban, or deeply read
+  one paper into structured DNL notes. Triggers include 搜论文, 顶会论文, find papers,
+  conference papers, paper-reader, 精读论文, read this paper, and arXiv or DOI links with reading intent.
 ---
 
-# MyResearchClaw — Conference Paper Scout
+# MyResearchClaw
 
-A focused research assistant for finding **top-venue papers** by topic across AI, IoT, networking, and systems conferences.
+MyResearchClaw provides three project skills:
 
-## Skills
+| Skill | Path | Use when |
+|---|---|---|
+| `conference-scout` | `skills/conference-scout/` | The user wants papers by topic, years, or venue groups |
+| `paper-reader` | `skills/paper-reader/` | The user wants a single paper analyzed into DNL notes |
+| `engineering-scout` | `skills/engineering-scout/` | The user wants implementation evidence, products, or real-world engineering signals for the topic |
 
-| # | Skill | Directory | What it does |
-|---|---|---|---|
-| 1 | **Conference Scout** 📡 | `skills/conference-scout/` | Search top-conference papers by topic + time range |
+## Routing
 
-## Quick Reference
+- Search, scouting, venue filtering, ranking, and kanban updates: use `conference-scout`.
+- Reading notes, paper decomposition, note generation, and moving a paper into active reading: use `paper-reader`.
+- Engineering implementations, GitHub repos, product signals, and deployment evidence: use `engineering-scout`.
+- If the user asks for a broad research investigation on a topic, run `conference-scout` first and then `engineering-scout` for the same topic in the same turn unless the user explicitly wants papers only.
+- If the user gives only a paper URL or arXiv ID with reading intent, go directly to `paper-reader`.
 
-| Say this | Skill triggered |
-|---|---|
-| `搜论文 [topic] [years] [conference type]` | Conference Scout |
-| `find papers on [topic] in [NeurIPS/MobiCom/...] since [year]` | Conference Scout |
-| `[topic]领域近[N]年的[AI/IoT]顶会论文` | Conference Scout |
+## Shared Output
 
-## Conference Groups
+- Database: `output/papers.json`
+- Dashboard: `output/kanban.html`
+- Notes: `output/notes/`
+- Engineering page: `output/engineering.html`
 
-```yaml
-conference_groups:
-  ai_ml:
-    - NeurIPS        # Neural Information Processing Systems
-    - ICLR           # International Conference on Learning Representations
-    - ICML           # International Conference on Machine Learning
-    - AAAI           # AAAI Conference on Artificial Intelligence
-    - CVPR           # Computer Vision and Pattern Recognition
-    - ICCV           # International Conference on Computer Vision
-    - ACL            # Association for Computational Linguistics
-    - EMNLP          # Empirical Methods in NLP
-  iot_systems:
-    - MobiCom        # ACM International Conference on Mobile Computing
-    - MobiSys        # ACM International Conference on Mobile Systems
-    - SenSys         # ACM Conference on Embedded Networked Sensor Systems
-    - UbiComp        # ACM International Joint Conference on Pervasive and Ubiquitous Computing
-    - IPSN           # ACM/IEEE Conference on Information Processing in Sensor Networks
-  networking:
-    - SIGCOMM        # ACM Special Interest Group on Data Communication
-    - NSDI           # USENIX Symposium on Networked Systems Design and Implementation
-    - INFOCOM        # IEEE International Conference on Computer Communications
-  systems:
-    - OSDI           # USENIX Symposium on Operating Systems Design and Implementation
-    - SOSP           # ACM Symposium on Operating Systems Principles
-    - ATC            # USENIX Annual Technical Conference
-    - EuroSys        # European Conference on Computer Systems
-```
-
-## Shared Config
-
-- **Output:** chat text (no HTML in v0.1)
+The repository keeps research state on disk, so preserve existing records unless the user explicitly asks to reset them.

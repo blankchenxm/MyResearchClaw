@@ -1,0 +1,4 @@
+interface:
+  display_name: "Paper Reader"
+  short_description: "Deep-read one paper into DNL notes and update the kanban"
+  default_prompt: "Use paper-reader to analyze one paper from an arXiv or DOI-style link, write a structured DNL note under output/notes/, update output/papers.json, and regenerate output/kanban.html."

@@ -1,226 +1,261 @@
 ---
 name: conference-scout
 description: >
-  Search top-conference papers by topic, time range, and venue type.
-  Use when user says: 搜论文, find papers, conference papers, 顶会论文, paper search, scout papers.
+  Search for top-conference academic papers by topic, year range, and venue group, then update
+  the persistent paper database and kanban dashboard. Use when the user asks to find papers,
+  search top venues, compare conference coverage, or says phrases such as 搜论文, 顶会论文,
+  find papers, conference papers, scout papers, or "[topic] papers in [conference]".
 ---
 
-# Conference Scout — Top-Venue Paper Search
+# Conference Scout
 
-**Goal:** Given a topic + year range + conference group(s), return the most relevant and highly-cited papers from target top venues.
+Goal: find top-venue papers on a topic, merge them into persistent project state, and regenerate `output/kanban.html`.
 
-**Data sources:**
-- **Semantic Scholar API** — primary, for venue-filtered results + citation counts
-- **arXiv Atom/XML API** — supplementary, for recent related preprints (especially useful when conference proceedings are not yet indexed)
+## Inputs
 
----
+Extract:
 
-## ⚙️ Step 0 — Parse User Input
-
-Extract from the user's message:
-
-| Field | Description | Example |
+| Field | Description | Default |
 |---|---|---|
-| `topic` | Research topic | "federated learning", "LLM reasoning" |
-| `year_start` | Start year of range | 2022 |
-| `year_end` | End year (default: current year) | 2025 |
-| `conference_groups` | Which venue group(s) to search | `["ai_ml"]`, `["iot_systems", "networking"]` |
-| `specific_venues` | Optional: user-specified venues directly | `["NeurIPS", "MobiCom"]` |
+| `topic` | research topic, preferably English keywords | required |
+| `year_start` | start year | `2022` |
+| `year_end` | end year | current year |
+| `conference_groups` | venue groups such as `ai_ml`, `iot_systems`, `security` | ask if missing |
+| `specific_venues` | explicit venue override | optional |
 
-**Conference group → venue name mapping** (use this to build venue aliases for matching):
+If venue intent is missing, ask which venue family the user wants.
+
+## Venue Groups
 
 ```yaml
 ai_ml:
-  - name: NeurIPS
-    aliases: ["NeurIPS", "Neural Information Processing Systems", "NIPS"]
-  - name: ICLR
-    aliases: ["ICLR", "International Conference on Learning Representations"]
-  - name: ICML
-    aliases: ["ICML", "International Conference on Machine Learning"]
-  - name: AAAI
-    aliases: ["AAAI"]
-  - name: CVPR
-    aliases: ["CVPR", "Computer Vision and Pattern Recognition"]
-  - name: ACL
-    aliases: ["ACL", "Association for Computational Linguistics"]
-  - name: EMNLP
-    aliases: ["EMNLP"]
+  - NeurIPS / Neural Information Processing Systems / NIPS
+  - ICLR / International Conference on Learning Representations
+  - ICML / International Conference on Machine Learning
+  - AAAI
+  - CVPR / Computer Vision and Pattern Recognition
+  - ACL / Association for Computational Linguistics
+  - EMNLP
 
 iot_systems:
-  - name: MobiCom
-    aliases: ["MobiCom", "Mobile Computing and Networking"]
-  - name: MobiSys
-    aliases: ["MobiSys", "Mobile Systems"]
-  - name: SenSys
-    aliases: ["SenSys", "Embedded Networked Sensor Systems"]
-  - name: UbiComp
-    aliases: ["UbiComp", "Pervasive and Ubiquitous Computing"]
-  - name: IPSN
-    aliases: ["IPSN"]
+  - MobiCom / Mobile Computing and Networking
+  - MobiSys / Mobile Systems
+  - SenSys / Embedded Networked Sensor Systems
+  - UbiComp / IMWUT / Interactive Mobile Wearable and Ubiquitous Technologies
+  - IPSN
 
 networking:
-  - name: SIGCOMM
-    aliases: ["SIGCOMM"]
-  - name: NSDI
-    aliases: ["NSDI", "Networked Systems Design"]
-  - name: INFOCOM
-    aliases: ["INFOCOM"]
+  - SIGCOMM
+  - NSDI / Networked Systems Design
+  - INFOCOM
 
 systems:
-  - name: OSDI
-    aliases: ["OSDI", "Operating Systems Design"]
-  - name: SOSP
-    aliases: ["SOSP", "Operating Systems Principles"]
-  - name: ATC
-    aliases: ["ATC", "USENIX Annual Technical"]
-  - name: EuroSys
-    aliases: ["EuroSys"]
+  - OSDI / Operating Systems Design
+  - SOSP / Operating Systems Principles
+  - ATC / USENIX Annual Technical
+  - EuroSys
+
+security:
+  - USENIX Security / USENIX Security Symposium
+  - CCS / ACM Conference on Computer and Communications Security
+  - IEEE S&P / IEEE Symposium on Security and Privacy
+  - NDSS
+
+hci:
+  - CHI / ACM CHI Conference on Human Factors in Computing Systems
+  - UIST / ACM Symposium on User Interface Software and Technology
+  - CSCW / Computer-Supported Cooperative Work
 ```
 
-If `conference_groups` not specified, ask the user: "你想搜哪类顶会？AI/ML、IoT、网络、还是系统？"
+## Data Sources
 
----
+Priority order:
 
-## 📡 Step 1 — Semantic Scholar Search (Primary)
+1. Semantic Scholar API
+2. DBLP API
+3. arXiv export API
 
-**API endpoint:**
-```
+Use DBLP as the fallback when Semantic Scholar is rate-limited or too sparse.
+
+## Search Workflow
+
+### 1. Semantic Scholar
+
+Use:
+
+```text
 GET https://api.semanticscholar.org/graph/v1/paper/search
-  ?query={TOPIC}
+  ?query={TOPIC_KEYWORDS}
   &fields=title,authors,year,venue,abstract,citationCount,externalIds,url
   &limit=50
   &year={YEAR_START}-{YEAR_END}
 ```
 
-- Replace spaces in `TOPIC` with `+`
-- Set `YEAR_START` and `YEAR_END` from Step 0
-- Run **1–2 queries** with slightly different phrasings if the first returns fewer than 10 results
-  - Primary: exact topic phrase, e.g., `"federated+learning"`
-  - Fallback: split into keywords, e.g., `federated+learning+privacy`
+Rules:
 
-**Parse response JSON:**
-```json
-{
-  "data": [
-    {
-      "paperId": "...",
-      "title": "...",
-      "year": 2024,
-      "venue": "NeurIPS",
-      "authors": [{"name": "..."}],
-      "abstract": "...",
-      "citationCount": 142,
-      "externalIds": {"ArXiv": "2401.XXXXX"},
-      "url": "https://www.semanticscholar.org/paper/..."
-    }
-  ]
-}
+- Run at most 2 queries.
+- Venue filtering happens locally by alias matching on `paper.venue`.
+- On `429`, skip directly to DBLP.
+- On TLS or connection failure, retry once, then fall back to DBLP.
+- On empty results, try one simplified query before falling back.
+
+### 2. DBLP fallback
+
+Use:
+
+```text
+GET https://dblp.org/search/publ/api?q={QUERY_TERMS}&format=json&h=30&f=0
 ```
 
-**Venue filter (local, after fetch):**
-- For each paper, check if `venue` field contains ANY alias from the target venue list
-- Match is case-insensitive substring: `paper.venue.lower().includes(alias.lower())`
-- Keep only papers that match at least one target venue
+Rules:
 
-**Build result list** with fields: `title`, `authors`, `year`, `venue`, `abstract`, `citationCount`, `arxivId` (from `externalIds.ArXiv` if present), `url`
+- Build 2 to 3 keyword-subset queries from the topic.
+- Filter locally by venue aliases.
+- DBLP records may lack abstract and citations; fill what is missing from Semantic Scholar only when easy and reliable.
 
----
+### 3. arXiv supplement
 
-## 🔬 Step 2 — arXiv Supplementary Search
+Use only `export.arxiv.org` for the API:
 
-Use arXiv to find **recent related preprints** that may not yet appear in conference proceedings (e.g., workshop papers, arxiv-first papers from target authors).
-
-**API endpoint:**
-```
+```text
 GET http://export.arxiv.org/api/query
-  ?search_query=all:{TOPIC}
+  ?search_query=all:{TOPIC_KEYWORDS}
   &sortBy=submittedDate
   &sortOrder=descending
   &max_results=20
   &start=0
 ```
 
-- Filter: only keep papers with `<published>` date within `[YEAR_START, YEAR_END]`
-- Parse XML Atom response fields: `<title>`, `<author>`, `<summary>`, `<published>`, `<id>` (arXiv URL)
+Keep up to 5 supplementary papers when:
 
-**Selection criteria for arXiv results** (more selective than SS, since no venue filter):
-- Title or abstract must contain at least 2 words from the topic
-- Must be from `YEAR_START` or later
-- Prefer papers that mention target venues in their abstract (e.g., "presented at NeurIPS", "accepted to ICML")
+- published year is within range
+- title or abstract matches at least 2 topic keywords
+- they are genuinely relevant, even if venue confirmation is missing
 
-Collect up to **5 arXiv papers** as supplementary results. Label them clearly as `[arXiv — not yet confirmed in venue]`.
+## Ranking
 
----
-
-## 🏆 Step 3 — Merge & Rank
-
-**Deduplication:** If an arXiv paper has the same title as a Semantic Scholar result, keep only the SS version (has citation count).
-
-**Scoring** (sort descending):
+Use a simple additive score:
 
 | Signal | Score |
 |---|---|
-| citationCount ≥ 100 | +3 |
-| citationCount 50–99 | +2 |
-| citationCount 10–49 | +1 |
-| citationCount < 10 | +0 |
-| Venue is in target group (confirmed) | +2 |
-| Title contains exact topic phrase | +1.5 |
-| Abstract contains ≥ 3 topic keywords | +1 |
-| Paper year = most recent year in range | +0.5 |
-| arXiv only (unconfirmed venue) | −1 |
+| citationCount >= 100 | +3 |
+| citationCount 50-99 | +2 |
+| citationCount 10-49 | +1 |
+| venue confirmed in target group | +2 |
+| title contains exact topic phrase | +1.5 |
+| abstract contains at least 3 topic keywords | +1 |
+| year is the most recent year in range | +0.5 |
+| arXiv-only result | -1 |
 
-Sort by score descending. Output:
-- **Top 8** from Semantic Scholar (venue-confirmed)
-- **Top 3** from arXiv (supplementary)
+Return the best 8 venue-confirmed papers plus up to 3 arXiv supplements.
 
----
+## Summaries
 
-## 📋 Step 4 — Format Output
+For each retained paper, generate:
 
-```
-📡 Conference Paper Scout Results
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔍 Topic: {TOPIC}
-📅 Range: {YEAR_START}–{YEAR_END}
-🏛️ Venues: {comma-separated venue names searched}
+1. `summary_en`: 4 to 6 sentences on problem, approach, result, significance, and why it matters for the searched topic
+2. `summary_zh`: 4 to 6 Chinese sentences covering the same substance with concrete technical detail
 
-── Top Papers (Venue-Confirmed) ──────────────
+Rules:
 
-1️⃣ {Title}
-   👤 {First Author} et al. | 📍 {Venue} {Year} | 🌟 {citationCount} citations
-   💡 {One-sentence summary of contribution}
-   🔗 {URL or https://arxiv.org/abs/{arxivId} if available}
+- prefer concrete technical detail over generic praise
+- mention at least one mechanism, metric, architecture choice, benchmark result, or deployment constraint when available
+- make each summary readable as a compact research brief rather than a short abstract rewrite
 
-2️⃣ {Title}
-   ... (repeat for up to 8 papers)
+## Persistent State
 
-── Supplementary (arXiv) ─────────────────────
+### `output/papers.json`
 
-🗂️ {Title}  [arXiv — venue unconfirmed]
-   👤 {Author} et al. | 📅 {Year}
-   💡 {One-sentence summary}
-   🔗 https://arxiv.org/abs/{arxivId}
+If missing, create:
 
-... (up to 3 arXiv papers)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💬 想深读某篇？给我链接说 "帮我读一下"
-💬 Want different venues? Tell me which group: ai_ml / iot_systems / networking / systems
+```json
+{
+  "last_updated": "{TODAY}",
+  "searches": [],
+  "papers": []
+}
 ```
 
-If fewer than 3 venue-confirmed papers found:
-> ⚠️ 在指定顶会中匹配结果较少（{N}篇）。可能原因：该主题在这些会议中覆盖有限，或 Semantic Scholar venue 字段未标准化。已扩展显示 arXiv 相关论文。
+For each new paper:
 
----
+- deduplicate by `url`
+- preserve existing `status`, `progress`, and `note_path`
+- create new entries with `status: "unread"` only when absent
 
-## ⚠️ Error Handling
+Suggested schema:
+
+```json
+{
+  "id": "{SLUG}",
+  "title": "Full paper title",
+  "authors": "First Author et al.",
+  "year": 2024,
+  "venue": "IMWUT",
+  "citations": 37,
+  "url": "https://doi.org/...",
+  "arxiv_id": "2401.XXXXX",
+  "is_arxiv": false,
+  "rank": 1,
+  "summary_en": "...",
+  "summary_zh": "...",
+  "status": "unread",
+  "progress": 0,
+  "topic": "{TOPIC}",
+  "date_added": "{TODAY}",
+  "tags": [],
+  "note_path": null
+}
+```
+
+Append each search to `searches` with topic, date, year range, venues, and `papers_added`.
+
+### `output/kanban.html`
+
+Load the dashboard template from `assets/kanban.html`.
+
+Fill:
+
+- `{{LAST_UPDATED}}`
+- `{{ACTIVE_TOPIC}}`
+- `{{ACTIVE_YEAR_RANGE}}`
+- `{{ACTIVE_VENUES}}`
+- `{{ALL_PAPERS}}`
+- `{{ENGINEERING_LINK}}`
+
+Render cards for every paper. Use the paper's existing progress and note link when present.
+
+## Response Format
+
+Reply with a compact summary:
+
+```text
+Conference Scout — {TOPIC}
+{YEAR_START}-{YEAR_END} | {VENUES}
+{N} new papers added | {TOTAL} total tracked
+
+Top confirmed papers:
+1. {Title} — {Venue} {Year} — {citations}
+   {summary_en}
+   {summary_zh}
+
+Supplements:
+- {Title} — arXiv {Year}
+
+Dashboard: output/kanban.html
+```
+
+## Template Assets
+
+- Dashboard: `assets/kanban.html`
+- Optional search report: `assets/results.html`
+
+## Error Handling
 
 | Error | Handling |
 |---|---|
-| Semantic Scholar returns 429 (rate limit) | Wait 2s, retry once; if still blocked, proceed with arXiv only and note it |
-| Semantic Scholar returns empty data | Broaden query (split phrase into individual keywords), retry once |
-| arXiv API returns empty | Note "arXiv temporarily unavailable", continue with SS results only |
-| No papers match venue filter | Show top 5 SS results unfiltered, flag with ⚠️ "venue filter yielded no results — showing best topic matches instead" |
-| year_end not specified | Default to current year (2026) |
-| Topic is ambiguous or too broad | Ask user: "你的主题比较宽泛，能再具体一点吗？比如加上方法名或应用场景" |
+| Semantic Scholar `429` | switch to DBLP immediately |
+| Semantic Scholar network failure | retry once, then DBLP |
+| DBLP returns no relevant hits | try alternative keyword subsets |
+| arXiv is noisy | filter aggressively by topic relevance |
+| no venue-confirmed papers | show best unfiltered matches and mark them as fallback |
+| malformed `papers.json` | recreate carefully and warn in the response |
