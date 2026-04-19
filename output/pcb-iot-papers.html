@@ -262,7 +262,7 @@ body.light {
       </div>
 
       <!-- ── Paper 3 ── -->
-      <div class="paper-card is-arxiv" data-id="pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026" data-url="https://arxiv.org/abs/2602.00510" data-pdf-url="https://arxiv.org/pdf/2602.00510" data-progress="0">
+      <div class="paper-card is-arxiv" data-id="pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026" data-url="https://arxiv.org/abs/2602.00510" data-pdf-url="/api/pdf/pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026" data-progress="0">
         <div class="card-header">
           <div class="card-title"><a href="https://arxiv.org/abs/2602.00510" target="_blank">PCBSchemaGen: Constraint-Guided Schematic Design via LLM for Printed Circuit Boards (PCB)</a></div>
           <span class="citations cite-none">★ 0</span>
@@ -515,7 +515,8 @@ function updateCard(p) {
   }
 
   if (p.note_path) card.setAttribute('data-note-path', p.note_path);
-  if (p.pdf_url) card.setAttribute('data-pdf-url', p.pdf_url);
+  if (p.pdf_local_path) card.setAttribute('data-pdf-url', `${API}/api/pdf/${encodeURIComponent(p.id)}`);
+  else if (p.pdf_url) card.setAttribute('data-pdf-url', p.pdf_url);
 
   if (prog >= 100 && p.id === activeReadId) {
     activeReadId = null;
@@ -636,12 +637,14 @@ async function showPdfPanel(pdfUrl, paperUrl) {
 
   if (!pdfUrl) {
     pdfLink.style.display = 'none';
-    empty.textContent = '当前没有可直接预览的 PDF 链接。可使用右上角按钮打开论文原页面。';
+    empty.textContent = '当前还没有可预览的本地 PDF。服务端会优先尝试下载并缓存 PDF；如果失败，再使用右上角按钮打开论文原页面。';
     return;
   }
 
   pdfLink.href = pdfUrl;
   pdfLink.style.display = 'inline-flex';
+  empty.textContent = 'PDF 正在加载中...';
+  empty.style.display = 'flex';
   frame.src = pdfUrl + '#toolbar=1&navpanes=0&view=FitH';
   frame.style.display = 'block';
   empty.style.display = 'none';

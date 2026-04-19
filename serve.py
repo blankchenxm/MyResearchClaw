@@ -21,6 +21,8 @@ import subprocess
 import tempfile
 import threading
 import urllib.parse
+import urllib.request
+import urllib.error
 import time
 from datetime import datetime
 from html import escape
@@ -31,6 +33,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(ROOT, "output")
 PAPERS_JSON = os.path.join(OUTPUT_DIR, "papers.json")
 NOTES_DIR = os.path.join(OUTPUT_DIR, "notes")
+PDFS_DIR = os.path.join(OUTPUT_DIR, "pdfs")
 LOGS_DIR = os.path.join(OUTPUT_DIR, "logs")
 ENGINEERING_STATUS_JSON = os.path.join(OUTPUT_DIR, "engineering_status.json")
 SKILLS_DIR = os.path.join(ROOT, "skills")
@@ -204,6 +207,10 @@ def escape_js(text):
 
 
 def infer_pdf_url(paper):
+    local_relpath = paper.get("pdf_local_path")
+    if local_relpath and os.path.exists(os.path.join(ROOT, local_relpath)):
+        return f"/api/pdf/{urllib.parse.quote(paper['id'])}"
+
     pdf_url = (paper.get("pdf_url") or "").strip()
     if pdf_url:
         return pdf_url
@@ -226,6 +233,194 @@ def infer_pdf_url(paper):
                     return match.group(1)
             except OSError:
                 pass
+    return ""
+
+
+def paper_pdf_relpath_for_paper(paper):
+    return f"output/pdfs/{paper_topic_slug(paper)}/{paper['id']}.pdf"
+
+
+def paper_pdf_abspath_for_paper(paper):
+    return os.path.join(ROOT, paper_pdf_relpath_for_paper(paper))
+
+
+def local_pdf_api_path(paper_id):
+    return f"/api/pdf/{urllib.parse.quote(paper_id)}"
+
+
+def update_paper_metadata(paper_id, **kwargs):
+    data = load_papers()
+    updated = False
+    for paper in data.get("papers", []):
+        if paper.get("id") == paper_id:
+            paper.update(kwargs)
+            updated = True
+            break
+    if updated:
+        data["last_updated"] = today_iso()
+        save_papers(data)
+    return updated
+
+
+def fetch_url(url, timeout=20):
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0 MyResearchClaw/1.0",
+            "Accept": "text/html,application/pdf;q=0.9,*/*;q=0.8",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        body = resp.read()
+        content_type = resp.headers.get("Content-Type", "")
+        final_url = resp.geturl()
+    return body, content_type, final_url
+
+
+def fetch_json(url, timeout=20):
+    body, _, _ = fetch_url(url, timeout=timeout)
+    return json.loads(body.decode("utf-8", errors="ignore"))
+
+
+def looks_like_pdf(data):
+    return data.lstrip()[:4] == b"%PDF"
+
+
+def extract_pdf_candidates_from_html(html, base_url):
+    candidates = []
+    patterns = [
+        r'<meta[^>]+name=["\']citation_pdf_url["\'][^>]+content=["\']([^"\']+)["\']',
+        r'<meta[^>]+property=["\']og:url["\'][^>]+content=["\']([^"\']+\.pdf[^"\']*)["\']',
+        r'href=["\']([^"\']+\.pdf(?:\?[^"\']*)?)["\']',
+        r'href=["\']([^"\']+/doi/pdf/[^"\']+)["\']',
+        r'href=["\']([^"\']+/pdf/[^"\']+)["\']',
+        r'href=["\']([^"\']+arxiv\.org/abs/[^"\']+)["\']',
+        r'href=["\']([^"\']+openreview\.net/pdf\?id=[^"\']+)["\']',
+        r'href=["\']([^"\']+openreview\.net/forum\?id=[^"\']+)["\']',
+    ]
+    for pattern in patterns:
+        for match in re.findall(pattern, html, re.I):
+            candidate = urllib.parse.urljoin(base_url, match.replace("&amp;", "&"))
+            if candidate not in candidates:
+                candidates.append(candidate)
+
+    if "dl.acm.org/doi/" in base_url and "/pdf/" not in base_url:
+        candidates.append(base_url.replace("/doi/", "/doi/pdf/"))
+    return candidates
+
+
+def collect_pdf_candidates(paper):
+    candidates = []
+
+    def add(url):
+        if not url:
+            return
+        url = url.strip()
+        if not url or url in candidates:
+            return
+        candidates.append(url)
+
+    add(paper.get("pdf_source_url"))
+    pdf_url = (paper.get("pdf_url") or "").strip()
+    if pdf_url.startswith("http://") or pdf_url.startswith("https://"):
+        add(pdf_url)
+
+    paper_url = (paper.get("url") or "").strip()
+    if paper_url:
+        add(paper_url)
+        if "arxiv.org/abs/" in paper_url:
+            add(paper_url.replace("/abs/", "/pdf/") + ".pdf")
+        if "arxiv.org/pdf/" in paper_url:
+            add(paper_url if paper_url.endswith(".pdf") else f"{paper_url}.pdf")
+
+    note_path = paper.get("note_path")
+    if note_path:
+        note_abspath = os.path.join(ROOT, note_path)
+        if os.path.exists(note_abspath):
+            try:
+                with open(note_abspath, encoding="utf-8") as f:
+                    note_md = f.read()
+                for match in re.findall(r"-\s*(?:\*\*)?(?:PDF|PDF mirror)(?::(?:\*\*)?)?\s*(https?://\S+)", note_md, re.I):
+                    add(match)
+            except OSError:
+                pass
+
+    expanded = []
+    for candidate in candidates:
+        expanded.append(candidate)
+        if candidate.startswith("http://") or candidate.startswith("https://"):
+            if "arxiv.org/abs/" in candidate:
+                add(candidate.replace("/abs/", "/pdf/") + ".pdf")
+                continue
+            if "openreview.net/forum?id=" in candidate:
+                add(candidate.replace("/forum?id=", "/pdf?id="))
+                continue
+            if not re.search(r"\.pdf(?:$|\?)", candidate, re.I):
+                try:
+                    body, content_type, final_url = fetch_url(candidate, timeout=12)
+                    if "pdf" in content_type.lower() or looks_like_pdf(body):
+                        add(final_url)
+                        continue
+                    html = body.decode("utf-8", errors="ignore")
+                    for extra in extract_pdf_candidates_from_html(html, final_url):
+                        add(extra)
+                except Exception:
+                    pass
+
+    title = (paper.get("title") or "").strip()
+    if title:
+        try:
+            query = urllib.parse.quote(title)
+            data = fetch_json(
+                "https://api.semanticscholar.org/graph/v1/paper/search/match"
+                f"?query={query}&fields=title,url,openAccessPdf,externalIds",
+                timeout=12,
+            )
+            open_pdf = ((data or {}).get("openAccessPdf") or {}).get("url")
+            add(open_pdf)
+            matched_url = (data or {}).get("url")
+            add(matched_url)
+            arxiv_id = ((data or {}).get("externalIds") or {}).get("ArXiv")
+            if arxiv_id:
+                add(f"https://arxiv.org/pdf/{arxiv_id}.pdf")
+        except Exception:
+            pass
+    return candidates
+
+
+def ensure_local_pdf(paper_id):
+    paper = find_paper_by_id(paper_id)
+    if not paper:
+        return ""
+
+    local_relpath = paper.get("pdf_local_path") or paper_pdf_relpath_for_paper(paper)
+    local_abspath = os.path.join(ROOT, local_relpath)
+    if os.path.exists(local_abspath) and os.path.getsize(local_abspath) > 0:
+        if paper.get("pdf_local_path") != local_relpath:
+            update_paper_metadata(paper_id, pdf_local_path=local_relpath)
+        return local_abspath
+
+    os.makedirs(os.path.dirname(local_abspath), exist_ok=True)
+    candidates = collect_pdf_candidates(paper)
+
+    for candidate in candidates:
+        try:
+            body, content_type, final_url = fetch_url(candidate)
+            if not ("pdf" in content_type.lower() or looks_like_pdf(body)):
+                continue
+            tmp_path = local_abspath + ".tmp"
+            with open(tmp_path, "wb") as f:
+                f.write(body)
+            os.replace(tmp_path, local_abspath)
+            update_paper_metadata(
+                paper_id,
+                pdf_local_path=local_relpath,
+                pdf_source_url=final_url,
+                pdf_url=paper.get("pdf_url") or final_url,
+            )
+            return local_abspath
+        except Exception:
+            continue
     return ""
 
 
@@ -767,6 +962,7 @@ def finalize_read_result(paper_id):
             )
             break
     save_papers(data)
+    ensure_local_pdf(paper_id)
     regenerate_kanban()
     return True
 
@@ -820,6 +1016,10 @@ def read_paper_bg(paper_id, url, title):
     ]
 
     try:
+        if ensure_local_pdf(paper_id):
+            set_paper_fields(paper_id, progress=8, status="reading")
+            regenerate_kanban()
+
         codex_dir = os.path.dirname(RESOLVED_CODEX_BIN)
         env = os.environ.copy()
         env["PATH"] = codex_dir + os.pathsep + env.get("PATH", "")
@@ -975,7 +1175,11 @@ class Handler(BaseHTTPRequestHandler):
 
         elif path == "/api/papers":
             try:
-                body = open(PAPERS_JSON, "rb").read()
+                data = load_papers()
+                for paper in data.get("papers", []):
+                    if paper.get("pdf_local_path") and os.path.exists(os.path.join(ROOT, paper["pdf_local_path"])):
+                        paper["pdf_url"] = local_pdf_api_path(paper["id"])
+                body = json.dumps(data, ensure_ascii=False).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.send_cors()
@@ -983,6 +1187,29 @@ class Handler(BaseHTTPRequestHandler):
                 self.wfile.write(body)
             except Exception:
                 self.send_response(500)
+                self.send_cors()
+                self.end_headers()
+
+        elif path.startswith("/api/pdf/"):
+            paper_id = urllib.parse.unquote(path[len("/api/pdf/"):])
+            paper = find_paper_by_id(paper_id)
+            pdf_file = ""
+            if paper:
+                local_relpath = paper.get("pdf_local_path") or paper_pdf_relpath_for_paper(paper)
+                pdf_file = os.path.join(ROOT, local_relpath)
+                if not os.path.exists(pdf_file):
+                    ensured = ensure_local_pdf(paper_id)
+                    pdf_file = ensured or pdf_file
+            if pdf_file and os.path.exists(pdf_file):
+                body = open(pdf_file, "rb").read()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/pdf")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_cors()
+                self.end_headers()
+                self.wfile.write(body)
+            else:
+                self.send_response(404)
                 self.send_cors()
                 self.end_headers()
 
