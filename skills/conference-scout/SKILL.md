@@ -26,6 +26,58 @@ Extract:
 
 If venue intent is missing, ask which venue family the user wants.
 
+If the user asks for "顶会论文", "top venues", "完整调查", or otherwise signals completeness:
+
+- do not silently narrow to a hand-picked subset of venues
+- either ask for the venue family if truly ambiguous, or use the topic-to-venue profile rules below
+- report the exact venue set you searched
+
+## Topic-to-Venue Profiles
+
+When the topic clearly falls into one of the following buckets, use the full profile by default instead of a partial subset:
+
+```yaml
+embedded_iot_firmware:
+  - SenSys
+  - IPSN
+  - MobiSys
+  - UbiComp / IMWUT
+  - RTSS
+  - EMSOFT
+  - ASP-DAC
+  - DATE
+  - USENIX Security
+  - NDSS
+
+pcb_hardware_automation:
+  - UIST
+  - CHI
+  - DAC
+  - ICCAD
+  - ASP-DAC
+  - DATE
+  - arXiv
+
+embedded_ai_systems:
+  - SenSys
+  - IPSN
+  - MobiSys
+  - UbiComp / IMWUT
+  - MobiCom
+  - ASPLOS
+  - EuroSys
+  - OSDI
+  - SOSP
+```
+
+Mapping rules:
+
+- MCU firmware generation, auto flashing, embedded IoT software generation, cross-chip firmware adaptation:
+  use `embedded_iot_firmware`
+- PCB automation, schematic generation, board-level design automation, requirement-to-PCB:
+  use `pcb_hardware_automation`
+- If the topic spans multiple buckets, take the union instead of picking one narrow family
+
 ## Venue Groups
 
 ```yaml
@@ -114,6 +166,23 @@ Rules:
 - Filter locally by venue aliases.
 - DBLP records may lack abstract and citations; fill what is missing from Semantic Scholar only when easy and reliable.
 
+### 2.5 Venue completeness check
+
+After the initial Semantic Scholar / DBLP pass, run a targeted completeness check before final ranking.
+
+Rules:
+
+- For each venue in the chosen venue set, run one venue-aware verification query for the topic
+- For recent years, explicitly verify the latest 2 years in range
+- If a likely relevant paper is found in a target venue but was absent from the initial pool, add it
+- Do not stop after one strong venue hit; completeness matters more than convenience for top-venue scouting
+
+Examples:
+
+- `AutoEmbed`-style failure to avoid:
+  if the topic is MCU firmware automation and the venue profile includes `SenSys`, then recent `SenSys` papers must be checked explicitly instead of relying on a generic embedded query to surface them
+- if the topic is PCB automation and the profile includes `DAC` and `ICCAD`, run explicit venue checks for both even if arXiv already has strong matches
+
 ### 3. arXiv supplement
 
 Use only `export.arxiv.org` for the API:
@@ -149,6 +218,23 @@ Use a simple additive score:
 | arXiv-only result | -1 |
 
 Return the best 8 venue-confirmed papers plus up to 3 arXiv supplements.
+
+Important:
+
+- ranking happens after completeness checking, not before
+- never let high citations from older but looser matches crowd out clearly on-topic recent top-venue papers
+- when the user asked for latest or recent work, bias toward the most recent venue-confirmed papers after relevance filtering
+
+## Latest-Paper Safeguard
+
+When the user asks for recent or latest papers, you must verify whether the newest year in range has any venue-confirmed matches.
+
+Checklist:
+
+1. Check whether at least one target-venue paper from the newest year exists
+2. If none appear, say that explicitly
+3. If one exists, ensure it is not accidentally excluded by an incomplete venue set
+4. In the response, mention concrete years, for example `SenSys 2026`, instead of vague wording like `latest`
 
 ## Summaries
 
