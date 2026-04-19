@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦀</text></svg>">
-<title>MyResearchClaw — PCB硬件自动化流程(面向 IoT传感器板)</title>
+<title>MyResearchClaw — MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -191,7 +191,7 @@ body.light {
     <div class="hero-top">
       <div>
         <div class="hero-eyebrow">Research Theme</div>
-        <h1 class="hero-title">PCB硬件自动化流程(面向 IoT传感器板)</h1>
+        <h1 class="hero-title">MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)</h1>
         <div class="hero-subtitle">Updated 2026-04-19</div>
       </div>
       <div class="hero-actions">
@@ -204,321 +204,263 @@ body.light {
     <div class="papers-grid">
       
       <!-- ── Paper 1 ── -->
-      <div class="paper-card is-arxiv" data-id="pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026" data-url="https://arxiv.org/abs/2602.00510" data-pdf-url="https://arxiv.org/pdf/2602.00510.pdf" data-progress="0">
+      <div class="paper-card is-confirmed" data-id="platform-specific-code-generation-from-platform-independent-timed-models_2015" data-url="https://dblp.org/rec/conf/rtss/KimFSL15" data-pdf-url="https://repository.upenn.edu/bitstreams/9c9bd30e-6c44-4003-ba46-1e8663a2d1c2/download" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://arxiv.org/abs/2602.00510" target="_blank">PCBSchemaGen: Constraint-Guided Schematic Design via LLM for Printed Circuit Boards (PCB)</a></div>
-          <span class="citations cite-none">★ 0</span>
+          <div class="card-title"><a href="https://dblp.org/rec/conf/rtss/KimFSL15" target="_blank">Platform-Specific Code Generation from Platform-Independent Timed Models</a></div>
+          <span class="citations cite-high">★ 224</span>
         </div>
-        <div class="card-authors">Huanghaohe Zou et al.</div>
+        <div class="card-authors">BaekGyu Kim et al.</div>
         <div class="card-meta">
-          <span class="venue-badge arxiv">CoRR 2026</span>
-          <span class="card-tag tag-cyan">pcb-schematic</span>
-          <span class="card-tag tag-purple">llm</span>
-          <span class="card-tag tag-pink">constraint-guided</span>
+          <span class="venue-badge">RTSS 2015</span>
+          <span class="card-tag tag-cyan">code-generation</span>
+          <span class="card-tag tag-purple">timed-models</span>
+          <span class="card-tag tag-pink">embedded-software</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">PCBSchemaGen proposes a training-free PCB schematic design pipeline built from an LLM agent and constraint-guided synthesis. It adds a verification layer based on a real datasheet-derived knowledge graph and subgraph isomorphism so that pin roles and topological constraints are checked before a schematic is accepted. The paper evaluates 23 schematic tasks across digital, analog, and power domains, which makes it unusually close to a practical requirement-to-schematic generator. For this topic, it is the clearest bridge from a high-level board brief to a structured design artifact.</div>
+          <div class="summary-en">This paper studies how to compile platform-independent timed models into platform-specific embedded code while preserving timing semantics. Its significance for modern MCU automation is that it formalizes the boundary between application intent and board-specific implementation, which is exactly the boundary a firmware agent has to cross when targeting ESP32, STM32, or nRF devices. Rather than treating firmware generation as free-form coding, the paper treats it as constrained synthesis against timing models and deployment assumptions. That perspective remains useful for any requirement-to-firmware pipeline that needs deterministic behavior instead of approximate code generation.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">PCBSchemaGen 提出了一条无需训练的 PCB 原理图设计流水线，由 LLM agent 和约束引导的综合模块组成。它额外加入了基于真实 datasheet 构建的知识图谱与子图同构校验，用来在接受原理图之前检查引脚角色和拓扑约束。论文在数字、模拟和电源三类任务上共评估了 23 个 PCB schematic 设计场景，因此非常接近真正的“需求到原理图”生成器。对这个主题来说，它是从高层板级需求落到结构化设计工件最直接的一篇。</div>
+          <div class="summary-zh">这篇论文研究如何把平台无关的时序模型编译成平台相关的嵌入式代码，同时尽量保持原始时序语义不被破坏。它对今天的 MCU 自动化仍然重要，因为它非常清楚地定义了“应用意图”和“板级实现”之间的那条边界，而这正是面向 ESP32、STM32、nRF 的固件 agent 必须跨过去的地方。论文并没有把固件生成当成自由写代码，而是把它视为受时序模型和部署约束驱动的综合问题。对于任何追求确定性而不是随意生成代码的自动化固件流程，这个视角仍然很有价值。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://arxiv.org/abs/2602.00510" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026','https://arxiv.org/abs/2602.00510','PCBSchemaGen: Constraint-Guided Schematic Design via LLM for Printed Circuit Boards (PCB)')">📖 Read Paper</button>
+          <a href="https://dblp.org/rec/conf/rtss/KimFSL15" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('platform-specific-code-generation-from-platform-independent-timed-models_2015','https://dblp.org/rec/conf/rtss/KimFSL15','Platform-Specific Code Generation from Platform-Independent Timed Models')">📖 Read Paper</button>
         </div>
       </div>
 
       <!-- ── Paper 2 ── -->
-      <div class="paper-card is-arxiv" data-id="omnisch-a-multimodal-pcb-schematic-benchmark-for-structured-diagram-visual-reasoning_2026" data-url="https://arxiv.org/abs/2604.00270" data-pdf-url="https://arxiv.org/pdf/2604.00270.pdf" data-progress="0">
+      <div class="paper-card is-confirmed" data-id="automatic-generation-of-hardware-dependent-software-for-mpsocs-from-abstract-system-specifications_2008" data-url="https://dblp.org/rec/conf/aspdac/SchirnerGD08" data-pdf-url="" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://arxiv.org/abs/2604.00270" target="_blank">OmniSch: A Multimodal PCB Schematic Benchmark For Structured Diagram Visual Reasoning</a></div>
-          <span class="citations cite-none">★ 0</span>
+          <div class="card-title"><a href="https://dblp.org/rec/conf/aspdac/SchirnerGD08" target="_blank">Automatic generation of hardware dependent software for MPSoCs from abstract system specifications</a></div>
+          <span class="citations cite-mid">★ 26</span>
         </div>
-        <div class="card-authors">Taiting Lu et al.</div>
+        <div class="card-authors">Gunar Schirner et al.</div>
         <div class="card-meta">
-          <span class="venue-badge arxiv">CoRR 2026</span>
-          <span class="card-tag tag-cyan">benchmark</span>
-          <span class="card-tag tag-purple">pcb-schematic</span>
-          <span class="card-tag tag-pink">multimodal</span>
+          <span class="venue-badge">ASP-DAC 2008</span>
+          <span class="card-tag tag-cyan">code-generation</span>
+          <span class="card-tag tag-purple">mpsoc</span>
+          <span class="card-tag tag-pink">synthesis</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">OmniSch turns PCB schematic understanding into a benchmark problem for multimodal models and agentic search. The benchmark contains 1,854 real-world schematic diagrams and tests four capabilities: entity grounding, diagram-to-graph reasoning, geometric reasoning, and tool-augmented visual search. That framing matters because PCB automation breaks down quickly if a model cannot read an existing schematic and recover connectivity plus spatial constraints. For requirement-to-PCB generation, OmniSch is the missing evaluation layer between raw vision models and design automation.</div>
+          <div class="summary-en">This ASP-DAC paper is an early but still relevant example of generating hardware-dependent software from abstract specifications. The important engineering lesson is that code generation becomes tractable once the hardware contract and communication structure are expressed in a formal intermediate representation. That maps well to today’s cross-chip MCU problem, where the hard part is not emitting C code, but carrying pin, bus, and peripheral assumptions across families. It supports the idea that automatic firmware generation should be built around structured device models rather than purely prompt-driven code completion.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">OmniSch 把 PCB 原理图理解问题抽象成一个面向多模态模型的基准任务。它包含 1,854 张真实原理图，并考察四类能力：实体定位、图结构推理、几何推理以及工具增强的视觉检索。这个设定很重要，因为如果模型连已有原理图里的连线和空间约束都读不准，PCB 自动化流程就会很快失效。对于需求到 PCB 的生成路径来说，OmniSch 提供了连接视觉模型与设计自动化之间缺失的评测层。</div>
+          <div class="summary-zh">这篇 ASP-DAC 论文是较早但仍然很有参考价值的例子：从抽象系统规格自动生成依赖硬件的软件。它给出的核心工程启发是，一旦硬件契约和通信结构被放进形式化中间表示，代码生成就会变得可控。这个结论与今天跨 ESP32、STM32、nRF 的 MCU 自动适配问题高度一致，因为真正困难的不是输出 C 代码，而是如何把引脚、总线和外设假设稳定地带过不同芯片族。它支持这样一种路线：自动固件生成应该建立在结构化设备模型之上，而不是单纯依赖 prompt 驱动的代码补全。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://arxiv.org/abs/2604.00270" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('omnisch-a-multimodal-pcb-schematic-benchmark-for-structured-diagram-visual-reasoning_2026','https://arxiv.org/abs/2604.00270','OmniSch: A Multimodal PCB Schematic Benchmark For Structured Diagram Visual Reasoning')">📖 Read Paper</button>
+          <a href="https://dblp.org/rec/conf/aspdac/SchirnerGD08" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('automatic-generation-of-hardware-dependent-software-for-mpsocs-from-abstract-system-specifications_2008','https://dblp.org/rec/conf/aspdac/SchirnerGD08','Automatic generation of hardware dependent software for MPSoCs from abstract system specifications')">📖 Read Paper</button>
         </div>
       </div>
 
       <!-- ── Paper 3 ── -->
-      <div class="paper-card is-confirmed" data-id="pcbsmith-an-effective-schematic-generator-for-testing-pcb-design-tool-chain_2025" data-url="https://doi.org/10.1109/tr.2025.3529303" data-pdf-url="" data-progress="0">
+      <div class="paper-card is-confirmed" data-id="rapidpatch-firmware-hotpatching-for-real-time-embedded-devices_2022" data-url="https://dblp.org/rec/conf/uss/HeZ0L0000022" data-pdf-url="" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://doi.org/10.1109/tr.2025.3529303" target="_blank">PCBSmith: An Effective Schematic Generator for Testing PCB Design Tool Chain</a></div>
-          <span class="citations cite-low">★ 2</span>
+          <div class="card-title"><a href="https://dblp.org/rec/conf/uss/HeZ0L0000022" target="_blank">RapidPatch: Firmware Hotpatching for Real-Time Embedded Devices</a></div>
+          <span class="citations cite-high">★ 163</span>
         </div>
-        <div class="card-authors">Xu Zhao et al.</div>
+        <div class="card-authors">Yi He et al.</div>
         <div class="card-meta">
-          <span class="venue-badge">IEEE Trans. Reliability 2025</span>
-          <span class="card-tag tag-cyan">schematic-generation</span>
-          <span class="card-tag tag-purple">eda</span>
-          <span class="card-tag tag-pink">tool-chain</span>
+          <span class="venue-badge">USENIX Security 2022</span>
+          <span class="card-tag tag-cyan">hotpatching</span>
+          <span class="card-tag tag-purple">real-time</span>
+          <span class="card-tag tag-pink">firmware</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">PCBSmith is a schematic generator designed specifically to stress-test a PCB design tool chain. It mimics the steps a PCB designer would take by selecting components, assigning electrical parameters, and assembling a simulatable schematic rather than just emitting a symbolic sketch. That makes it useful as both a generator and a validation workload for downstream EDA automation. In this topic, it is the most explicit example of turning a board-level design intent into executable schematic artifacts.</div>
+          <div class="summary-en">RapidPatch tackles a production-facing firmware problem: how to update real-time embedded code without rebooting the device or violating timing guarantees. That matters here because automated firmware generation is only half the story; the generated image must also be safely delivered, patched, and maintained on deployed devices. The paper moves the discussion from one-shot flashing toward fine-grained lifecycle management, which is much closer to how industrial MCU fleets operate. For cross-platform automation, it highlights that deployment constraints can be as important as code synthesis itself.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">PCBSmith 是一个专门用来测试 PCB 设计工具链的原理图生成器。它模拟 PCB 设计者的步骤：先选器件，再设置电气参数，最后拼装出可以仿真的原理图，而不是只输出一个符号化草图。这样它既是生成器，也是下游 EDA 自动化链路的验证负载。放在这个主题下，它是把板级设计意图转成可执行 schematic 工件最明确的例子之一。</div>
+          <div class="summary-zh">RapidPatch 关注的是量产环境里真正棘手的问题：如何在不重启设备、也不破坏实时性的前提下更新嵌入式固件。它之所以与本题相关，是因为“自动生成固件”只是前半段，后半段还包括如何把生成结果安全地下发、修补并维持在设备上。论文把讨论重点从一次性刷写推进到更细粒度的生命周期管理，这比单纯烧录更接近工业 MCU 设备的真实运维方式。对跨平台自动化来说，它提示我们：部署约束的重要性并不亚于代码综合本身。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://doi.org/10.1109/tr.2025.3529303" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('pcbsmith-an-effective-schematic-generator-for-testing-pcb-design-tool-chain_2025','https://doi.org/10.1109/tr.2025.3529303','PCBSmith: An Effective Schematic Generator for Testing PCB Design Tool Chain')">📖 Read Paper</button>
+          <a href="https://dblp.org/rec/conf/uss/HeZ0L0000022" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('rapidpatch-firmware-hotpatching-for-real-time-embedded-devices_2022','https://dblp.org/rec/conf/uss/HeZ0L0000022','RapidPatch: Firmware Hotpatching for Real-Time Embedded Devices')">📖 Read Paper</button>
         </div>
       </div>
 
       <!-- ── Paper 4 ── -->
-      <div class="paper-card is-confirmed" data-id="pcbagent-an-agent-based-framework-for-high-density-printed-circuit-board-placement_2025" data-url="https://doi.org/10.1145/3658617.3697736" data-pdf-url="" data-progress="0">
+      <div class="paper-card is-confirmed" data-id="hera-hotpatching-of-embedded-real-time-applications_2021" data-url="https://dblp.org/rec/conf/ndss/NieslerSD21" data-pdf-url="" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://doi.org/10.1145/3658617.3697736" target="_blank">PCBAgent: An Agent-based Framework for High-Density Printed Circuit Board Placement</a></div>
-          <span class="citations cite-low">★ 3</span>
+          <div class="card-title"><a href="https://dblp.org/rec/conf/ndss/NieslerSD21" target="_blank">HERA: Hotpatching of Embedded Real-time Applications</a></div>
+          <span class="citations cite-mid">★ 47</span>
         </div>
-        <div class="card-authors">Lin Chen et al.</div>
+        <div class="card-authors">Christian Niesler et al.</div>
         <div class="card-meta">
-          <span class="venue-badge">ASP-DAC 2025</span>
-          <span class="card-tag tag-cyan">placement</span>
-          <span class="card-tag tag-purple">rl</span>
-          <span class="card-tag tag-pink">llm</span>
+          <span class="venue-badge">NDSS 2021</span>
+          <span class="card-tag tag-cyan">hotpatching</span>
+          <span class="card-tag tag-purple">embedded-security</span>
+          <span class="card-tag tag-pink">real-time</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">PCBAgent addresses the placement side of PCB automation with an agent-based framework for high-density boards. The design combines an RL agent for layout inference and fine-tuning with an LLM agent for interactive optimization, which is a strong fit for constrained board layouts where human feedback still matters. The paper reports experiments on 17 industrial tasks and says it outperforms prior methods. For IoT sensor boards, this is the part of the pipeline that turns a schematic into something that can actually fit on the board outline.</div>
+          <div class="summary-en">HERA also studies live updating for embedded real-time software, but from the angle of preserving correctness under stringent timing and memory constraints. For MCU automation, this paper matters because an end-to-end pipeline is only believable if it can update running devices without destabilizing them. The work makes clear that automated deployment on small controllers is not simply a compiler problem; it is a systems problem involving memory layouts, patch compatibility, and execution safety. That is directly relevant to any claim of autonomous flashing across multiple MCU families.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">PCBAgent 直接针对 PCB 自动化中的 placement 阶段，提出了一个面向高密度板子的 agent 式框架。它把用于布局推断和微调的 RL agent 与用于交互优化的 LLM agent 结合起来，这非常适合那些约束很多、还需要人工反馈的板级设计。论文在 17 个工业任务上做了实验，并报告优于既有方法。对于 IoT 传感器板来说，这正是把原理图变成真正能塞进板框的关键步骤。</div>
+          <div class="summary-zh">HERA 同样研究嵌入式实时软件的在线更新，但更强调在严格的时序和内存约束下如何保持系统正确性。对 MCU 自动化来说，它的重要性在于：如果一条端到端自动流水线连在线设备的稳定更新都做不到，那它就谈不上真正可部署。论文说明，小型控制器上的自动化部署绝不只是编译问题，而是涉及内存布局、补丁兼容性和执行安全的一整套系统问题。这一点直接关系到“跨多类 MCU 自动烧录”是否真的可信。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://doi.org/10.1145/3658617.3697736" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('pcbagent-an-agent-based-framework-for-high-density-printed-circuit-board-placement_2025','https://doi.org/10.1145/3658617.3697736','PCBAgent: An Agent-based Framework for High-Density Printed Circuit Board Placement')">📖 Read Paper</button>
+          <a href="https://dblp.org/rec/conf/ndss/NieslerSD21" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('hera-hotpatching-of-embedded-real-time-applications_2021','https://dblp.org/rec/conf/ndss/NieslerSD21','HERA: Hotpatching of Embedded Real-time Applications')">📖 Read Paper</button>
         </div>
       </div>
 
       <!-- ── Paper 5 ── -->
-      <div class="paper-card is-confirmed" data-id="hieplace-efficient-hierarchical-pcb-placement_2025" data-url="https://doi.org/10.1109/tcad.2025.3580511" data-pdf-url="" data-progress="0">
+      <div class="paper-card is-confirmed" data-id="library-portability-to-para-rehosting-natively-executing-microcontroller-software-on-commodity-hardware_2021" data-url="https://dblp.org/rec/conf/ndss/LiGLSL21" data-pdf-url="" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://doi.org/10.1109/tcad.2025.3580511" target="_blank">HiePlace: Efficient Hierarchical PCB Placement</a></div>
-          <span class="citations cite-none">★ 0</span>
+          <div class="card-title"><a href="https://dblp.org/rec/conf/ndss/LiGLSL21" target="_blank">From Library Portability to Para-rehosting: Natively Executing Microcontroller Software on Commodity Hardware</a></div>
+          <span class="citations cite-mid">★ 80</span>
         </div>
-        <div class="card-authors">Shanyi Li et al.</div>
+        <div class="card-authors">Wenqiang Li et al.</div>
         <div class="card-meta">
-          <span class="venue-badge">IEEE TCAD 2025</span>
-          <span class="card-tag tag-cyan">placement</span>
-          <span class="card-tag tag-purple">mathematical-programming</span>
-          <span class="card-tag tag-pink">optimization</span>
+          <span class="venue-badge">NDSS 2021</span>
+          <span class="card-tag tag-cyan">rehosting</span>
+          <span class="card-tag tag-purple">microcontroller</span>
+          <span class="card-tag tag-pink">analysis</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">HiePlace is a mathematical-programming-based placement framework tailored to PCB constraints rather than chip placement. The paper introduces a dynamic-programming stage for core components and a relaxation method that shrinks the boolean search space, which together improve runtime and solution quality. The available abstract summary reports a 7.7x speedup and a 66% cost reduction. That combination is exactly what board designers need when a dense IoT sensor stack must satisfy clearance, alignment, and mechanical constraints at the same time.</div>
+          <div class="summary-en">This paper shows how MCU firmware can be rehosted on commodity hardware by neutralizing hardware dependencies. The immediate relevance is to automated firmware generation loops: if you can run generated firmware off-target, you can validate and debug it before touching a real ESP32, STM32, or nRF board. That shortens the iteration cycle and makes autonomous code generation much more realistic. In practice, rehosting is one of the strongest enablers for scaling firmware agents beyond toy examples.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">HiePlace 是一个面向 PCB 约束而不是芯片约束的数学规划式 placement 框架。它引入动态规划步骤来优先放置核心器件，并用 relaxation 方法缩小布尔变量搜索空间，从而同时提升运行时间和布局质量。现有摘要信息给出的结果是 7.7x 的加速和 66% 的成本下降。对于需要同时满足间距、对齐和机械约束的高密度 IoT 板来说，这正是非常实用的优化形态。</div>
+          <div class="summary-zh">这篇论文展示了如何通过移除或适配硬件依赖，让 MCU 固件在通用硬件上运行。它对自动化固件生成特别重要，因为一旦能在离板环境里先运行和调试生成结果，就能在真正接触 ESP32、STM32、nRF 硬件之前完成大量验证。这样会显著缩短自动生成代码的迭代闭环，也让 agent 式固件生成更接近可用工程系统。现实里，rehosting 是把固件自动化从玩具 demo 推向可扩展实践的重要支撑能力。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://doi.org/10.1109/tcad.2025.3580511" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('hieplace-efficient-hierarchical-pcb-placement_2025','https://doi.org/10.1109/tcad.2025.3580511','HiePlace: Efficient Hierarchical PCB Placement')">📖 Read Paper</button>
+          <a href="https://dblp.org/rec/conf/ndss/LiGLSL21" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('library-portability-to-para-rehosting-natively-executing-microcontroller-software-on-commodity-hardware_2021','https://dblp.org/rec/conf/ndss/LiGLSL21','From Library Portability to Para-rehosting: Natively Executing Microcontroller Software on Commodity Hardware')">📖 Read Paper</button>
         </div>
       </div>
 
       <!-- ── Paper 6 ── -->
-      <div class="paper-card is-confirmed" data-id="pcbroutenet-dynamic-quadrilateral-flow-dataset-and-benchmarks-for-machine-learning-pcb-routing_2025" data-url="https://doi.org/10.1109/tvlsi.2025.3600764" data-pdf-url="" data-progress="0">
+      <div class="paper-card is-confirmed" data-id="sota-secure-over-the-air-programming-of-iot-devices_2018" data-url="https://dblp.org/rec/conf/milcom/YesilyurtAUB18" data-pdf-url="" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://doi.org/10.1109/tvlsi.2025.3600764" target="_blank">PCBRouteNet: Dynamic Quadrilateral-Flow Dataset and Benchmarks for Machine-Learning PCB Routing</a></div>
-          <span class="citations cite-none">★ 0</span>
+          <div class="card-title"><a href="https://dblp.org/rec/conf/milcom/YesilyurtAUB18" target="_blank">SOTA: Secure Over-The-Air Programming of IoT Devices</a></div>
+          <span class="citations cite-mid">★ 41</span>
         </div>
-        <div class="card-authors">Zhihao Ren et al.</div>
+        <div class="card-authors">Halim Burak Yesilyurt et al.</div>
         <div class="card-meta">
-          <span class="venue-badge">IEEE TVLSI 2025</span>
-          <span class="card-tag tag-cyan">routing</span>
-          <span class="card-tag tag-purple">dataset</span>
-          <span class="card-tag tag-pink">benchmark</span>
+          <span class="venue-badge">MILCOM 2018</span>
+          <span class="card-tag tag-cyan">ota</span>
+          <span class="card-tag tag-purple">security</span>
+          <span class="card-tag tag-pink">iot</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">PCBRouteNet focuses on routing, but its main contribution is the dataset and benchmark setup that make ML routing work practical. It converts PCB layouts into a quadrilateral network-flow representation so that global and detailed routing tasks can be learned from large-scale board data. The abstract summary also emphasizes multilayer boards, high-density interconnects, and scaling-law style analysis of the flow encoding. This is the infrastructure paper you want if the goal is to learn routing policies instead of hand-coding heuristics for every new board class.</div>
+          <div class="summary-en">SOTA studies secure OTA programming for IoT devices, emphasizing authenticated updates and safe deployment rather than only flash mechanics. This is directly relevant if you want a requirement-to-code-to-flash pipeline that scales beyond a USB cable on a lab bench. The paper frames firmware delivery as a trust and recovery problem, which is exactly what cross-device automation needs once multiple boards are deployed in the field. It is a reminder that automation without secure update infrastructure is incomplete.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">PCBRouteNet 的重点不是单一 router，而是为机器学习 PCB routing 提供可训练的数据集与基准。它把 PCB 布局转换成四边形网络流表示，使全局 routing 和细节 routing 都能在大规模板级数据上学习。摘要还特别强调了多层板、高密度互连以及对 flow 编码的 scaling-law 分析。若目标是训练 routing policy，而不是每种新板型都手写启发式规则，这篇就是基础设施型工作。</div>
+          <div class="summary-zh">SOTA 研究的是 IoT 设备的安全 OTA 编程，它关心的重点不是单纯如何把二进制写进 Flash，而是如何保证更新认证、完整性和故障恢复。对“需求到代码再到烧录”的自动化闭环来说，这一点非常关键，因为真正有价值的流程不能只在实验台上通过串口刷写，而要能面向实际部署环境。论文把固件交付视为信任链和恢复机制问题，这正是跨设备自动化最终必须补上的部分。它提醒我们，没有安全更新基础设施的自动化，本质上是不完整的。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://doi.org/10.1109/tvlsi.2025.3600764" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('pcbroutenet-dynamic-quadrilateral-flow-dataset-and-benchmarks-for-machine-learning-pcb-routing_2025','https://doi.org/10.1109/tvlsi.2025.3600764','PCBRouteNet: Dynamic Quadrilateral-Flow Dataset and Benchmarks for Machine-Learning PCB Routing')">📖 Read Paper</button>
+          <a href="https://dblp.org/rec/conf/milcom/YesilyurtAUB18" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('sota-secure-over-the-air-programming-of-iot-devices_2018','https://dblp.org/rec/conf/milcom/YesilyurtAUB18','SOTA: Secure Over-The-Air Programming of IoT Devices')">📖 Read Paper</button>
         </div>
       </div>
 
       <!-- ── Paper 7 ── -->
-      <div class="paper-card is-confirmed" data-id="an-ml-aided-approach-to-automatically-generate-schematic-symbols-in-pcb-eda-tools_2024" data-url="https://doi.org/10.1145/3670474.3685944" data-pdf-url="" data-progress="0">
+      <div class="paper-card is-confirmed" data-id="remote-progressive-firmware-update-for-flash-based-networked-embedded-systems_2009" data-url="https://dblp.org/rec/conf/islped/KimC09" data-pdf-url="" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://doi.org/10.1145/3670474.3685944" target="_blank">An ML-aided Approach to Automatically Generate Schematic Symbols in PCB EDA Tools</a></div>
-          <span class="citations cite-none">★ 0</span>
+          <div class="card-title"><a href="https://dblp.org/rec/conf/islped/KimC09" target="_blank">Remote progressive firmware update for flash-based networked embedded systems</a></div>
+          <span class="citations cite-mid">★ 48</span>
         </div>
-        <div class="card-authors">Shiyu Gao et al.</div>
+        <div class="card-authors">Jinsik Kim et al.</div>
         <div class="card-meta">
-          <span class="venue-badge">MLCAD 2024</span>
-          <span class="card-tag tag-cyan">schematic-symbols</span>
-          <span class="card-tag tag-purple">mlcad</span>
-          <span class="card-tag tag-pink">eda</span>
+          <span class="venue-badge">ISLPED 2009</span>
+          <span class="card-tag tag-cyan">ota</span>
+          <span class="card-tag tag-purple">flash-update</span>
+          <span class="card-tag tag-pink">embedded</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">This paper targets the unglamorous but expensive symbol-library bottleneck in PCB EDA. By automating schematic symbol creation, it reduces the manual work required before a board can even be described cleanly in the tool chain. That matters because requirement-to-PCB generation is blocked if the system cannot first turn parts into valid schematic primitives. It is a smaller step than full board synthesis, but it is a concrete step toward a usable automation pipeline.</div>
+          <div class="summary-en">This paper presents progressive firmware update for flash-based embedded systems, reducing the burden of replacing whole images on constrained devices. Its relevance today is that many cross-MCU automation claims ignore the cost of bandwidth, energy, and flash wear when deploying generated images. By treating update as an incremental systems problem, the paper gives a more realistic model for field deployment. That is particularly useful for battery-powered IoT nodes where full reflashing is often the wrong operational primitive.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">这篇工作瞄准的是 PCB EDA 里最琐碎但又最耗时的 symbol 库瓶颈。它通过自动生成 schematic symbol，减少了在工具链里正式描述一块板之前必须手工完成的工作量。这个环节很关键，因为如果系统连器件都没法转成合法的 schematic primitive，那么“需求到 PCB 生成”根本走不下去。它不如完整板级综合那么大，但确实是可落地自动化流水线里的一个具体台阶。</div>
+          <div class="summary-zh">这篇论文提出面向 Flash 型嵌入式系统的渐进式远程固件更新方法，目的是降低受限设备整包替换的代价。它今天依然相关，因为很多“自动化烧录”方案只关注代码生成，却忽略了带宽、能耗和 Flash 磨损这些现实部署成本。论文把更新问题建模成增量式系统问题，而不是一次性整体重刷，这更接近 IoT 节点的实际运行条件。对于电池供电的小设备来说，这种思路尤其重要。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://doi.org/10.1145/3670474.3685944" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('an-ml-aided-approach-to-automatically-generate-schematic-symbols-in-pcb-eda-tools_2024','https://doi.org/10.1145/3670474.3685944','An ML-aided Approach to Automatically Generate Schematic Symbols in PCB EDA Tools')">📖 Read Paper</button>
+          <a href="https://dblp.org/rec/conf/islped/KimC09" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('remote-progressive-firmware-update-for-flash-based-networked-embedded-systems_2009','https://dblp.org/rec/conf/islped/KimC09','Remote progressive firmware update for flash-based networked embedded systems')">📖 Read Paper</button>
         </div>
       </div>
 
       <!-- ── Paper 8 ── -->
-      <div class="paper-card is-confirmed" data-id="clearance-constrained-pcb-global-placement-with-heterogeneous-components_2025" data-url="https://doi.org/10.1109/dac63849.2025.11133056" data-pdf-url="" data-progress="0">
+      <div class="paper-card is-confirmed" data-id="no-reboot-and-zero-flash-over-the-air-programming-for-wireless-sensor-networks_2012" data-url="https://dblp.org/rec/conf/secon/ShafiAH12" data-pdf-url="" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://doi.org/10.1109/dac63849.2025.11133056" target="_blank">Clearance-Constrained PCB Global Placement with Heterogeneous Components</a></div>
-          <span class="citations cite-low">★ 1</span>
+          <div class="card-title"><a href="https://dblp.org/rec/conf/secon/ShafiAH12" target="_blank">No-reboot and zero-flash over-the-air programming for Wireless Sensor Networks</a></div>
+          <span class="citations cite-mid">★ 16</span>
         </div>
-        <div class="card-authors">Yan-Jen Chen et al.</div>
+        <div class="card-authors">Nasif Bin Shafi et al.</div>
         <div class="card-meta">
-          <span class="venue-badge">DAC 2025</span>
-          <span class="card-tag tag-cyan">placement</span>
-          <span class="card-tag tag-purple">clearance</span>
-          <span class="card-tag tag-pink">dac</span>
+          <span class="venue-badge">SECON 2012</span>
+          <span class="card-tag tag-cyan">ota</span>
+          <span class="card-tag tag-purple">wsn</span>
+          <span class="card-tag tag-pink">flash</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">This paper addresses global placement when heterogeneous PCB components must respect clearance rules. From the title and venue metadata, it is clearly about manufacturable layout closure rather than abstract packing. That makes it especially relevant to IoT boards, where sensors, RF modules, connectors, and passives all carry different spacing and orientation constraints. I am inferring the exact optimizer details from the title because the abstract was not available in the sources I checked.</div>
+          <div class="summary-en">This paper targets extremely constrained wireless sensor nodes and proposes OTA updating without reboot and without extra flash reservation. That is a strong fit for your question because it exposes the operational limits that any automatic code-and-flash pipeline must handle on small MCUs. The main lesson is that update automation is dominated by memory layout, availability, and runtime continuity, not only by compiler support. In other words, the last mile of automated flashing is mostly systems engineering.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">这篇工作处理的是 heterogeneous PCB components 在 global placement 时必须遵守 clearance 规则的问题。仅从标题和 venue 来看，它关注的是可制造的 layout closure，而不是抽象意义上的 packing。对于 IoT 板尤其相关，因为传感器、RF 模块、连接器和被动器件都会带来不同的间距和朝向约束。由于我查到的来源里没有完整 abstract，这里的算法细节是根据标题做的推断。</div>
+          <div class="summary-zh">这篇论文面向极度受限的无线传感节点，提出了无需重启、也不依赖额外 Flash 空间的 OTA 更新方案。它与您的问题高度相关，因为它直接揭示了自动代码生成和自动烧录在小 MCU 上真正要面对的资源边界。论文传递出的核心信息是：更新自动化主要受内存布局、在线可用性和运行连续性支配，而不只是编译器或代码生成能力。换句话说，自动烧录的最后一公里，本质上是系统工程问题。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://doi.org/10.1109/dac63849.2025.11133056" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('clearance-constrained-pcb-global-placement-with-heterogeneous-components_2025','https://doi.org/10.1109/dac63849.2025.11133056','Clearance-Constrained PCB Global Placement with Heterogeneous Components')">📖 Read Paper</button>
+          <a href="https://dblp.org/rec/conf/secon/ShafiAH12" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('no-reboot-and-zero-flash-over-the-air-programming-for-wireless-sensor-networks_2012','https://dblp.org/rec/conf/secon/ShafiAH12','No-reboot and zero-flash over-the-air programming for Wireless Sensor Networks')">📖 Read Paper</button>
         </div>
       </div>
 
       <!-- ── Paper 9 ── -->
-      <div class="paper-card is-confirmed" data-id="a-pad-focused-pcb-routing-algorithm-using-polygon-based-dynamic-partitioning_2024" data-url="https://doi.org/10.1109/access.2024.3386921" data-pdf-url="" data-progress="0">
+      <div class="paper-card is-arxiv" data-id="autopatch-automated-generation-of-hotpatches-for-real-time-embedded-devices_2024" data-url="https://arxiv.org/abs/2408.15372" data-pdf-url="https://arxiv.org/pdf/2408.15372" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://doi.org/10.1109/access.2024.3386921" target="_blank">A Pad-Focused PCB Routing Algorithm Using Polygon-Based Dynamic Partitioning</a></div>
-          <span class="citations cite-low">★ 1</span>
-        </div>
-        <div class="card-authors">Youbiao He et al.</div>
-        <div class="card-meta">
-          <span class="venue-badge">IEEE Access 2024</span>
-          <span class="card-tag tag-cyan">routing</span>
-          <span class="card-tag tag-purple">pad-escape</span>
-          <span class="card-tag tag-pink">geometry</span>
-        </div>
-        <div class="summary-block">
-          <div class="summary-label">EN</div>
-          <div class="summary-en">This routing paper focuses on pad-level partitioning, which is useful when traces must escape dense component fields without violating local constraints. The polygon-based partitioning suggests a geometry-aware strategy rather than a pure graph search. For IoT sensor boards, pad access and short interconnects often dominate the layout quality of the first routing pass. I am inferring some of the implementation specifics from the title and publication record because the full abstract was not available in the sources I checked.</div>
-          <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">这篇 routing 工作聚焦在 pad-level partitioning，对于需要从高密度器件区逃逸走线且不能破坏局部约束的场景很有用。polygon-based partitioning 暗示它采用了几何感知策略，而不是纯图搜索。对 IoT 传感器板来说，pad 进线和短互连常常决定首轮布线质量。由于我查到的来源里没有完整 abstract，具体实现细节是根据标题和出版记录做的推断。</div>
-        </div>
-        <div class="progress-row">
-          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
-          <span class="progress-label"></span>
-        </div>
-        <div class="card-actions">
-          <a href="https://doi.org/10.1109/access.2024.3386921" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('a-pad-focused-pcb-routing-algorithm-using-polygon-based-dynamic-partitioning_2024','https://doi.org/10.1109/access.2024.3386921','A Pad-Focused PCB Routing Algorithm Using Polygon-Based Dynamic Partitioning')">📖 Read Paper</button>
-        </div>
-      </div>
-
-      <!-- ── Paper 10 ── -->
-      <div class="paper-card is-confirmed" data-id="multi-agent-based-minimal-layer-via-routing-algorithm-for-pcb-design_2025" data-url="https://doi.org/10.1016/j.vlsi.2025.102533" data-pdf-url="" data-progress="0">
-        <div class="card-header">
-          <div class="card-title"><a href="https://doi.org/10.1016/j.vlsi.2025.102533" target="_blank">Multi-agent based minimal-layer via routing algorithm for PCB design</a></div>
+          <div class="card-title"><a href="https://arxiv.org/abs/2408.15372" target="_blank">AutoPatch: Automated Generation of Hotpatches for Real-Time Embedded Devices</a></div>
           <span class="citations cite-none">★ 0</span>
         </div>
-        <div class="card-authors">Jialu Cao et al.</div>
+        <div class="card-authors">Mohsen Salehi et al.</div>
         <div class="card-meta">
-          <span class="venue-badge">Integration 2025</span>
-          <span class="card-tag tag-cyan">routing</span>
-          <span class="card-tag tag-purple">via-minimization</span>
-          <span class="card-tag tag-pink">multi-agent</span>
+          <span class="venue-badge arxiv">arXiv 2024</span>
+          <span class="card-tag tag-cyan">hotpatching</span>
+          <span class="card-tag tag-purple">automation</span>
+          <span class="card-tag tag-pink">embedded</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">This paper appears to use a multi-agent strategy to reduce the number of layers and vias needed for PCB routing. That is directly relevant to low-cost IoT sensor boards, where every extra layer raises fabrication cost and every via complicates return paths and manufacturing. The title suggests a search-based optimizer rather than a fixed heuristic, which is a good fit for layout spaces with many interacting constraints. I am inferring the internal mechanics from the title because a full abstract was not available in the sources I checked.</div>
+          <div class="summary-en">AutoPatch pushes further toward automation by generating hotpatches for real-time embedded devices instead of requiring manual intervention for every fix. It is relevant because it narrows the gap between automatic code generation and automatic post-deployment maintenance. For heterogeneous MCU fleets, the difficult part is not just generating an initial firmware image, but generating safe deltas that respect timing and state continuity. This paper is one of the clearest signals that the firmware automation stack is moving from compile-time assistance toward runtime lifecycle automation.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">这篇工作看起来是用 multi-agent 策略来减少 PCB routing 所需的层数和 via 数量。它对低成本 IoT 传感器板非常相关，因为每增加一层都会抬高制板成本，而每个 via 都会增加回流路径和制造复杂度。标题暗示它更像是一个搜索式优化器，而不是固定启发式规则，这非常适合存在大量耦合约束的布局空间。由于我查到的来源里没有完整 abstract，内部机制是根据标题做的推断。</div>
+          <div class="summary-zh">AutoPatch 更进一步，它尝试自动为实时嵌入式设备生成热补丁，而不是每次都依赖工程师手工修复。它的重要性在于把自动化从“初始代码生成”推进到了“部署后维护”阶段。对于异构 MCU 设备群来说，难点不仅在于生成首版固件，还在于如何生成既安全又不破坏时序和状态连续性的增量补丁。它是一个很明显的信号：固件自动化正在从编译期辅助走向运行期生命周期管理。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://doi.org/10.1016/j.vlsi.2025.102533" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('multi-agent-based-minimal-layer-via-routing-algorithm-for-pcb-design_2025','https://doi.org/10.1016/j.vlsi.2025.102533','Multi-agent based minimal-layer via routing algorithm for PCB design')">📖 Read Paper</button>
-        </div>
-      </div>
-
-      <!-- ── Paper 11 ── -->
-      <div class="paper-card is-arxiv" data-id="eeschematic-multimodal-llm-based-ai-agent-for-schematic-generation-of-analog-circuit_2025" data-url="https://arxiv.org/abs/2510.17002" data-pdf-url="https://arxiv.org/pdf/2510.17002.pdf" data-progress="0">
-        <div class="card-header">
-          <div class="card-title"><a href="https://arxiv.org/abs/2510.17002" target="_blank">EEschematic: Multimodal-LLM Based AI Agent for Schematic Generation of Analog Circuit</a></div>
-          <span class="citations cite-none">★ 0</span>
-        </div>
-        <div class="card-authors">Chang Liu et al.</div>
-        <div class="card-meta">
-          <span class="venue-badge arxiv">CoRR 2025</span>
-          <span class="card-tag tag-cyan">analog-schematic</span>
-          <span class="card-tag tag-purple">multimodal-llm</span>
-          <span class="card-tag tag-pink">arxiv</span>
-        </div>
-        <div class="summary-block">
-          <div class="summary-label">EN</div>
-          <div class="summary-en">EEschematic converts SPICE netlists into human-editable schematic diagrams with a multimodal LLM agent. It uses a small set of analog substructure examples for few-shot placement and a Visual Chain-of-Thought loop to refine placement and wiring until the drawing becomes clearer and more symmetric. The evaluated circuits are classic analog building blocks such as an inverter, 5T-OTA, and telescopic cascode amplifier. It is not PCB-specific, but it is relevant because sensor boards often include analog front ends that need the same schematic-generation discipline.</div>
-          <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">EEschematic 把 SPICE netlist 转成可人工编辑的 schematic diagram，并且用的是 multimodal LLM agent。它用少量 analog substructure 示例做 few-shot placement，再通过 Visual Chain-of-Thought 循环不断修正器件摆放和连线，让最终图更清晰、更对称。评估对象是 inverter、5T-OTA、telescopic cascode amplifier 这类经典模拟电路。它不是 PCB 专属工作，但对传感器板里的模拟前端很相关，因为这类模块同样需要稳定的原理图生成能力。</div>
-        </div>
-        <div class="progress-row">
-          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
-          <span class="progress-label"></span>
-        </div>
-        <div class="card-actions">
-          <a href="https://arxiv.org/abs/2510.17002" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('eeschematic-multimodal-llm-based-ai-agent-for-schematic-generation-of-analog-circuit_2025','https://arxiv.org/abs/2510.17002','EEschematic: Multimodal-LLM Based AI Agent for Schematic Generation of Analog Circuit')">📖 Read Paper</button>
+          <a href="https://arxiv.org/abs/2408.15372" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('autopatch-automated-generation-of-hotpatches-for-real-time-embedded-devices_2024','https://arxiv.org/abs/2408.15372','AutoPatch: Automated Generation of Hotpatches for Real-Time Embedded Devices')">📖 Read Paper</button>
         </div>
       </div>
     </div>
@@ -594,7 +536,7 @@ async function openEngineeringView() {
       await fetch(`${API}/api/generate-engineering`, { method: 'POST' });
     } catch {}
   }
-  location.href = 'pcb-hardware-automation-iot-sensor-boards-engineering.html';
+  location.href = '/mcu-esp32-stm32-nrf-engineering.html';
 }
 
 async function checkServer() {

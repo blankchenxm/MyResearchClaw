@@ -17,9 +17,9 @@ Use the `skills/` tree as the active Codex layout.
 
 ## Working Model
 
-- `conference-scout` updates `output/papers.json` and regenerates `output/kanban.html`.
-- `paper-reader` writes `output/notes/{paper_id}.md`, updates paper status, and regenerates the kanban.
-- `engineering-scout` writes `output/engineering.html` for implementation-oriented results on the current topic.
+- `conference-scout` updates `output/papers.json`, regenerates `output/kanban.html`, and may generate topic-specific paper pages such as `output/{topic_slug}-papers.html`.
+- `paper-reader` writes `output/notes/{topic_slug}/{paper_id}.md`, updates paper status, and regenerates the kanban.
+- `engineering-scout` writes implementation-oriented results and may generate topic-specific engineering pages such as `output/{topic_slug}-engineering.html`.
 - For broad topic investigation, run `conference-scout` and `engineering-scout` together unless the user explicitly narrows scope.
 - Preserve existing paper state such as `status`, `progress`, and `note_path` unless the task explicitly changes them.
 
@@ -40,13 +40,14 @@ For individual paper reads, arXiv, DOI landing pages, ACM DL, and Semantic Schol
 
 ## Output Conventions
 
-- Keep notes as Markdown under `output/notes/`.
-- Keep the dashboard as a single generated file: `output/kanban.html`.
-- Keep engineering output as a single generated file: `output/engineering.html`.
+- Keep notes as Markdown under `output/notes/{topic_slug}/`.
+- Keep `output/kanban.html` as the default entry page. When multiple topics exist, it may act as a topic navigator instead of a single-topic paper board.
+- Keep topic-specific paper pages under `output/{topic_slug}-papers.html`.
+- Keep topic-specific engineering pages under `output/{topic_slug}-engineering.html`.
 - Deduplicate papers primarily by URL and secondarily by stable identifiers such as arXiv ID.
 
 ## Runtime
 
-- `serve.py` is the local OpenAI-backed runtime for paper reading.
+- `serve.py` is the local Codex CLI-backed runtime for paper reading.
 - It reads `skills/paper-reader/SKILL.md` as the active instruction source.
-- Configure `OPENAI_API_KEY` before starting the server.
+- Ensure the local `codex` CLI is available before starting the server.

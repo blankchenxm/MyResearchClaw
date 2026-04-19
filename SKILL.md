@@ -29,7 +29,8 @@ MyResearchClaw provides three project skills:
 
 - Database: `output/papers.json`
 - Dashboard: `output/kanban.html`
-- Notes: `output/notes/`
-- Engineering page: `output/engineering.html`
+- Topic paper page: `output/{topic_slug}-papers.html`
+- Notes: `output/notes/{topic_slug}/`
+- Topic engineering page: `output/{topic_slug}-engineering.html`
 
 The repository keeps research state on disk, so preserve existing records unless the user explicitly asks to reset them.

@@ -88,7 +88,7 @@ Explain the arithmetic explicitly.
 Write to:
 
 ```text
-output/notes/{paper_id}.md
+output/notes/{topic_slug}/{paper_id}.md
 ```
 
 Use Markdown that stays readable in git and Obsidian. Prefer real numbers, concrete claims, and honest limitations.
@@ -159,6 +159,7 @@ Best result: {BEST_RESULT}
 Insight: {TOP_INSIGHT}
 
 Notes: output/notes/{paper_id}.md
+If the paper belongs to a topic bucket, use the topic-scoped note path instead.
 Dashboard: output/kanban.html
 ```
 

@@ -271,31 +271,215 @@ def render_paper_card(idx, paper):
       </div>"""
 
 
+def render_dashboard_html(active_topic, active_year_range, active_venues, engineering_link, papers):
+    template = load_kanban_template()
+    all_papers = "\n".join(
+        render_paper_card(idx, paper) for idx, paper in enumerate(papers, start=1)
+    )
+    return (
+        template.replace("{{LAST_UPDATED}}", escape(today_iso()))
+        .replace("{{ACTIVE_TOPIC}}", escape(active_topic))
+        .replace("{{ACTIVE_YEAR_RANGE}}", escape(active_year_range))
+        .replace("{{ACTIVE_VENUES}}", escape(active_venues))
+        .replace("{{ENGINEERING_LINK}}", engineering_link)
+        .replace("{{ALL_PAPERS}}", all_papers)
+    )
+
+
+def render_topic_index_html(searches, papers):
+    topic_rows = []
+    seen = set()
+    for search in reversed(searches):
+        topic = search.get("topic") or "Research Topic"
+        if topic in seen:
+            continue
+        seen.add(topic)
+        slug = slugify_topic(topic)
+        paper_count = sum(1 for paper in papers if paper.get("topic") == topic)
+        topic_rows.append(
+            {
+                "topic": topic,
+                "slug": slug,
+                "paper_count": paper_count,
+                "year_range": search.get("year_range") or "Unknown Range",
+                "venues": search.get("venues") or "Unknown Venues",
+                "date": search.get("date") or today_iso(),
+            }
+        )
+
+    cards_html = "\n".join(
+        f"""
+        <article class="topic-card">
+          <div class="topic-top">
+            <div>
+              <div class="topic-eyebrow">Research Theme</div>
+              <h2>{escape(row["topic"])}</h2>
+            </div>
+            <div class="topic-count">{row["paper_count"]} papers</div>
+          </div>
+          <div class="topic-meta">
+            <span>{escape(row["year_range"])}</span>
+            <span>{escape(row["date"])}</span>
+          </div>
+          <p class="topic-venues">{escape(row["venues"])}</p>
+          <div class="topic-actions">
+            <a href="/{row["slug"]}-papers.html">Open Papers →</a>
+            <a href="/{row["slug"]}-engineering.html">Engineering View →</a>
+          </div>
+        </article>"""
+        for row in topic_rows
+    )
+
+    return f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyResearchClaw</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+* {{ box-sizing:border-box; margin:0; padding:0; }}
+:root {{
+  --bg:#0c1118; --panel:#151c27; --panel-soft:#101722; --text:#edf3ff; --dim:#93a6c3;
+  --muted:#6c7a90; --line:rgba(255,255,255,0.08); --blue:#69a6ff; --cyan:#38d9c7; --amber:#ffd66e;
+}}
+body {{
+  font-family:'Noto Sans SC',sans-serif; min-height:100vh; color:var(--text);
+  background:radial-gradient(circle at top right, rgba(105,166,255,0.14), transparent 24%),
+             radial-gradient(circle at top left, rgba(56,217,199,0.08), transparent 20%),
+             var(--bg);
+}}
+body.light {{
+  --bg:#f4f7fb; --panel:#ffffff; --panel-soft:#edf2f8; --text:#18202c; --dim:#506176;
+  --muted:#68778b; --line:rgba(15,23,42,0.10); --blue:#2364d2; --cyan:#0f9f90; --amber:#b98911;
+}}
+.wrap {{ max-width:1320px; margin:0 auto; padding:28px 28px 80px; }}
+.theme-toggle {{
+  position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font-size:16px;
+}}
+.hero {{
+  border:1px solid var(--line); border-radius:28px; padding:30px 32px;
+  background:linear-gradient(145deg, rgba(105,166,255,0.14), rgba(56,217,199,0.04));
+  margin-bottom:24px;
+}}
+.hero-eyebrow {{ font:600 12px 'JetBrains Mono', monospace; color:var(--amber); text-transform:uppercase; letter-spacing:.14em; margin-bottom:12px; }}
+.hero h1 {{ font-size:48px; line-height:1.04; font-weight:900; max-width:980px; }}
+.hero p {{ margin-top:14px; color:var(--dim); font-size:15px; line-height:1.85; max-width:900px; }}
+.topics {{ display:grid; gap:18px; }}
+.topic-card {{ background:var(--panel); border:1px solid var(--line); border-radius:22px; padding:22px 24px; }}
+.topic-top {{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; }}
+.topic-eyebrow {{ font:600 11px 'JetBrains Mono', monospace; color:var(--cyan); text-transform:uppercase; letter-spacing:.12em; margin-bottom:8px; }}
+.topic-card h2 {{ font-size:26px; line-height:1.28; font-weight:900; }}
+.topic-count {{ white-space:nowrap; border:1px solid var(--line); border-radius:999px; padding:6px 10px; font:600 11px 'JetBrains Mono', monospace; color:var(--blue); }}
+.topic-meta {{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; color:var(--muted); font:500 11px 'JetBrains Mono', monospace; }}
+.topic-venues {{ color:var(--dim); line-height:1.8; margin-bottom:16px; }}
+.topic-actions {{ display:flex; gap:10px; flex-wrap:wrap; }}
+.topic-actions a {{
+  display:inline-flex; align-items:center; gap:6px; text-decoration:none; border:1px solid var(--line);
+  border-radius:999px; padding:10px 14px; font-size:13px; color:var(--text); background:rgba(255,255,255,0.04);
+}}
+.topic-actions a:last-child {{ color:var(--cyan); border-color:rgba(56,217,199,0.18); background:rgba(56,217,199,0.08); }}
+@media (max-width: 720px) {{
+  .wrap {{ padding:16px 16px 60px; }}
+  .hero {{ padding:22px 20px; }}
+  .hero h1 {{ font-size:30px; }}
+  .topic-top {{ flex-direction:column; }}
+}}
+</style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-eyebrow">MyResearchClaw</div>
+      <h1>Topic Navigator</h1>
+      <p>当前仅保留两个主题。先从对应的 Papers 页面进入，再在页面顶部点击 Engineering View；后续精读笔记会按主题写入 <code>output/notes/&lt;topic-slug&gt;/</code>。</p>
+    </section>
+    <section class="topics">
+      {cards_html}
+    </section>
+  </div>
+<script>
+function applyTheme() {{
+  const light = localStorage.getItem('theme') === 'light';
+  document.body.classList.toggle('light', light);
+  document.querySelector('.theme-toggle').textContent = light ? '☀️' : '🌙';
+}}
+function toggleTheme() {{
+  const light = !document.body.classList.contains('light');
+  localStorage.setItem('theme', light ? 'light' : 'dark');
+  applyTheme();
+}}
+window.addEventListener('load', applyTheme);
+</script>
+</body>
+</html>"""
+
+
 def regenerate_kanban():
     data = load_papers()
-    template = load_kanban_template()
     papers = data.get("papers", [])
     searches = data.get("searches", [])
+    topics = [search.get("topic") for search in searches if search.get("topic")]
+    if len(set(topics)) > 1:
+        rendered = render_topic_index_html(searches, papers)
+        with open(KANBAN_HTML, "w", encoding="utf-8") as f:
+            f.write(rendered)
+        return
+
     latest_search = searches[-1] if searches else {}
     active_topic = latest_search.get("topic") or "Research Topic"
     active_year_range = latest_search.get("year_range") or "Unknown Range"
     active_venues = latest_search.get("venues") or "Unknown Venues"
     active_papers = [paper for paper in papers if paper.get("topic") == active_topic] or papers
-    all_papers = "\n".join(
-        render_paper_card(idx, paper) for idx, paper in enumerate(active_papers, start=1)
-    )
-
-    rendered = (
-        template.replace("{{LAST_UPDATED}}", escape(data.get("last_updated") or today_iso()))
-        .replace("{{ACTIVE_TOPIC}}", escape(active_topic))
-        .replace("{{ACTIVE_YEAR_RANGE}}", escape(active_year_range))
-        .replace("{{ACTIVE_VENUES}}", escape(active_venues))
-        .replace("{{ENGINEERING_LINK}}", "/engineering.html")
-        .replace("{{ALL_PAPERS}}", all_papers)
+    rendered = render_dashboard_html(
+        active_topic=active_topic,
+        active_year_range=active_year_range,
+        active_venues=active_venues,
+        engineering_link="/engineering.html",
+        papers=active_papers,
     )
 
     with open(KANBAN_HTML, "w", encoding="utf-8") as f:
         f.write(rendered)
+
+
+def slugify_topic(topic):
+    topic = topic.lower()
+    topic = re.sub(r"[^a-z0-9]+", "-", topic)
+    topic = re.sub(r"-+", "-", topic).strip("-")
+    return topic or "topic"
+
+
+def paper_topic_slug(paper):
+    return slugify_topic(paper.get("topic") or "unclassified")
+
+
+def find_paper_by_id(paper_id):
+    data = load_papers()
+    for paper in data.get("papers", []):
+        if paper.get("id") == paper_id:
+            return paper
+    return None
+
+
+def write_topic_dashboard(topic, year_range, venues):
+    data = load_papers()
+    topic_papers = [paper for paper in data.get("papers", []) if paper.get("topic") == topic]
+    slug = slugify_topic(topic)
+    papers_name = f"{slug}-papers.html"
+    engineering_name = f"{slug}-engineering.html"
+    papers_html = render_dashboard_html(
+        active_topic=topic,
+        active_year_range=year_range,
+        active_venues=venues,
+        engineering_link=f"/{engineering_name}",
+        papers=topic_papers,
+    )
+    with open(os.path.join(OUTPUT_DIR, papers_name), "w", encoding="utf-8") as f:
+        f.write(papers_html)
+    return papers_name, engineering_name
 
 
 def ensure_engineering_page():
@@ -511,8 +695,15 @@ def maybe_start_engineering_generation(force=False):
     return True
 
 
+def paper_note_relpath_for_paper(paper):
+    return f"output/notes/{paper_topic_slug(paper)}/{paper['id']}.md"
+
+
 def paper_note_relpath(paper_id):
-    return f"output/notes/{paper_id}.md"
+    paper = find_paper_by_id(paper_id)
+    if not paper:
+        return f"output/notes/unclassified/{paper_id}.md"
+    return paper_note_relpath_for_paper(paper)
 
 
 def paper_log_abspath(paper_id):
@@ -554,7 +745,10 @@ def restore_paper_state(paper_id, state):
 
 
 def finalize_read_result(paper_id):
-    note_relpath = paper_note_relpath(paper_id)
+    paper = find_paper_by_id(paper_id)
+    if not paper:
+        return False
+    note_relpath = paper_note_relpath_for_paper(paper)
     note_abspath = os.path.join(ROOT, note_relpath)
     if not os.path.exists(note_abspath):
         return False
@@ -578,6 +772,7 @@ def finalize_read_result(paper_id):
 
 
 def build_codex_prompt(url, paper_id, title):
+    note_relpath = paper_note_relpath(paper_id)
     return f"""Use the project skill `paper-reader` to deeply read this paper and update repository state.
 
 Paper URL: {url}
@@ -585,7 +780,7 @@ Paper ID: {paper_id}
 Title: {title}
 
 Required outcomes:
-- Write the DNL note to output/notes/{paper_id}.md
+- Write the DNL note to {note_relpath}
 - Update output/papers.json for this paper
 - Regenerate output/kanban.html
 - Preserve existing paper state unless paper-reader explicitly changes it
@@ -820,7 +1015,9 @@ class Handler(BaseHTTPRequestHandler):
 
         elif path.startswith("/api/notes/"):
             paper_id = path[len("/api/notes/"):]
-            note_file = os.path.join(NOTES_DIR, f"{paper_id}.md")
+            paper = find_paper_by_id(paper_id)
+            note_relpath = paper.get("note_path") if paper else None
+            note_file = os.path.join(ROOT, note_relpath) if note_relpath else ""
             if os.path.exists(note_file):
                 body = open(note_file, "rb").read()
                 self.send_response(200)
