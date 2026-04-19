@@ -3,85 +3,873 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PCB硬件自动化流程（面向 IoT 传感器板）— Papers</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦀</text></svg>">
+<title>MyResearchClaw — PCB硬件自动化流程(面向 IoT传感器板)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;background:#0d1117;color:#e6edf3;line-height:1.7}.wrap{max-width:1100px;margin:0 auto;padding:28px 20px 60px}.hero{padding:26px 28px;border:1px solid #263041;border-radius:20px;background:linear-gradient(135deg,#151b24,#0f141c);margin-bottom:22px}.hero h1{font-size:34px;line-height:1.15;margin-bottom:10px}.hero p{color:#9fb0c7}.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.badge{padding:7px 12px;border:1px solid #2b3648;border-radius:999px;background:#111722;color:#9fb0c7;font-size:12px}.section{margin-top:24px}.section h2{font-size:20px;margin-bottom:12px}.card{border:1px solid #273244;border-radius:16px;padding:18px 18px 16px;background:#121923;margin-bottom:14px}.card h3{font-size:18px;line-height:1.35;margin-bottom:8px}.card a{color:#7cc0ff;text-decoration:none}.meta2{font-size:13px;color:#98a9c0;margin-bottom:10px}.summary{color:#d9e4f1}.summary p{margin:8px 0}.list{padding-left:20px;color:#d9e4f1}.note{padding:16px 18px;border-left:4px solid #f0b74a;background:#18140b;border-radius:10px;color:#f5deb0}.sources a{display:block;margin:6px 0}
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#0c1118; --bg-card:#151c27; --bg-soft:#0f1520; --bg-header:#101722; --accent:#69a6ff;
+  --accent2:#38d9c7; --accent3:#ff8d6b; --accent4:#ffd66e; --text:#edf3ff; --text-dim:#94a6c2;
+  --text-muted:#687892; --border:rgba(255,255,255,0.08); --border-hover:rgba(105,166,255,0.28);
+}
+html, body { background:var(--bg); color:var(--text); min-height:100vh; font-family:'Noto Sans SC',sans-serif; }
+body {
+  background:
+    radial-gradient(circle at top right, rgba(105,166,255,0.14), transparent 24%),
+    radial-gradient(circle at top left, rgba(56,217,199,0.08), transparent 20%),
+    var(--bg);
+}
+body.light {
+  --bg:#f4f7fb; --bg-card:#ffffff; --bg-soft:#eef3f8; --bg-header:#edf2f8; --accent:#2364d2;
+  --accent2:#0f9f90; --accent3:#d66033; --accent4:#b98911; --text:#18202c; --text-dim:#425469;
+  --text-muted:#66768c; --border:rgba(15,23,42,0.10); --border-hover:rgba(35,100,210,0.22);
+}
+::-webkit-scrollbar { width:8px; height:8px; }
+::-webkit-scrollbar-thumb { background:rgba(105,166,255,0.35); border-radius:99px; }
+.page-wrap { max-width:1440px; margin:0 auto; padding:24px 28px 80px; }
+.theme-toggle {
+  position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:16px;
+}
+.server-banner {
+  background:rgba(255,141,107,0.08); border:1px solid rgba(255,141,107,0.16);
+  padding:10px 16px; border-radius:14px; font:12px 'JetBrains Mono', monospace; color:var(--accent3);
+  margin-bottom:18px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+}
+.server-banner code {
+  background:rgba(255,141,107,0.1); border:1px solid rgba(255,141,107,0.18);
+  padding:2px 8px; border-radius:8px;
+}
+.hero {
+  border:1px solid var(--border); border-radius:28px; padding:30px 32px;
+  background:linear-gradient(145deg, rgba(105,166,255,0.14), rgba(56,217,199,0.04));
+  margin-bottom:24px;
+}
+.hero-top { display:flex; justify-content:space-between; gap:16px; align-items:start; }
+.hero-eyebrow { font:600 12px 'JetBrains Mono', monospace; color:var(--accent4); text-transform:uppercase; letter-spacing:.14em; margin-bottom:12px; }
+.hero-title { font-size:48px; line-height:1.04; font-weight:900; max-width:980px; }
+.hero-subtitle { margin-top:14px; color:var(--text-muted); font:500 12px 'JetBrains Mono', monospace; }
+.hero-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.hero-btn, .btn {
+  display:inline-flex; align-items:center; gap:6px; cursor:pointer; text-decoration:none;
+  border:1px solid var(--border); border-radius:999px; padding:10px 14px; font-size:13px;
+  color:var(--text); background:rgba(255,255,255,0.04); transition:all .15s;
+}
+.hero-btn:hover, .btn:hover { border-color:var(--border-hover); transform:translateY(-1px); }
+.hero-btn.engineering { background:rgba(56,217,199,0.08); color:var(--accent2); border-color:rgba(56,217,199,0.18); }
+.papers-grid { display:grid; grid-template-columns:1fr; gap:18px; }
+.paper-card {
+  background:var(--bg-card); border:1px solid var(--border); border-radius:22px; padding:22px 24px;
+  transition:border-color .15s, transform .15s; display:flex; flex-direction:column;
+}
+.paper-card:hover { border-color:var(--border-hover); transform:translateY(-1px); }
+.paper-card.is-arxiv { border-left:4px solid #d69e2e; }
+.paper-card.is-confirmed { border-left:4px solid var(--accent); }
+.paper-card.is-reading { border-left:4px solid var(--accent4); }
+.paper-card.is-done { border-left:4px solid var(--accent2); }
+.card-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px; }
+.card-title { font-size:20px; font-weight:800; line-height:1.42; flex:1; }
+.card-title a { color:inherit; text-decoration:none; }
+.card-title a:hover { color:var(--accent); }
+.citations { font:700 12px 'JetBrains Mono', monospace; padding:5px 10px; border-radius:999px; white-space:nowrap; }
+.cite-high { color:var(--accent2); background:rgba(56,217,199,0.1); border:1px solid rgba(56,217,199,0.18); }
+.cite-mid { color:#c0b6ff; background:rgba(162,155,254,0.12); border:1px solid rgba(162,155,254,0.2); }
+.cite-low, .cite-none { color:var(--text-muted); background:rgba(255,255,255,0.04); border:1px solid var(--border); }
+.card-authors { font-size:13px; color:var(--text-muted); margin-bottom:12px; }
+.card-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.venue-badge { font-size:11px; padding:4px 10px; border-radius:999px; font-weight:700; color:var(--accent); border:1px solid rgba(105,166,255,0.24); background:rgba(105,166,255,0.1); }
+.venue-badge.arxiv { color:#f7c978; border-color:rgba(247,201,120,0.24); background:rgba(247,201,120,0.1); }
+.card-tag { font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid; font-weight:500; }
+.tag-cyan { color:var(--accent2); border-color:rgba(56,217,199,0.18); background:rgba(56,217,199,0.06); }
+.tag-purple { color:#c0b6ff; border-color:rgba(162,155,254,0.18); background:rgba(162,155,254,0.06); }
+.tag-pink { color:#ff9ac2; border-color:rgba(255,154,194,0.18); background:rgba(255,154,194,0.06); }
+.summary-block { border-top:1px solid var(--border); padding-top:14px; margin-bottom:14px; }
+.summary-label { font:600 10px 'JetBrains Mono', monospace; color:var(--text-muted); margin-bottom:6px; letter-spacing:.08em; text-transform:uppercase; }
+.summary-en, .summary-zh { font-size:14px; line-height:1.82; }
+.summary-en { color:var(--text-dim); margin-bottom:12px; }
+.summary-zh { color:#c8d5e8; border-left:3px solid rgba(105,166,255,0.28); padding-left:12px; }
+.progress-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.progress-track { flex:1; height:6px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,0.06); }
+.progress-fill { height:100%; width:0%; background:linear-gradient(90deg, var(--accent), #94b8ff); transition:width 1.1s ease; }
+.progress-fill.active { background:linear-gradient(90deg, var(--accent4), var(--accent)); animation:progPulse 1.8s ease-in-out infinite; }
+.progress-fill.done { background:var(--accent2); animation:none; }
+.progress-label { font:500 11px 'JetBrains Mono', monospace; color:var(--text-muted); min-width:115px; text-align:right; }
+.progress-label.done { color:var(--accent2); }
+@keyframes progPulse { 0%,100% { opacity:1; } 50% { opacity:.55; } }
+.card-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.btn-view { color:var(--accent); background:rgba(105,166,255,0.08); border-color:rgba(105,166,255,0.18); }
+.btn-read { color:#c0b6ff; background:rgba(162,155,254,0.08); border-color:rgba(162,155,254,0.18); }
+.btn-read.reading { color:var(--accent4); background:rgba(255,214,110,0.08); border-color:rgba(255,214,110,0.18); }
+.btn-done, .btn-notes { color:var(--accent2); background:rgba(56,217,199,0.08); border-color:rgba(56,217,199,0.18); }
+.notes-shell { display:grid; grid-template-columns:minmax(0, 0.98fr) minmax(380px, 0.92fr); gap:18px; align-items:start; }
+.notes-pane, .pdf-pane {
+  background:var(--bg-card); border:1px solid var(--border); border-radius:22px; min-height:72vh;
+}
+.notes-pane { padding:24px 26px 36px; }
+.notes-topbar {
+  display:flex; justify-content:space-between; align-items:flex-start; gap:16px;
+  padding-bottom:18px; margin-bottom:18px; border-bottom:1px solid var(--border);
+}
+.notes-title-wrap { display:flex; flex-direction:column; gap:6px; }
+.notes-kicker { font:600 11px 'JetBrains Mono', monospace; color:var(--accent4); text-transform:uppercase; letter-spacing:.12em; }
+.notes-title { font-size:22px; line-height:1.35; font-weight:800; }
+.notes-subtitle { color:var(--text-muted); font-size:13px; }
+.notes-content { font-size:15px; line-height:1.9; color:var(--text-dim); }
+.notes-content h1 { font-size:28px; font-weight:900; margin:28px 0 16px; color:var(--text); }
+.notes-content h2 { font-size:20px; font-weight:800; color:var(--accent); margin:26px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+.notes-content h3 { font-size:16px; font-weight:800; color:#bfd1f7; margin:18px 0 8px; }
+.notes-content h4 { font-size:14px; font-weight:700; color:var(--text); margin:14px 0 6px; }
+.notes-content p { margin:12px 0; }
+.notes-content strong { color:var(--text); }
+.notes-content code { background:rgba(255,255,255,0.06); border:1px solid var(--border); padding:2px 6px; border-radius:6px; font-family:'JetBrains Mono',monospace; font-size:13px; }
+.notes-content pre { background:var(--bg-soft); border:1px solid var(--border); border-radius:14px; padding:16px; overflow:auto; margin:16px 0; }
+.notes-content pre code { background:none; border:none; padding:0; }
+.notes-content table { width:100%; border-collapse:collapse; margin:18px 0; font-size:14px; }
+.notes-content th, .notes-content td { border:1px solid var(--border); padding:10px 12px; text-align:left; }
+.notes-content th { background:rgba(105,166,255,0.08); color:var(--accent); }
+.notes-content blockquote { border-left:3px solid var(--accent); background:rgba(105,166,255,0.05); color:var(--text-muted); margin:16px 0; padding:10px 14px; border-radius:0 10px 10px 0; }
+.notes-content ul, .notes-content ol { padding-left:24px; margin:12px 0; }
+.pdf-pane { display:flex; flex-direction:column; overflow:hidden; }
+.pdf-topbar {
+  padding:18px 18px 14px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:12px;
+}
+.pdf-title { font-size:15px; font-weight:800; }
+.pdf-links { display:flex; gap:8px; flex-wrap:wrap; }
+.pdf-body { display:grid; grid-template-columns:120px minmax(0, 1fr); min-height:0; flex:1; }
+.pdf-thumbs {
+  border-right:1px solid var(--border); overflow:auto; padding:12px; display:flex; flex-direction:column; gap:10px;
+  background:rgba(255,255,255,0.02); cursor:grab; user-select:none;
+}
+.pdf-thumbs.dragging { cursor:grabbing; }
+.thumb-card { border:1px solid var(--border); border-radius:12px; padding:8px; background:var(--bg-soft); }
+.thumb-card.active { border-color:rgba(105,166,255,0.42); box-shadow:0 0 0 1px rgba(105,166,255,0.24) inset; }
+.thumb-card canvas { width:100%; display:block; border-radius:8px; background:#fff; }
+.thumb-label { font:500 11px 'JetBrains Mono', monospace; color:var(--text-muted); text-align:center; margin-top:6px; }
+.pdf-viewer { position:relative; min-height:70vh; background:#0a0f16; }
+.pdf-frame { width:100%; height:100%; min-height:70vh; border:0; background:#0a0f16; }
+.pdf-empty {
+  padding:24px; color:var(--text-dim); line-height:1.8; display:flex; align-items:center; justify-content:center; min-height:70vh;
+}
+.toast {
+  position:fixed; bottom:24px; right:24px; z-index:9999; max-width:520px; display:none;
+  border:1px solid rgba(162,155,254,0.35); border-radius:16px; background:#1b2230; padding:16px 18px; box-shadow:0 12px 42px rgba(0,0,0,0.38);
+}
+.toast.show { display:block; }
+.toast-title { font:600 11px 'JetBrains Mono', monospace; color:var(--text-muted); margin-bottom:8px; }
+.toast-cmd { font:500 13px 'JetBrains Mono', monospace; background:rgba(255,255,255,0.06); padding:10px 12px; border-radius:10px; color:#fff; word-break:break-word; }
+.kanban-footer {
+  margin-top:34px; padding-top:18px; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  font:500 11px 'JetBrains Mono', monospace; color:var(--text-muted);
+}
+@media (max-width: 1100px) {
+  .hero-title { font-size:38px; }
+  .notes-shell { grid-template-columns:1fr; }
+  .pdf-body { grid-template-columns:96px minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .page-wrap { padding:16px 16px 60px; }
+  .hero { padding:22px 20px; }
+  .hero-top { flex-direction:column; }
+  .hero-title { font-size:30px; }
+  .pdf-body { grid-template-columns:1fr; }
+  .pdf-thumbs { flex-direction:row; border-right:none; border-bottom:1px solid var(--border); overflow:auto hidden; }
+  .thumb-card { min-width:88px; }
+}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="page-wrap">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+  <div id="server-banner" class="server-banner" style="display:none">
+    本地自动精读服务未连接。启动 <code>python serve.py</code> 后可直接在页面中触发 `paper-reader`。
+  </div>
+
   <section class="hero">
-    <h1>PCB硬件自动化流程（面向 IoT 传感器板）— 论文调查</h1>
-    <p>按 conference-scout 流程整理。重点关注：是否已经存在从“功能需求/传感器需求”自动走到原理图、PCB 布局乃至制造文件的完整链路。</p>
-    <div class="meta">
-      <div class="badge">年份：2024–2026</div>
-      <div class="badge">方向：EDA / PCB Automation / LLM-assisted Hardware Design</div>
-      <div class="badge">结论：原理图自动化已明显推进，完整投产级 PCB 仍多为半自动</div>
+    <div class="hero-top">
+      <div>
+        <div class="hero-eyebrow">Research Theme</div>
+        <h1 class="hero-title">PCB硬件自动化流程(面向 IoT传感器板)</h1>
+        <div class="hero-subtitle">Updated 2026-04-19</div>
+      </div>
+      <div class="hero-actions">
+        <button class="hero-btn engineering" onclick="openEngineeringView()">Engineering View →</button>
+      </div>
     </div>
   </section>
 
-  <section class="section">
-    <div class="note">
-      当前研究最成熟的是“需求到原理图”与“原理图到部分 PCB 结构”的自动化；真正稳定覆盖器件选型、引脚约束、布局布线、ERC/DRC、EMI、电源完整性并最终输出可直接投板文件的全自动闭环，仍然较少见。对 IoT 传感板来说，现实路径更像是“LLM 生成 + 规则校验 + 人工收尾”。
+  <div id="papers-view">
+    <div class="papers-grid">
+      
+      <!-- ── Paper 1 ── -->
+      <div class="paper-card is-arxiv" data-id="pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026" data-url="https://arxiv.org/abs/2602.00510" data-pdf-url="https://arxiv.org/pdf/2602.00510.pdf" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://arxiv.org/abs/2602.00510" target="_blank">PCBSchemaGen: Constraint-Guided Schematic Design via LLM for Printed Circuit Boards (PCB)</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-authors">Huanghaohe Zou et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge arxiv">CoRR 2026</span>
+          <span class="card-tag tag-cyan">pcb-schematic</span>
+          <span class="card-tag tag-purple">llm</span>
+          <span class="card-tag tag-pink">constraint-guided</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">PCBSchemaGen proposes a training-free PCB schematic design pipeline built from an LLM agent and constraint-guided synthesis. It adds a verification layer based on a real datasheet-derived knowledge graph and subgraph isomorphism so that pin roles and topological constraints are checked before a schematic is accepted. The paper evaluates 23 schematic tasks across digital, analog, and power domains, which makes it unusually close to a practical requirement-to-schematic generator. For this topic, it is the clearest bridge from a high-level board brief to a structured design artifact.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">PCBSchemaGen 提出了一条无需训练的 PCB 原理图设计流水线，由 LLM agent 和约束引导的综合模块组成。它额外加入了基于真实 datasheet 构建的知识图谱与子图同构校验，用来在接受原理图之前检查引脚角色和拓扑约束。论文在数字、模拟和电源三类任务上共评估了 23 个 PCB schematic 设计场景，因此非常接近真正的“需求到原理图”生成器。对这个主题来说，它是从高层板级需求落到结构化设计工件最直接的一篇。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://arxiv.org/abs/2602.00510" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026','https://arxiv.org/abs/2602.00510','PCBSchemaGen: Constraint-Guided Schematic Design via LLM for Printed Circuit Boards (PCB)')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 2 ── -->
+      <div class="paper-card is-arxiv" data-id="omnisch-a-multimodal-pcb-schematic-benchmark-for-structured-diagram-visual-reasoning_2026" data-url="https://arxiv.org/abs/2604.00270" data-pdf-url="https://arxiv.org/pdf/2604.00270.pdf" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://arxiv.org/abs/2604.00270" target="_blank">OmniSch: A Multimodal PCB Schematic Benchmark For Structured Diagram Visual Reasoning</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-authors">Taiting Lu et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge arxiv">CoRR 2026</span>
+          <span class="card-tag tag-cyan">benchmark</span>
+          <span class="card-tag tag-purple">pcb-schematic</span>
+          <span class="card-tag tag-pink">multimodal</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">OmniSch turns PCB schematic understanding into a benchmark problem for multimodal models and agentic search. The benchmark contains 1,854 real-world schematic diagrams and tests four capabilities: entity grounding, diagram-to-graph reasoning, geometric reasoning, and tool-augmented visual search. That framing matters because PCB automation breaks down quickly if a model cannot read an existing schematic and recover connectivity plus spatial constraints. For requirement-to-PCB generation, OmniSch is the missing evaluation layer between raw vision models and design automation.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">OmniSch 把 PCB 原理图理解问题抽象成一个面向多模态模型的基准任务。它包含 1,854 张真实原理图，并考察四类能力：实体定位、图结构推理、几何推理以及工具增强的视觉检索。这个设定很重要，因为如果模型连已有原理图里的连线和空间约束都读不准，PCB 自动化流程就会很快失效。对于需求到 PCB 的生成路径来说，OmniSch 提供了连接视觉模型与设计自动化之间缺失的评测层。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://arxiv.org/abs/2604.00270" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('omnisch-a-multimodal-pcb-schematic-benchmark-for-structured-diagram-visual-reasoning_2026','https://arxiv.org/abs/2604.00270','OmniSch: A Multimodal PCB Schematic Benchmark For Structured Diagram Visual Reasoning')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 3 ── -->
+      <div class="paper-card is-confirmed" data-id="pcbsmith-an-effective-schematic-generator-for-testing-pcb-design-tool-chain_2025" data-url="https://doi.org/10.1109/tr.2025.3529303" data-pdf-url="" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://doi.org/10.1109/tr.2025.3529303" target="_blank">PCBSmith: An Effective Schematic Generator for Testing PCB Design Tool Chain</a></div>
+          <span class="citations cite-low">★ 2</span>
+        </div>
+        <div class="card-authors">Xu Zhao et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge">IEEE Trans. Reliability 2025</span>
+          <span class="card-tag tag-cyan">schematic-generation</span>
+          <span class="card-tag tag-purple">eda</span>
+          <span class="card-tag tag-pink">tool-chain</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">PCBSmith is a schematic generator designed specifically to stress-test a PCB design tool chain. It mimics the steps a PCB designer would take by selecting components, assigning electrical parameters, and assembling a simulatable schematic rather than just emitting a symbolic sketch. That makes it useful as both a generator and a validation workload for downstream EDA automation. In this topic, it is the most explicit example of turning a board-level design intent into executable schematic artifacts.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">PCBSmith 是一个专门用来测试 PCB 设计工具链的原理图生成器。它模拟 PCB 设计者的步骤：先选器件，再设置电气参数，最后拼装出可以仿真的原理图，而不是只输出一个符号化草图。这样它既是生成器，也是下游 EDA 自动化链路的验证负载。放在这个主题下，它是把板级设计意图转成可执行 schematic 工件最明确的例子之一。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://doi.org/10.1109/tr.2025.3529303" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('pcbsmith-an-effective-schematic-generator-for-testing-pcb-design-tool-chain_2025','https://doi.org/10.1109/tr.2025.3529303','PCBSmith: An Effective Schematic Generator for Testing PCB Design Tool Chain')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 4 ── -->
+      <div class="paper-card is-confirmed" data-id="pcbagent-an-agent-based-framework-for-high-density-printed-circuit-board-placement_2025" data-url="https://doi.org/10.1145/3658617.3697736" data-pdf-url="" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://doi.org/10.1145/3658617.3697736" target="_blank">PCBAgent: An Agent-based Framework for High-Density Printed Circuit Board Placement</a></div>
+          <span class="citations cite-low">★ 3</span>
+        </div>
+        <div class="card-authors">Lin Chen et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge">ASP-DAC 2025</span>
+          <span class="card-tag tag-cyan">placement</span>
+          <span class="card-tag tag-purple">rl</span>
+          <span class="card-tag tag-pink">llm</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">PCBAgent addresses the placement side of PCB automation with an agent-based framework for high-density boards. The design combines an RL agent for layout inference and fine-tuning with an LLM agent for interactive optimization, which is a strong fit for constrained board layouts where human feedback still matters. The paper reports experiments on 17 industrial tasks and says it outperforms prior methods. For IoT sensor boards, this is the part of the pipeline that turns a schematic into something that can actually fit on the board outline.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">PCBAgent 直接针对 PCB 自动化中的 placement 阶段，提出了一个面向高密度板子的 agent 式框架。它把用于布局推断和微调的 RL agent 与用于交互优化的 LLM agent 结合起来，这非常适合那些约束很多、还需要人工反馈的板级设计。论文在 17 个工业任务上做了实验，并报告优于既有方法。对于 IoT 传感器板来说，这正是把原理图变成真正能塞进板框的关键步骤。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://doi.org/10.1145/3658617.3697736" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('pcbagent-an-agent-based-framework-for-high-density-printed-circuit-board-placement_2025','https://doi.org/10.1145/3658617.3697736','PCBAgent: An Agent-based Framework for High-Density Printed Circuit Board Placement')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 5 ── -->
+      <div class="paper-card is-confirmed" data-id="hieplace-efficient-hierarchical-pcb-placement_2025" data-url="https://doi.org/10.1109/tcad.2025.3580511" data-pdf-url="" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://doi.org/10.1109/tcad.2025.3580511" target="_blank">HiePlace: Efficient Hierarchical PCB Placement</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-authors">Shanyi Li et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge">IEEE TCAD 2025</span>
+          <span class="card-tag tag-cyan">placement</span>
+          <span class="card-tag tag-purple">mathematical-programming</span>
+          <span class="card-tag tag-pink">optimization</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">HiePlace is a mathematical-programming-based placement framework tailored to PCB constraints rather than chip placement. The paper introduces a dynamic-programming stage for core components and a relaxation method that shrinks the boolean search space, which together improve runtime and solution quality. The available abstract summary reports a 7.7x speedup and a 66% cost reduction. That combination is exactly what board designers need when a dense IoT sensor stack must satisfy clearance, alignment, and mechanical constraints at the same time.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">HiePlace 是一个面向 PCB 约束而不是芯片约束的数学规划式 placement 框架。它引入动态规划步骤来优先放置核心器件，并用 relaxation 方法缩小布尔变量搜索空间，从而同时提升运行时间和布局质量。现有摘要信息给出的结果是 7.7x 的加速和 66% 的成本下降。对于需要同时满足间距、对齐和机械约束的高密度 IoT 板来说，这正是非常实用的优化形态。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://doi.org/10.1109/tcad.2025.3580511" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('hieplace-efficient-hierarchical-pcb-placement_2025','https://doi.org/10.1109/tcad.2025.3580511','HiePlace: Efficient Hierarchical PCB Placement')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 6 ── -->
+      <div class="paper-card is-confirmed" data-id="pcbroutenet-dynamic-quadrilateral-flow-dataset-and-benchmarks-for-machine-learning-pcb-routing_2025" data-url="https://doi.org/10.1109/tvlsi.2025.3600764" data-pdf-url="" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://doi.org/10.1109/tvlsi.2025.3600764" target="_blank">PCBRouteNet: Dynamic Quadrilateral-Flow Dataset and Benchmarks for Machine-Learning PCB Routing</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-authors">Zhihao Ren et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge">IEEE TVLSI 2025</span>
+          <span class="card-tag tag-cyan">routing</span>
+          <span class="card-tag tag-purple">dataset</span>
+          <span class="card-tag tag-pink">benchmark</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">PCBRouteNet focuses on routing, but its main contribution is the dataset and benchmark setup that make ML routing work practical. It converts PCB layouts into a quadrilateral network-flow representation so that global and detailed routing tasks can be learned from large-scale board data. The abstract summary also emphasizes multilayer boards, high-density interconnects, and scaling-law style analysis of the flow encoding. This is the infrastructure paper you want if the goal is to learn routing policies instead of hand-coding heuristics for every new board class.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">PCBRouteNet 的重点不是单一 router，而是为机器学习 PCB routing 提供可训练的数据集与基准。它把 PCB 布局转换成四边形网络流表示，使全局 routing 和细节 routing 都能在大规模板级数据上学习。摘要还特别强调了多层板、高密度互连以及对 flow 编码的 scaling-law 分析。若目标是训练 routing policy，而不是每种新板型都手写启发式规则，这篇就是基础设施型工作。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://doi.org/10.1109/tvlsi.2025.3600764" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('pcbroutenet-dynamic-quadrilateral-flow-dataset-and-benchmarks-for-machine-learning-pcb-routing_2025','https://doi.org/10.1109/tvlsi.2025.3600764','PCBRouteNet: Dynamic Quadrilateral-Flow Dataset and Benchmarks for Machine-Learning PCB Routing')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 7 ── -->
+      <div class="paper-card is-confirmed" data-id="an-ml-aided-approach-to-automatically-generate-schematic-symbols-in-pcb-eda-tools_2024" data-url="https://doi.org/10.1145/3670474.3685944" data-pdf-url="" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://doi.org/10.1145/3670474.3685944" target="_blank">An ML-aided Approach to Automatically Generate Schematic Symbols in PCB EDA Tools</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-authors">Shiyu Gao et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge">MLCAD 2024</span>
+          <span class="card-tag tag-cyan">schematic-symbols</span>
+          <span class="card-tag tag-purple">mlcad</span>
+          <span class="card-tag tag-pink">eda</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">This paper targets the unglamorous but expensive symbol-library bottleneck in PCB EDA. By automating schematic symbol creation, it reduces the manual work required before a board can even be described cleanly in the tool chain. That matters because requirement-to-PCB generation is blocked if the system cannot first turn parts into valid schematic primitives. It is a smaller step than full board synthesis, but it is a concrete step toward a usable automation pipeline.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">这篇工作瞄准的是 PCB EDA 里最琐碎但又最耗时的 symbol 库瓶颈。它通过自动生成 schematic symbol，减少了在工具链里正式描述一块板之前必须手工完成的工作量。这个环节很关键，因为如果系统连器件都没法转成合法的 schematic primitive，那么“需求到 PCB 生成”根本走不下去。它不如完整板级综合那么大，但确实是可落地自动化流水线里的一个具体台阶。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://doi.org/10.1145/3670474.3685944" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('an-ml-aided-approach-to-automatically-generate-schematic-symbols-in-pcb-eda-tools_2024','https://doi.org/10.1145/3670474.3685944','An ML-aided Approach to Automatically Generate Schematic Symbols in PCB EDA Tools')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 8 ── -->
+      <div class="paper-card is-confirmed" data-id="clearance-constrained-pcb-global-placement-with-heterogeneous-components_2025" data-url="https://doi.org/10.1109/dac63849.2025.11133056" data-pdf-url="" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://doi.org/10.1109/dac63849.2025.11133056" target="_blank">Clearance-Constrained PCB Global Placement with Heterogeneous Components</a></div>
+          <span class="citations cite-low">★ 1</span>
+        </div>
+        <div class="card-authors">Yan-Jen Chen et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge">DAC 2025</span>
+          <span class="card-tag tag-cyan">placement</span>
+          <span class="card-tag tag-purple">clearance</span>
+          <span class="card-tag tag-pink">dac</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">This paper addresses global placement when heterogeneous PCB components must respect clearance rules. From the title and venue metadata, it is clearly about manufacturable layout closure rather than abstract packing. That makes it especially relevant to IoT boards, where sensors, RF modules, connectors, and passives all carry different spacing and orientation constraints. I am inferring the exact optimizer details from the title because the abstract was not available in the sources I checked.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">这篇工作处理的是 heterogeneous PCB components 在 global placement 时必须遵守 clearance 规则的问题。仅从标题和 venue 来看，它关注的是可制造的 layout closure，而不是抽象意义上的 packing。对于 IoT 板尤其相关，因为传感器、RF 模块、连接器和被动器件都会带来不同的间距和朝向约束。由于我查到的来源里没有完整 abstract，这里的算法细节是根据标题做的推断。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://doi.org/10.1109/dac63849.2025.11133056" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('clearance-constrained-pcb-global-placement-with-heterogeneous-components_2025','https://doi.org/10.1109/dac63849.2025.11133056','Clearance-Constrained PCB Global Placement with Heterogeneous Components')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 9 ── -->
+      <div class="paper-card is-confirmed" data-id="a-pad-focused-pcb-routing-algorithm-using-polygon-based-dynamic-partitioning_2024" data-url="https://doi.org/10.1109/access.2024.3386921" data-pdf-url="" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://doi.org/10.1109/access.2024.3386921" target="_blank">A Pad-Focused PCB Routing Algorithm Using Polygon-Based Dynamic Partitioning</a></div>
+          <span class="citations cite-low">★ 1</span>
+        </div>
+        <div class="card-authors">Youbiao He et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge">IEEE Access 2024</span>
+          <span class="card-tag tag-cyan">routing</span>
+          <span class="card-tag tag-purple">pad-escape</span>
+          <span class="card-tag tag-pink">geometry</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">This routing paper focuses on pad-level partitioning, which is useful when traces must escape dense component fields without violating local constraints. The polygon-based partitioning suggests a geometry-aware strategy rather than a pure graph search. For IoT sensor boards, pad access and short interconnects often dominate the layout quality of the first routing pass. I am inferring some of the implementation specifics from the title and publication record because the full abstract was not available in the sources I checked.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">这篇 routing 工作聚焦在 pad-level partitioning，对于需要从高密度器件区逃逸走线且不能破坏局部约束的场景很有用。polygon-based partitioning 暗示它采用了几何感知策略，而不是纯图搜索。对 IoT 传感器板来说，pad 进线和短互连常常决定首轮布线质量。由于我查到的来源里没有完整 abstract，具体实现细节是根据标题和出版记录做的推断。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://doi.org/10.1109/access.2024.3386921" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('a-pad-focused-pcb-routing-algorithm-using-polygon-based-dynamic-partitioning_2024','https://doi.org/10.1109/access.2024.3386921','A Pad-Focused PCB Routing Algorithm Using Polygon-Based Dynamic Partitioning')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 10 ── -->
+      <div class="paper-card is-confirmed" data-id="multi-agent-based-minimal-layer-via-routing-algorithm-for-pcb-design_2025" data-url="https://doi.org/10.1016/j.vlsi.2025.102533" data-pdf-url="" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://doi.org/10.1016/j.vlsi.2025.102533" target="_blank">Multi-agent based minimal-layer via routing algorithm for PCB design</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-authors">Jialu Cao et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge">Integration 2025</span>
+          <span class="card-tag tag-cyan">routing</span>
+          <span class="card-tag tag-purple">via-minimization</span>
+          <span class="card-tag tag-pink">multi-agent</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">This paper appears to use a multi-agent strategy to reduce the number of layers and vias needed for PCB routing. That is directly relevant to low-cost IoT sensor boards, where every extra layer raises fabrication cost and every via complicates return paths and manufacturing. The title suggests a search-based optimizer rather than a fixed heuristic, which is a good fit for layout spaces with many interacting constraints. I am inferring the internal mechanics from the title because a full abstract was not available in the sources I checked.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">这篇工作看起来是用 multi-agent 策略来减少 PCB routing 所需的层数和 via 数量。它对低成本 IoT 传感器板非常相关，因为每增加一层都会抬高制板成本，而每个 via 都会增加回流路径和制造复杂度。标题暗示它更像是一个搜索式优化器，而不是固定启发式规则，这非常适合存在大量耦合约束的布局空间。由于我查到的来源里没有完整 abstract，内部机制是根据标题做的推断。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://doi.org/10.1016/j.vlsi.2025.102533" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('multi-agent-based-minimal-layer-via-routing-algorithm-for-pcb-design_2025','https://doi.org/10.1016/j.vlsi.2025.102533','Multi-agent based minimal-layer via routing algorithm for PCB design')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 11 ── -->
+      <div class="paper-card is-arxiv" data-id="eeschematic-multimodal-llm-based-ai-agent-for-schematic-generation-of-analog-circuit_2025" data-url="https://arxiv.org/abs/2510.17002" data-pdf-url="https://arxiv.org/pdf/2510.17002.pdf" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://arxiv.org/abs/2510.17002" target="_blank">EEschematic: Multimodal-LLM Based AI Agent for Schematic Generation of Analog Circuit</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-authors">Chang Liu et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge arxiv">CoRR 2025</span>
+          <span class="card-tag tag-cyan">analog-schematic</span>
+          <span class="card-tag tag-purple">multimodal-llm</span>
+          <span class="card-tag tag-pink">arxiv</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">EEschematic converts SPICE netlists into human-editable schematic diagrams with a multimodal LLM agent. It uses a small set of analog substructure examples for few-shot placement and a Visual Chain-of-Thought loop to refine placement and wiring until the drawing becomes clearer and more symmetric. The evaluated circuits are classic analog building blocks such as an inverter, 5T-OTA, and telescopic cascode amplifier. It is not PCB-specific, but it is relevant because sensor boards often include analog front ends that need the same schematic-generation discipline.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">EEschematic 把 SPICE netlist 转成可人工编辑的 schematic diagram，并且用的是 multimodal LLM agent。它用少量 analog substructure 示例做 few-shot placement，再通过 Visual Chain-of-Thought 循环不断修正器件摆放和连线，让最终图更清晰、更对称。评估对象是 inverter、5T-OTA、telescopic cascode amplifier 这类经典模拟电路。它不是 PCB 专属工作，但对传感器板里的模拟前端很相关，因为这类模块同样需要稳定的原理图生成能力。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://arxiv.org/abs/2510.17002" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('eeschematic-multimodal-llm-based-ai-agent-for-schematic-generation-of-analog-circuit_2025','https://arxiv.org/abs/2510.17002','EEschematic: Multimodal-LLM Based AI Agent for Schematic Generation of Analog Circuit')">📖 Read Paper</button>
+        </div>
+      </div>
     </div>
-  </section>
+  </div>
 
-  <section class="section">
-    <h2>代表性论文</h2>
+  <div id="notes-view" style="display:none">
+    <div class="notes-shell">
+      <section class="notes-pane">
+        <div class="notes-topbar">
+          <div class="notes-title-wrap">
+            <div class="notes-kicker">Paper Reader</div>
+            <div id="notes-title" class="notes-title"></div>
+            <div id="notes-subtitle" class="notes-subtitle"></div>
+          </div>
+          <button class="btn" onclick="navigateTo('papers')">← Back to Papers</button>
+        </div>
+        <div id="notes-content" class="notes-content"></div>
+      </section>
 
-    <article class="card">
-      <h3><a href="https://arxiv.org/abs/2602.00510" target="_blank">PCBSchemaGen: Constraint-Guided Schematic Design via LLM for Printed Circuit Boards</a></h3>
-      <div class="meta2">2026 · arXiv · 直接针对 PCB schematic 自动生成</div>
-      <div class="summary">
-        <p>这篇工作非常贴近你的问题本身：输入功能描述，自动生成 PCB 原理图。它的核心不是单纯让模型“写电路”，而是把约束、器件关系、校验过程一起纳入生成闭环，因此更像一个受约束的 schematic synthesis 系统。</p>
-        <p>它说明研究界已经开始把“需求 -> 原理图”作为明确问题来解，而不是只做器件推荐或局部布线优化。对 IoT 传感板场景，这类方法最有价值的地方在于能把传感器、电源、MCU、通信模块之间的常见连接模式结构化。</p>
-      </div>
-    </article>
+      <aside class="pdf-pane">
+        <div class="pdf-topbar">
+          <div class="pdf-title">Paper PDF</div>
+          <div class="pdf-links">
+            <a id="pdf-open-link" class="btn btn-view" href="#" target="_blank" style="display:none">Open PDF ↗</a>
+            <a id="paper-open-link" class="btn btn-view" href="#" target="_blank" style="display:none">Open Paper ↗</a>
+          </div>
+        </div>
+        <div class="pdf-body">
+          <div id="pdf-thumbs" class="pdf-thumbs"></div>
+          <div class="pdf-viewer">
+            <iframe id="pdf-frame" class="pdf-frame" title="Paper PDF Viewer"></iframe>
+            <div id="pdf-empty" class="pdf-empty">当前没有可直接预览的 PDF。若论文页面可访问，右上角可直接打开原文。</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
 
-    <article class="card">
-      <h3><a href="https://arxiv.org/abs/2509.14576" target="_blank">TypedSchematics: A Block-based PCB Design Tool with Real-time Detection of Common Connection Errors</a></h3>
-      <div class="meta2">2025 · arXiv / HCI-style tool paper · 面向原理图拼接与错误检测</div>
-      <div class="summary">
-        <p>TypedSchematics 的切入点不是完整自动化生成，而是把电路设计抽象成“带类型的功能块”。它强调实时检测常见连接错误、自动组合电路块和可扩展元件库，这对 IoT 传感板非常关键，因为这类板子经常是 MCU + 电源 + 传感器 + 无线模块的拼装变体。</p>
-        <p>从自动化视角看，它更像是把“自然语言需求”翻译成一组 typed blocks，再自动组合成 schematic 的中间表示。它离最终 PCB 文件还有距离，但非常适合作为上游需求编译层。</p>
-      </div>
-    </article>
+  <div class="toast" id="toast">
+    <div class="toast-title">Paste into Codex</div>
+    <div class="toast-cmd" id="toast-cmd"></div>
+  </div>
 
-    <article class="card">
-      <h3><a href="https://typedschematics.com/" target="_blank">TypedSchematics (Beta Tool / Research Prototype)</a></h3>
-      <div class="meta2">2025 · 研究原型站点 · 提供 “Generate PCB” 的交互思路</div>
-      <div class="summary">
-        <p>这个原型的价值不在成熟度，而在交互范式：设计被拆成模块化的 schematic blocks，系统再往 PCB 生成推进。这很接近你要的“输入需求 -> 自动产出”的上游 UX 形态。</p>
-        <p>它说明学术原型已经在尝试把 schematic 表达和 PCB 生成串起来，但离工业级无人工程闭环还有明显差距。</p>
-      </div>
-    </article>
-
-    <article class="card">
-      <h3><a href="https://arxiv.org/abs/2402.00052" target="_blank">Zero-shot Sequential Neuro-symbolic Reasoning for Automatically Generating Architecture Schematic Designs</a></h3>
-      <div class="meta2">2024 · arXiv · 虽偏建筑 schematic，但方法论有参考价值</div>
-      <div class="summary">
-        <p>这篇不是 PCB 论文，但方法论值得注意：它把“从需求到 schematic”建模成 sequential neuro-symbolic reasoning。你关心的 PCB 自动化流程，实际上也需要这种“生成 + 规则 + 约束求解”的混合范式，而不是纯 LLM 文本生成。</p>
-        <p>对于 IoT 传感板，这意味着可行技术路线通常不是让模型直接吐 KiCad 文件，而是先生成结构，再做器件约束求解、引脚映射和规则验证。</p>
-      </div>
-    </article>
-  </section>
-
-  <section class="section">
-    <h2>研究结论</h2>
-    <ul class="list">
-      <li>“输入需求后自动生成原理图”已经有明显研究进展，且开始引入约束与错误检测。</li>
-      <li>“输入需求后自动输出完整 PCB 文件”目前更多出现在原型系统和工程工具试验中，而不是被广泛验证的稳定学术闭环。</li>
-      <li>对 IoT 传感板，最现实的自动化路径是：需求解析 → 功能块组合 → 器件/封装选择 → 原理图生成 → 规则校验 → PCB 布局/布线建议 → 人工审阅 → 制造文件导出。</li>
-    </ul>
-  </section>
-
-  <section class="section sources">
-    <h2>Sources</h2>
-    <a href="https://arxiv.org/abs/2602.00510" target="_blank">PCBSchemaGen</a>
-    <a href="https://arxiv.org/abs/2509.14576" target="_blank">TypedSchematics Paper</a>
-    <a href="https://typedschematics.com/" target="_blank">TypedSchematics Beta</a>
-    <a href="https://arxiv.org/abs/2402.00052" target="_blank">Neuro-symbolic schematic generation</a>
-  </section>
+  <footer class="kanban-footer">
+    <span>Powered by MyResearchClaw</span>
+    <span>2026-04-19</span>
+  </footer>
 </div>
+
+<script>
+const API = 'http://localhost:5678';
+let serverOk = false;
+let activeReadId = null;
+let pollInterval = null;
+let currentPdfUrl = '';
+let currentPaperUrl = '';
+
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+async function init() {
+  applyTheme();
+  await checkServer();
+  renderRoute();
+  window.addEventListener('hashchange', renderRoute);
+  setupThumbDrag();
+}
+
+async function openEngineeringView() {
+  if (serverOk) {
+    try {
+      await fetch(`${API}/api/generate-engineering`, { method: 'POST' });
+    } catch {}
+  }
+  location.href = 'pcb-hardware-automation-iot-sensor-boards-engineering.html';
+}
+
+async function checkServer() {
+  try {
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 1500);
+    const r = await fetch(`${API}/api/papers`, { signal: ctrl.signal });
+    serverOk = r.ok;
+  } catch {
+    serverOk = false;
+  }
+  document.getElementById('server-banner').style.display = serverOk ? 'none' : 'flex';
+  if (serverOk) startPolling();
+}
+
+function startPolling() {
+  if (pollInterval) return;
+  pollInterval = setInterval(async () => {
+    try {
+      const r = await fetch(`${API}/api/papers`);
+      if (!r.ok) return;
+      const data = await r.json();
+      data.papers.forEach(updateCard);
+    } catch {}
+  }, 3000);
+}
+
+function updateCard(p) {
+  const card = document.querySelector(`[data-id="${p.id}"]`);
+  if (!card) return;
+  const prog = p.progress || 0;
+  const fill = card.querySelector('.progress-fill');
+  if (fill) {
+    fill.style.width = prog + '%';
+    fill.className = 'progress-fill' + (prog >= 100 ? ' done' : prog > 0 ? ' active' : '');
+  }
+  const lbl = card.querySelector('.progress-label');
+  if (lbl) {
+    if (prog >= 100) { lbl.textContent = '✓ Complete'; lbl.className = 'progress-label done'; }
+    else if (prog > 0) { lbl.textContent = `Reading... ${prog}%`; lbl.className = 'progress-label'; }
+    else { lbl.textContent = ''; lbl.className = 'progress-label'; }
+  }
+
+  const btn = card.querySelector('[data-role="read-btn"]');
+  if (btn) {
+    if (prog >= 100) {
+      btn.disabled = false;
+      btn.textContent = '📄 View Notes';
+      btn.className = 'btn btn-notes';
+      btn.onclick = () => navigateTo('notes', p.id);
+    } else if (prog > 0) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Reading...';
+      btn.className = 'btn btn-read reading';
+    } else {
+      btn.disabled = false;
+      btn.textContent = '📖 Read Paper';
+      btn.className = 'btn btn-read';
+      const url = card.getAttribute('data-url');
+      const title = card.querySelector('.card-title').textContent.trim();
+      btn.onclick = () => triggerRead(p.id, url, title);
+    }
+  }
+
+  if (p.note_path) card.setAttribute('data-note-path', p.note_path);
+  if (p.pdf_url) card.setAttribute('data-pdf-url', p.pdf_url);
+
+  if (prog >= 100 && p.id === activeReadId) {
+    activeReadId = null;
+    setTimeout(() => navigateTo('notes', p.id), 800);
+  }
+}
+
+async function triggerRead(id, url, title) {
+  if (!serverOk) { showToast(url); return; }
+  activeReadId = id;
+  const card = document.querySelector(`[data-id="${id}"]`);
+  const btn = card.querySelector('[data-role="read-btn"]');
+  btn.disabled = true;
+  btn.textContent = '⏳ Starting...';
+  btn.className = 'btn btn-read reading';
+
+  try {
+    const r = await fetch(`${API}/api/read-paper`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, paper_id: id, title })
+    });
+    if (!r.ok) throw new Error('Server returned ' + r.status);
+  } catch (e) {
+    activeReadId = null;
+    btn.disabled = false;
+    btn.textContent = '📖 Read Paper';
+    btn.className = 'btn btn-read';
+    btn.onclick = () => triggerRead(id, url, title);
+    showToast(url);
+  }
+}
+
+function renderRoute() {
+  const hash = location.hash;
+  if (hash.startsWith('#notes/')) showNotes(decodeURIComponent(hash.slice(7)));
+  else showPapers();
+}
+
+function navigateTo(page, id) {
+  if (page === 'notes') location.hash = '#notes/' + encodeURIComponent(id);
+  else {
+    history.pushState('', document.title, window.location.pathname + window.location.search);
+    renderRoute();
+  }
+}
+
+function showPapers() {
+  document.getElementById('papers-view').style.display = '';
+  document.getElementById('notes-view').style.display = 'none';
+}
+
+async function showNotes(paperId) {
+  document.getElementById('papers-view').style.display = 'none';
+  document.getElementById('notes-view').style.display = '';
+  const card = document.querySelector(`[data-id="${paperId}"]`);
+  const title = card ? card.querySelector('.card-title a').textContent.trim() : paperId;
+  const subtitle = card ? `${card.querySelector('.card-authors')?.textContent || ''}` : '';
+  document.getElementById('notes-title').textContent = title;
+  document.getElementById('notes-subtitle').textContent = subtitle;
+
+  const content = document.getElementById('notes-content');
+  content.innerHTML = '<p style="color:var(--text-muted)">Loading notes...</p>';
+
+  try {
+    const r = await fetch(`${API}/api/notes/${paperId}`);
+    if (!r.ok) throw new Error('not-ready');
+    const md = await r.text();
+    content.innerHTML = renderMd(md);
+    const resources = extractPaperResources(md, card?.getAttribute('data-url') || '', card?.getAttribute('data-pdf-url') || '');
+    currentPdfUrl = resources.pdfUrl;
+    currentPaperUrl = resources.paperUrl;
+    await showPdfPanel(resources.pdfUrl, resources.paperUrl);
+  } catch {
+    content.innerHTML = `<p style="color:var(--accent3)">Notes not ready yet. Please wait for reading to complete.</p>`;
+    await showPdfPanel(card?.getAttribute('data-pdf-url') || '', card?.getAttribute('data-url') || '');
+  }
+}
+
+function renderMd(md) {
+  if (typeof marked !== 'undefined') {
+    marked.setOptions({ breaks:true, gfm:true });
+    return marked.parse(md);
+  }
+  return '<pre style="white-space:pre-wrap">' + md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>';
+}
+
+function extractPaperResources(md, fallbackPaperUrl, presetPdfUrl) {
+  let pdfUrl = presetPdfUrl || '';
+  let paperUrl = fallbackPaperUrl || '';
+  const lines = md.split('\n');
+  for (const line of lines) {
+    const match = line.match(/-\s*(Paper|论文)\s*:\s*(https?:\/\/\S+)/i);
+    if (match && !paperUrl) paperUrl = match[2];
+    const pdfMatch = line.match(/-\s*(PDF|PDF mirror)\s*:\s*(https?:\/\/\S+)/i);
+    if (pdfMatch && !pdfUrl) pdfUrl = pdfMatch[2];
+  }
+  if (!pdfUrl && paperUrl.includes('arxiv.org/abs/')) pdfUrl = paperUrl.replace('/abs/', '/pdf/') + '.pdf';
+  if (!pdfUrl && paperUrl.includes('arxiv.org/pdf/')) pdfUrl = paperUrl.endsWith('.pdf') ? paperUrl : `${paperUrl}.pdf`;
+  return { pdfUrl, paperUrl };
+}
+
+async function showPdfPanel(pdfUrl, paperUrl) {
+  const frame = document.getElementById('pdf-frame');
+  const empty = document.getElementById('pdf-empty');
+  const thumbs = document.getElementById('pdf-thumbs');
+  const pdfLink = document.getElementById('pdf-open-link');
+  const paperLink = document.getElementById('paper-open-link');
+
+  thumbs.innerHTML = '';
+  frame.style.display = 'none';
+  empty.style.display = 'flex';
+
+  if (paperUrl) {
+    paperLink.href = paperUrl;
+    paperLink.style.display = 'inline-flex';
+  } else paperLink.style.display = 'none';
+
+  if (!pdfUrl) {
+    pdfLink.style.display = 'none';
+    empty.textContent = '当前没有可直接预览的 PDF 链接。可使用右上角按钮打开论文原页面。';
+    return;
+  }
+
+  pdfLink.href = pdfUrl;
+  pdfLink.style.display = 'inline-flex';
+  frame.src = pdfUrl + '#toolbar=1&navpanes=0&view=FitH';
+  frame.style.display = 'block';
+  empty.style.display = 'none';
+
+  if (!window.pdfjsLib) return;
+  try {
+    const loadingTask = pdfjsLib.getDocument(pdfUrl);
+    const pdf = await loadingTask.promise;
+    const maxThumbs = Math.min(pdf.numPages, 12);
+    for (let pageNum = 1; pageNum <= maxThumbs; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 0.22 });
+      const canvas = document.createElement('canvas');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const context = canvas.getContext('2d');
+      await page.render({ canvasContext: context, viewport }).promise;
+
+      const card = document.createElement('button');
+      card.className = 'thumb-card' + (pageNum === 1 ? ' active' : '');
+      card.type = 'button';
+      card.innerHTML = `<div></div><div class="thumb-label">P.${pageNum}</div>`;
+      card.firstChild.replaceWith(canvas);
+      card.onclick = () => jumpToPdfPage(pdfUrl, pageNum, card);
+      thumbs.appendChild(card);
+    }
+  } catch (err) {
+    thumbs.innerHTML = '<div class="thumb-label">PDF 缩略图加载失败</div>';
+  }
+}
+
+function jumpToPdfPage(pdfUrl, pageNum, activeCard) {
+  const frame = document.getElementById('pdf-frame');
+  frame.src = `${pdfUrl}#page=${pageNum}&view=FitH`;
+  document.querySelectorAll('.thumb-card').forEach(el => el.classList.remove('active'));
+  if (activeCard) activeCard.classList.add('active');
+}
+
+function setupThumbDrag() {
+  const thumbs = document.getElementById('pdf-thumbs');
+  let dragging = false;
+  let startY = 0;
+  let startScroll = 0;
+  thumbs.addEventListener('mousedown', e => {
+    dragging = true;
+    thumbs.classList.add('dragging');
+    startY = e.clientY;
+    startScroll = thumbs.scrollTop;
+  });
+  window.addEventListener('mouseup', () => {
+    dragging = false;
+    thumbs.classList.remove('dragging');
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    thumbs.scrollTop = startScroll - (e.clientY - startY);
+  });
+}
+
+function showToast(url) {
+  const cmd = `Use paper-reader to read this paper: ${url}`;
+  document.getElementById('toast-cmd').textContent = cmd;
+  document.getElementById('toast').classList.add('show');
+  navigator.clipboard.writeText(cmd).catch(() => {});
+}
+
+function applyTheme() {
+  const light = localStorage.getItem('theme') === 'light';
+  document.body.classList.toggle('light', light);
+  document.querySelector('.theme-toggle').textContent = light ? '☀️' : '🌙';
+}
+
+function toggleTheme() {
+  const light = !document.body.classList.contains('light');
+  localStorage.setItem('theme', light ? 'light' : 'dark');
+  applyTheme();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('toast').classList.remove('show');
+});
+
+window.addEventListener('load', init);
+</script>
 </body>
 </html>

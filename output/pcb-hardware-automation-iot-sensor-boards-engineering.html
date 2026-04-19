@@ -3,73 +3,304 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PCB硬件自动化流程（面向 IoT 传感器板）— Engineering</title>
+<title>Engineering Scout — PCB硬件自动化流程(面向 IoT传感器板)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;background:#0d1117;color:#e6edf3;line-height:1.75}.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 60px}.hero{padding:26px 28px;border:1px solid #263041;border-radius:20px;background:linear-gradient(135deg,#151b24,#0f141c);margin-bottom:22px}.hero h1{font-size:34px;line-height:1.15;margin-bottom:10px}.hero p{color:#9fb0c7}.grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}.card{border:1px solid #273244;border-radius:16px;padding:18px;background:#121923}.card h2{font-size:19px;margin-bottom:10px}.card h3{font-size:17px;margin-bottom:8px}.card a{color:#7cc0ff;text-decoration:none}.meta{color:#9fb0c7;font-size:13px;margin-bottom:8px}.p{color:#d9e4f1}.p p{margin:8px 0}.callout{padding:16px 18px;border-left:4px solid #62c3ff;background:#0f1a22;border-radius:12px}.list{padding-left:20px}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#0d1117; --panel:#151b24; --panel-2:#101620; --text:#e8eef8; --dim:#91a0b8;
+  --muted:#66748a; --line:rgba(255,255,255,0.08); --blue:#67a4ff; --cyan:#38d9c7; --amber:#ffd66e;
+}
+body { font-family:'Noto Sans SC',sans-serif; background:radial-gradient(circle at top right, rgba(103,164,255,0.12), transparent 28%), var(--bg); color:var(--text); min-height:100vh; }
+body.light {
+  --bg:#f4f7fb; --panel:#ffffff; --panel-2:#eef3f8; --text:#18202c; --dim:#516277;
+  --muted:#66768c; --line:rgba(15,23,42,0.10); --blue:#2364d2; --cyan:#0f9f90; --amber:#b98911;
+}
+.wrap { max-width: 1320px; margin: 0 auto; padding: 28px 28px 80px; }
+.theme-toggle {
+  position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font-size:16px;
+}
+.hero { background:linear-gradient(145deg, rgba(103,164,255,0.14), rgba(56,217,199,0.06)); border:1px solid var(--line); border-radius:24px; padding:28px 30px; margin-bottom:24px; }
+.eyebrow { font:600 12px 'JetBrains Mono',monospace; color:var(--amber); letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
+.hero h1 { font-size:42px; line-height:1.08; font-weight:900; max-width:980px; }
+.hero p { margin-top:14px; color:var(--dim); font-size:15px; max-width:900px; line-height:1.8; }
+.meta { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+.badge { border:1px solid var(--line); background:rgba(255,255,255,0.04); border-radius:999px; padding:8px 14px; font:500 12px 'JetBrains Mono',monospace; color:var(--dim); }
+.nav { display:flex; gap:10px; margin-bottom:22px; }
+.nav a { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; }
+.grid { display:grid; grid-template-columns:1fr; gap:18px; }
+.section { background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:22px; }
+.section-title { display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:16px; }
+.section-title h2 { font-size:24px; font-weight:800; }
+.section-title span { color:var(--dim); font:500 12px 'JetBrains Mono',monospace; }
+.items { display:grid; gap:14px; }
+.item { background:var(--panel-2); border:1px solid var(--line); border-radius:16px; padding:18px; }
+.item-top { display:flex; justify-content:space-between; gap:12px; align-items:start; margin-bottom:10px; }
+.item h3 { font-size:18px; line-height:1.35; }
+.item h3 a { color:inherit; text-decoration:none; }
+.item h3 a:hover { color:var(--blue); }
+.tag { white-space:nowrap; border:1px solid var(--line); border-radius:999px; padding:5px 10px; font:600 11px 'JetBrains Mono',monospace; color:var(--blue); }
+.org { color:var(--dim); font-size:13px; margin-bottom:10px; }
+.summary { color:var(--text); font-size:14px; line-height:1.85; margin-bottom:10px; }
+.how { color:#b7c5da; font-size:14px; line-height:1.85; border-left:3px solid rgba(103,164,255,0.35); padding-left:12px; }
+.takeaways { display:grid; gap:12px; }
+.takeaway { background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:16px 18px; color:var(--text); line-height:1.8; }
+.status-card { margin-bottom:18px; background:rgba(56,217,199,0.07); border:1px solid rgba(56,217,199,0.16); border-radius:16px; padding:14px 16px; color:var(--dim); }
+.status-card.error { background:rgba(255,141,107,0.08); border-color:rgba(255,141,107,0.18); }
+@media (max-width: 900px) {
+  .wrap { padding:16px 16px 60px; }
+  .hero h1 { font-size:32px; }
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <section class="hero">
-    <h1>PCB硬件自动化流程（面向 IoT 传感器板）— Engineering</h1>
-    <p>按 engineering-scout 流程整理。重点判断：现实工程里是否已经存在“输入功能需求 -> 自动生成完整 PCB 文件”的实现路径，以及这些路径卡在哪里。</p>
-  </section>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+  <div class="wrap">
+    <div class="nav">
+      <a href="/kanban.html">← Back to Papers</a>
+    </div>
 
-  <section class="card callout">
-    <strong>结论先行：</strong> 现实中已经出现“需求到 schematic / KiCad 工程”的开源与商业原型，但多数系统仍把完整 PCB layout 视为半自动阶段。最成熟的产品形态是“AI 生成原理图 + 器件选择 + 工具内辅助布局布线”，而不是完全无人值守地输出最终可投产板。
-  </section>
-
-  <div class="grid">
-    <section class="card">
-      <h2>Open Source</h2>
-
-      <h3><a href="https://github.com/Shaurya-Sethi/circuitron" target="_blank">Circuitron</a></h3>
-      <div class="meta">GitHub · 自然语言到 `.sch` / `.kicad_pcb` / ERC</div>
-      <div class="p">
-        <p>Circuitron 是目前最接近“自然语言需求 -> PCB 工程文件”的开源原型之一。它明确声称可产出 KiCad 所需的 `.sch` 与 `.kicad_pcb`，而不是只停在文字建议或 JSON 中间表示。</p>
-        <p>实现思路明显是 agentic：需求解析、知识图谱/元件知识检索、图结构构建、ERC/修正迭代，再导出 KiCad 资产。对 IoT 板来说，它的价值在于能把“传感器 + MCU + 电源 + 无线”的重复设计模板自动化。</p>
-      </div>
-
-      <h3 style="margin-top:16px;"><a href="https://github.com/circuit-synth/circuit-synth" target="_blank">circuit-synth</a></h3>
-      <div class="meta">GitHub · Python-defined circuits + 生成 schematic / PCB outputs</div>
-      <div class="p">
-        <p>这条路线不是自然语言直接生成，而是“电路代码化”。它把电路定义写成结构化代码，再导出 BOM、schematic、PCB 相关产物。这对自动化系统特别重要，因为代码化电路比自然语言更容易做参数化、版本控制和约束检查。</p>
+    <section class="hero">
+      <div class="eyebrow">Engineering Scout</div>
+      <h1>PCB硬件自动化流程(面向 IoT传感器板)</h1>
+      <p>这一页聚焦“论文之外”的工程落地信息：GitHub 开源实现、现实产品与功能、以及相关新闻与实际部署信号，帮助你判断一个研究主题距离工程可用还有多远。</p>
+      <div class="meta">
+        <div class="badge">Range: 2024-2026</div>
+        <div class="badge">Updated: 2026-04-19</div>
+        <div class="badge">Open source: 4</div>
+        <div class="badge">Products: 4</div>
+        <div class="badge">News: 3</div>
       </div>
     </section>
 
-    <section class="card">
-      <h2>Products</h2>
+    <div id="status-card" class="status-card" style="display:none"></div>
 
-      <h3><a href="https://www.flux.ai/Copilot" target="_blank">Flux Copilot</a></h3>
-      <div class="meta">官方产品 · AI-assisted schematic design</div>
-      <div class="p">
-        <p>Flux 的官方文档写得很明确：Copilot 目前主要理解 schematic，对 PCB layout 的理解仍有限。这意味着它已经进入“需求到原理图助手”的成熟产品阶段，但还没有把完整布局布线完全交给 AI。</p>
-        <p>从实现上看，它更像嵌入在浏览器 EDA 中的设计协同层：器件数据、原理图编辑、AI 对话和 PCB 编辑器共享一套工程上下文。</p>
+    <div class="grid">
+      <section class="section">
+        <div class="section-title">
+          <h2>Key Takeaways</h2>
+          <span>High-level engineering readout</span>
+        </div>
+        <div class="takeaways">
+          <div class="takeaway">PCB automation is no longer just about schematic capture: the pipeline now spans requirement capture, symbol generation, schematic synthesis, placement, and routing.</div>
+          <div class="takeaway">The strongest open-source pieces are the agent/tooling layers around KiCad, while the strongest product signals come from CELUS, Flux, and Altium on requirements and schematic assistance.</div>
+          <div class="takeaway">For IoT sensor boards, the hardest remaining problems are constraint propagation and layout closure, especially when mixed-signal, clearance, and layer-count constraints collide.</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <h2>Open Source</h2>
+          <span>4 repos / projects</span>
+        </div>
+        <div class="items">
+          
+      <div class="item">
+        <div class="item-top">
+          <h3><a href="https://github.com/Shaurya-Sethi/circuitron" target="_blank" rel="noopener noreferrer">Circuitron</a></h3>
+          <div class="tag">open_source</div>
+        </div>
+        <div class="org">GitHub · Agentic PCB design accelerator</div>
+        <div class="summary">Circuitron converts natural-language requirements into SKiDL scripts, KiCad schematics, and PCB layout files. The repo documents a multi-agent pipeline with part discovery, documentation lookup, code generation, validation, and ERC correction, all wired through MCP and containerized tooling.</div>
+        <div class="how">Why it matters: this is the most complete open-source path I found for taking a textual board brief and producing editable KiCad artifacts instead of a text-only plan.</div>
       </div>
 
-      <h3 style="margin-top:16px;"><a href="https://www.celus.io/solutions/engineers" target="_blank">CELUS</a></h3>
-      <div class="meta">官方产品 · requirements → architecture / components / schematic handoff</div>
-      <div class="p">
-        <p>CELUS 更接近你要的“从需求出发”的产品路线。它强调从 requirements 生成架构、器件选型和 schematic 级输出，再交给专业 EDA 工具做后续实现。</p>
-        <p>它的现实意义在于验证了一个工程共识：真正能商业化的自动化链，通常是把“需求到设计意图”自动化，把最后的 layout/signoff 仍留给 EDA 工具和工程师。</p>
+      <div class="item">
+        <div class="item-top">
+          <h3><a href="https://github.com/circuit-synth/circuit-synth" target="_blank" rel="noopener noreferrer">circuit-synth</a></h3>
+          <div class="tag">open_source</div>
+        </div>
+        <div class="org">GitHub · Python-defined circuits</div>
+        <div class="summary">circuit-synth represents circuits in code, then exports schematic and PCB-related outputs through the tool chain. That makes the design intent versionable and parameterizable, which is useful when you want to generate repeated sensor-board variants from one template.</div>
+        <div class="how">Why it matters: code-first circuits are much easier to constrain, diff, and regenerate than free-form drawings, which is a good fit for IoT board families.</div>
       </div>
-    </section>
 
-    <section class="card">
-      <h2>Implementation Path</h2>
-      <ul class="list">
-        <li>需求输入：传感器类型、采样频率、功耗、通信方式、尺寸/成本约束。</li>
-        <li>功能块编译：MCU / PMIC / Sensor / Radio / Connector / Storage。</li>
-        <li>元件选择：根据供应链和 footprint 约束匹配真实器件。</li>
-        <li>原理图生成：自动连线、电源树、去耦、电平转换、I2C/SPI/UART 关系。</li>
-        <li>PCB 生成：placement seeds、keepout、差分/阻抗规则、自动布线建议。</li>
-        <li>验证：ERC / DRC / footprint 检查 / 电源完整性 / 制造输出。</li>
-      </ul>
-      <div class="p" style="margin-top:10px;">
-        <p>因此，如果你的目标是“我给一个 IoT 需求，最后自动输出完整 PCB 文件”，现实路径已经可以走到很后面，但最后一段通常还需要人工收尾，尤其是高密度、射频、EMC 敏感和机械约束复杂的板子。</p>
+      <div class="item">
+        <div class="item-top">
+          <h3><a href="https://github.com/rjwalters/kicad-tools" target="_blank" rel="noopener noreferrer">kicad-tools</a></h3>
+          <div class="tag">open_source</div>
+        </div>
+        <div class="org">GitHub · KiCad parsing and manipulation helpers</div>
+        <div class="summary">kicad-tools exposes machine-readable commands for parsing and modifying KiCad schematic and PCB files without launching the GUI. It is explicitly positioned as an agent-friendly layer for analysis, CI, and automated board edits.</div>
+        <div class="how">Why it matters: any real PCB automation agent needs a structured way to inspect and rewrite existing design files, not just generate a first draft.</div>
       </div>
-    </section>
+
+      <div class="item">
+        <div class="item-top">
+          <h3><a href="https://github.com/circuit-synth/mcp-kicad-sch-api" target="_blank" rel="noopener noreferrer">MCP KiCad Schematic API</a></h3>
+          <div class="tag">open_source</div>
+        </div>
+        <div class="org">GitHub · MCP server for schematic manipulation</div>
+        <div class="summary">This project wraps KiCad schematic operations behind MCP tools so AI agents can create components, wires, and hierarchical designs programmatically. It is not a full board synthesizer, but it supplies the plumbing that makes interactive design loops possible.</div>
+        <div class="how">Why it matters: it is the clearest open-source bridge between an LLM agent and a real EDA file format.</div>
+      </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <h2>Products</h2>
+          <span>4 products / features</span>
+        </div>
+        <div class="items">
+          
+      <div class="item">
+        <div class="item-top">
+          <h3><a href="https://www.celus.io/en/design-platform" target="_blank" rel="noopener noreferrer">CELUS Design Platform</a></h3>
+          <div class="tag">product</div>
+        </div>
+        <div class="org">CELUS · AI-assisted electronics design platform</div>
+        <div class="summary">CELUS says its platform automates component search and schematic generation while capturing requirements and handing off BOM, footprints, and EDA data to downstream tools. The product framing is requirement-first: define blocks, evaluate solutions, and then transfer the result into the engineer’s EDA flow.</div>
+        <div class="how">Why it matters: this is one of the strongest current product signals that requirements-to-schematic automation has moved past pure research.</div>
+      </div>
+
+      <div class="item">
+        <div class="item-top">
+          <h3><a href="https://www.celus.io/knowledge/design-assistant-accelerating-electronics-design-with-natural-language" target="_blank" rel="noopener noreferrer">CELUS Design Assistant</a></h3>
+          <div class="tag">product</div>
+        </div>
+        <div class="org">CELUS · Natural-language design assistant</div>
+        <div class="summary">The Design Assistant interprets text or sketches and turns them into structured functional diagrams. It is the clearest product-level example I found of users starting from a prompt such as a sensor-board brief and rapidly getting a system architecture.</div>
+        <div class="how">Why it matters: it shows how natural language can seed a board design workflow before layout begins.</div>
+      </div>
+
+      <div class="item">
+        <div class="item-top">
+          <h3><a href="https://www.flux.ai/Copilot" target="_blank" rel="noopener noreferrer">Flux Copilot</a></h3>
+          <div class="tag">product</div>
+        </div>
+        <div class="org">Flux · PCB design assistant</div>
+        <div class="summary">Flux Copilot is positioned as a schematic-first assistant. Flux’s own documentation says it still has limited understanding of PCB layout and trace positioning, which is a useful honesty check about where the product is today.</div>
+        <div class="how">Why it matters: it is useful evidence that the product market is already comfortable with AI helping schematic work, but not yet fully automating board layout closure.</div>
+      </div>
+
+      <div class="item">
+        <div class="item-top">
+          <h3><a href="https://www.altium.com/capabilities/requirements-systems-portal" target="_blank" rel="noopener noreferrer">Altium Requirements Management</a></h3>
+          <div class="tag">product</div>
+        </div>
+        <div class="org">Altium · Requirements traceability for PCB design</div>
+        <div class="summary">Altium ties requirements, verification, and PCB design data together in a live workspace. The official documentation describes requirements import, AI-assisted requirement structuring, and traceability into the design itself.</div>
+        <div class="how">Why it matters: requirements management is the control plane for requirement-to-PCB generation, even when the final placement and routing still need human oversight.</div>
+      </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <h2>News & Deployment Signals</h2>
+          <span>3 recent signals</span>
+        </div>
+        <div class="items">
+          
+      <div class="item">
+        <div class="item-top">
+          <h3><a href="https://www.microsoft.com/en-us/research/publication/omnisch-a-multimodal-pcb-schematic-benchmark-for-structured-diagram-visual-reasoning/" target="_blank" rel="noopener noreferrer">OmniSch publication page</a></h3>
+          <div class="tag">news</div>
+        </div>
+        <div class="org">Microsoft Research · March 2026</div>
+        <div class="summary">Microsoft Research’s publication page is a strong deployment signal because it treats PCB schematic understanding as a first-class benchmark problem. The page frames schematic diagrams, graph construction, and tool-augmented reasoning as practical EDA challenges rather than niche image tasks.</div>
+        <div class="how">Why it matters: when a large research lab formalizes a PCB benchmark, it usually means the ecosystem is getting serious about machine-readable design workflows.</div>
+      </div>
+
+      <div class="item">
+        <div class="item-top">
+          <h3><a href="https://www.celus.io/hubfs/Open%20Space%20BETA%20-%20PR.pdf?hsLang=en" target="_blank" rel="noopener noreferrer">CELUS beta / launch materials</a></h3>
+          <div class="tag">news</div>
+        </div>
+        <div class="org">CELUS · Product launch / beta signal</div>
+        <div class="summary">CELUS’s launch materials describe an AI-supported electronics engineering platform moving into beta, which is a clear sign that requirement capture and schematic automation are productized features rather than lab demos.</div>
+        <div class="how">Why it matters: it shows commercial appetite for early-stage automation in electronics design, especially where teams want faster starts and cleaner handoff into EDA.</div>
+      </div>
+
+      <div class="item">
+        <div class="item-top">
+          <h3><a href="https://files.resources.altium.com/sites/default/files/2025-10/Guide%20to%20Requirements%20Management%20for%20Modern%20Electronic%20Hardware%20Teams-2025.pdf?VersionId=WkPPypigv6W4GyfJNqvuGx5sIAUWy1eZ" target="_blank" rel="noopener noreferrer">Altium requirements guide 2025</a></h3>
+          <div class="tag">news</div>
+        </div>
+        <div class="org">Altium · Updated requirements-management guide</div>
+        <div class="summary">Altium’s 2025 guide focuses on traceability, versioning, and requirement verification for electronic hardware teams. The document is a practical signal that modern PCB workflows are being reorganized around formal requirements, not just schematic capture.</div>
+        <div class="how">Why it matters: requirement-aware tooling is the prerequisite for automated generation, review, and compliance in real hardware teams.</div>
+      </div>
+        </div>
+      </section>
+    </div>
   </div>
-</div>
+<script>
+const API = 'http://localhost:5678';
+
+async function init() {
+  applyTheme();
+  await ensureEngineeringReady();
+}
+
+async function ensureEngineeringReady() {
+  try {
+    const status = await fetchStatus();
+    const shouldStart = !status.page_ready || status.status === 'idle' || status.status === 'error' || status.topic !== status.expected_topic;
+    if (shouldStart) {
+      showStatus('正在生成 Engineering View：自动收集 GitHub 开源实现、产品与新闻信号。');
+      await fetch(`${API}/api/generate-engineering`, { method:'POST' });
+      pollStatus();
+    } else if (status.status === 'running') {
+      showStatus(status.message || 'Engineering scout 正在运行中。');
+      pollStatus();
+    }
+  } catch {
+    showStatus('无法连接本地服务。启动 `python serve.py` 后刷新页面即可自动生成。', true);
+  }
+}
+
+async function fetchStatus() {
+  const r = await fetch(`${API}/api/engineering-status`);
+  if (!r.ok) throw new Error('status failed');
+  return await r.json();
+}
+
+function pollStatus() {
+  const timer = setInterval(async () => {
+    try {
+      const status = await fetchStatus();
+      if (status.status === 'ready' && status.page_ready) {
+        clearInterval(timer);
+        showStatus('Engineering View 已准备好，页面即将刷新。');
+        setTimeout(() => location.reload(), 800);
+        return;
+      }
+      if (status.status === 'error') {
+        clearInterval(timer);
+        showStatus(status.message || 'Engineering scout 生成失败。', true);
+        return;
+      }
+      showStatus(status.message || 'Engineering scout 正在运行中。');
+    } catch {
+      clearInterval(timer);
+      showStatus('读取 engineering 状态失败。', true);
+    }
+  }, 3000);
+}
+
+function showStatus(text, isError=false) {
+  const el = document.getElementById('status-card');
+  el.style.display = 'block';
+  el.className = 'status-card' + (isError ? ' error' : '');
+  el.textContent = text;
+}
+
+function applyTheme() {
+  const light = localStorage.getItem('theme') === 'light';
+  document.body.classList.toggle('light', light);
+  document.querySelector('.theme-toggle').textContent = light ? '☀️' : '🌙';
+}
+
+function toggleTheme() {
+  const light = !document.body.classList.contains('light');
+  localStorage.setItem('theme', light ? 'light' : 'dark');
+  applyTheme();
+}
+
+window.addEventListener('load', init);
+</script>
 </body>
 </html>
