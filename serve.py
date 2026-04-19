@@ -280,8 +280,9 @@ def regenerate_kanban():
     active_topic = latest_search.get("topic") or "Research Topic"
     active_year_range = latest_search.get("year_range") or "Unknown Range"
     active_venues = latest_search.get("venues") or "Unknown Venues"
+    active_papers = [paper for paper in papers if paper.get("topic") == active_topic] or papers
     all_papers = "\n".join(
-        render_paper_card(idx, paper) for idx, paper in enumerate(papers, start=1)
+        render_paper_card(idx, paper) for idx, paper in enumerate(active_papers, start=1)
     )
 
     rendered = (
@@ -740,6 +741,18 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urllib.parse.urlparse(self.path).path
+
+        if path.endswith(".html") and path not in ("/kanban.html", "/engineering.html"):
+            rel_name = path.lstrip("/")
+            safe_name = os.path.basename(rel_name)
+            html_file = os.path.join(OUTPUT_DIR, safe_name)
+            if os.path.exists(html_file):
+                body = open(html_file, "rb").read()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(body)
+                return
 
         if path == "/" or path == "/kanban.html":
             html_file = os.path.join(OUTPUT_DIR, "kanban.html")
