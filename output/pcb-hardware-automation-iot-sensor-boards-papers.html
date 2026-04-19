@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCB硬件自动化流程（面向 IoT 传感器板）— Papers</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;background:#0d1117;color:#e6edf3;line-height:1.7}.wrap{max-width:1100px;margin:0 auto;padding:28px 20px 60px}.hero{padding:26px 28px;border:1px solid #263041;border-radius:20px;background:linear-gradient(135deg,#151b24,#0f141c);margin-bottom:22px}.hero h1{font-size:34px;line-height:1.15;margin-bottom:10px}.hero p{color:#9fb0c7}.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.badge{padding:7px 12px;border:1px solid #2b3648;border-radius:999px;background:#111722;color:#9fb0c7;font-size:12px}.section{margin-top:24px}.section h2{font-size:20px;margin-bottom:12px}.card{border:1px solid #273244;border-radius:16px;padding:18px 18px 16px;background:#121923;margin-bottom:14px}.card h3{font-size:18px;line-height:1.35;margin-bottom:8px}.card a{color:#7cc0ff;text-decoration:none}.meta2{font-size:13px;color:#98a9c0;margin-bottom:10px}.summary{color:#d9e4f1}.summary p{margin:8px 0}.list{padding-left:20px;color:#d9e4f1}.note{padding:16px 18px;border-left:4px solid #f0b74a;background:#18140b;border-radius:10px;color:#f5deb0}.sources a{display:block;margin:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>PCB硬件自动化流程（面向 IoT 传感器板）— 论文调查</h1>
+    <p>按 conference-scout 流程整理。重点关注：是否已经存在从“功能需求/传感器需求”自动走到原理图、PCB 布局乃至制造文件的完整链路。</p>
+    <div class="meta">
+      <div class="badge">年份：2024–2026</div>
+      <div class="badge">方向：EDA / PCB Automation / LLM-assisted Hardware Design</div>
+      <div class="badge">结论：原理图自动化已明显推进，完整投产级 PCB 仍多为半自动</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="note">
+      当前研究最成熟的是“需求到原理图”与“原理图到部分 PCB 结构”的自动化；真正稳定覆盖器件选型、引脚约束、布局布线、ERC/DRC、EMI、电源完整性并最终输出可直接投板文件的全自动闭环，仍然较少见。对 IoT 传感板来说，现实路径更像是“LLM 生成 + 规则校验 + 人工收尾”。
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>代表性论文</h2>
+
+    <article class="card">
+      <h3><a href="https://arxiv.org/abs/2602.00510" target="_blank">PCBSchemaGen: Constraint-Guided Schematic Design via LLM for Printed Circuit Boards</a></h3>
+      <div class="meta2">2026 · arXiv · 直接针对 PCB schematic 自动生成</div>
+      <div class="summary">
+        <p>这篇工作非常贴近你的问题本身：输入功能描述，自动生成 PCB 原理图。它的核心不是单纯让模型“写电路”，而是把约束、器件关系、校验过程一起纳入生成闭环，因此更像一个受约束的 schematic synthesis 系统。</p>
+        <p>它说明研究界已经开始把“需求 -> 原理图”作为明确问题来解，而不是只做器件推荐或局部布线优化。对 IoT 传感板场景，这类方法最有价值的地方在于能把传感器、电源、MCU、通信模块之间的常见连接模式结构化。</p>
+      </div>
+    </article>
+
+    <article class="card">
+      <h3><a href="https://arxiv.org/abs/2509.14576" target="_blank">TypedSchematics: A Block-based PCB Design Tool with Real-time Detection of Common Connection Errors</a></h3>
+      <div class="meta2">2025 · arXiv / HCI-style tool paper · 面向原理图拼接与错误检测</div>
+      <div class="summary">
+        <p>TypedSchematics 的切入点不是完整自动化生成，而是把电路设计抽象成“带类型的功能块”。它强调实时检测常见连接错误、自动组合电路块和可扩展元件库，这对 IoT 传感板非常关键，因为这类板子经常是 MCU + 电源 + 传感器 + 无线模块的拼装变体。</p>
+        <p>从自动化视角看，它更像是把“自然语言需求”翻译成一组 typed blocks，再自动组合成 schematic 的中间表示。它离最终 PCB 文件还有距离，但非常适合作为上游需求编译层。</p>
+      </div>
+    </article>
+
+    <article class="card">
+      <h3><a href="https://typedschematics.com/" target="_blank">TypedSchematics (Beta Tool / Research Prototype)</a></h3>
+      <div class="meta2">2025 · 研究原型站点 · 提供 “Generate PCB” 的交互思路</div>
+      <div class="summary">
+        <p>这个原型的价值不在成熟度，而在交互范式：设计被拆成模块化的 schematic blocks，系统再往 PCB 生成推进。这很接近你要的“输入需求 -> 自动产出”的上游 UX 形态。</p>
+        <p>它说明学术原型已经在尝试把 schematic 表达和 PCB 生成串起来，但离工业级无人工程闭环还有明显差距。</p>
+      </div>
+    </article>
+
+    <article class="card">
+      <h3><a href="https://arxiv.org/abs/2402.00052" target="_blank">Zero-shot Sequential Neuro-symbolic Reasoning for Automatically Generating Architecture Schematic Designs</a></h3>
+      <div class="meta2">2024 · arXiv · 虽偏建筑 schematic，但方法论有参考价值</div>
+      <div class="summary">
+        <p>这篇不是 PCB 论文，但方法论值得注意：它把“从需求到 schematic”建模成 sequential neuro-symbolic reasoning。你关心的 PCB 自动化流程，实际上也需要这种“生成 + 规则 + 约束求解”的混合范式，而不是纯 LLM 文本生成。</p>
+        <p>对于 IoT 传感板，这意味着可行技术路线通常不是让模型直接吐 KiCad 文件，而是先生成结构，再做器件约束求解、引脚映射和规则验证。</p>
+      </div>
+    </article>
+  </section>
+
+  <section class="section">
+    <h2>研究结论</h2>
+    <ul class="list">
+      <li>“输入需求后自动生成原理图”已经有明显研究进展，且开始引入约束与错误检测。</li>
+      <li>“输入需求后自动输出完整 PCB 文件”目前更多出现在原型系统和工程工具试验中，而不是被广泛验证的稳定学术闭环。</li>
+      <li>对 IoT 传感板，最现实的自动化路径是：需求解析 → 功能块组合 → 器件/封装选择 → 原理图生成 → 规则校验 → PCB 布局/布线建议 → 人工审阅 → 制造文件导出。</li>
+    </ul>
+  </section>
+
+  <section class="section sources">
+    <h2>Sources</h2>
+    <a href="https://arxiv.org/abs/2602.00510" target="_blank">PCBSchemaGen</a>
+    <a href="https://arxiv.org/abs/2509.14576" target="_blank">TypedSchematics Paper</a>
+    <a href="https://typedschematics.com/" target="_blank">TypedSchematics Beta</a>
+    <a href="https://arxiv.org/abs/2402.00052" target="_blank">Neuro-symbolic schematic generation</a>
+  </section>
+</div>
+</body>
+</html>

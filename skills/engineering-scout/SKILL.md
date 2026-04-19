@@ -20,6 +20,7 @@ Extract:
 | `year_start` | start year for news / product recency | `2022` |
 | `year_end` | end year for news / product recency | current year |
 | `focus` | optional filters such as `github`, `products`, `news` | all |
+| `output_html` | optional standalone HTML output path when the user wants a topic-specific engineering page without overwriting the shared engineering page | optional |
 
 If the user asks this immediately after a paper search, reuse the latest paper-search topic unless the user overrides it.
 
@@ -69,6 +70,11 @@ Load the template from:
 ```text
 assets/engineering.html
 ```
+
+If the user explicitly asks for standalone topic-specific output that must not overwrite existing results:
+
+- generate a dedicated engineering page such as `output/{topic_slug}-engineering.html`
+- keep the shared `output/engineering.html` unchanged unless the task explicitly requests updating it
 
 Fill:
 

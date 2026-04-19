@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCU固件生成与自动烧录（跨 ESP32/STM32/nRF）— Engineering</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;background:#0d1117;color:#e6edf3;line-height:1.75}.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 60px}.hero{padding:26px 28px;border:1px solid #263041;border-radius:20px;background:linear-gradient(135deg,#151b24,#0f141c);margin-bottom:22px}.hero h1{font-size:34px;line-height:1.15;margin-bottom:10px}.hero p{color:#9fb0c7}.grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}.card{border:1px solid #273244;border-radius:16px;padding:18px;background:#121923}.card h2{font-size:19px;margin-bottom:10px}.card h3{font-size:17px;margin-bottom:8px}.card a{color:#7cc0ff;text-decoration:none}.meta{color:#9fb0c7;font-size:13px;margin-bottom:8px}.p{color:#d9e4f1}.p p{margin:8px 0}.callout{padding:16px 18px;border-left:4px solid #62c3ff;background:#0f1a22;border-radius:12px}.list{padding-left:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>MCU 固件生成与自动烧录（跨 ESP32 / STM32 / nRF）— Engineering</h1>
+    <p>按 engineering-scout 流程整理。重点看现实工具链是否已经支持：需求驱动代码生成、跨平台适配、自动 build / flash / deploy。</p>
+  </section>
+
+  <section class="card callout">
+    <strong>结论先行：</strong> 现实里“自动生成代码 + 自动 build/flash”已经可行；“同一需求稳定跨 ESP32 / STM32 / nRF 自动适配”也有工程路径，但必须建立在统一抽象层、板级配置和芯片族工具链封装之上，不能只靠单次文本生成。
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Products / Full-stack Tools</h2>
+
+      <h3><a href="https://embedder.com/" target="_blank">Embedder</a></h3>
+      <div class="meta">官方产品 · 支持 STM32 / ESP32 / nRF52 / 更多 MCU</div>
+      <div class="p">
+        <p>Embedder 的产品表述非常接近你要的目标：自动读取文档和工程上下文，生成 firmware baseline，并覆盖多家 MCU。它不是“只会写一段 demo 代码”的代理，而是试图成为完整的 AI firmware engineer。</p>
+        <p>这说明工程市场已经把“自动生成 + 平台识别 + 项目上下文接入”当成产品能力，而不是单独的研究概念。</p>
+      </div>
+
+      <h3 style="margin-top:16px;"><a href="https://autoembed.github.io/" target="_blank">AutoEmbed</a></h3>
+      <div class="meta">研究系统 + 原型 · 需求到代码的自动开发链</div>
+      <div class="p">
+        <p>AutoEmbed 的工程价值在于它把需求输入、组件识别、依赖求解和代码生成串成了一条 pipeline。对于自动烧录场景，这种结构特别重要，因为后续可以自然接上编译脚本和 flash runner。</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Cross-platform Build / Flash Infrastructure</h2>
+
+      <h3><a href="https://docs.platformio.org/en/latest/projectconf/" target="_blank">PlatformIO</a></h3>
+      <div class="meta">官方文档 · multi-environment 项目配置</div>
+      <div class="p">
+        <p>PlatformIO 的核心价值不在 AI，而在“同一项目维护多个 board / framework / upload runner”。这非常适合作为你想要的自动化系统底座：上层给出需求，生成平台无关逻辑，下层通过 `platformio.ini` 选中不同环境来构建 ESP32、STM32、nRF 版本。</p>
+      </div>
+
+      <h3 style="margin-top:16px;"><a href="https://docs.zephyrproject.org/latest/develop/flash_debug/host-tools.html" target="_blank">Zephyr + west flash</a></h3>
+      <div class="meta">官方文档 · 统一 build / flash 抽象</div>
+      <div class="p">
+        <p>Zephyr 的 `west build` / `west flash` 是跨板卡和 runner 的统一入口。官方文档里明确提到 STM32 使用 `stm32cubeprogrammer` 作为默认 west runner；Zephyr 也覆盖了 nRF 与 Espressif 相关 runner。</p>
+        <p>这意味着一个自动化代理完全可以把“需求 → 生成 Zephyr app → 指定 board → west flash”做成统一流程，而不用每个平台手写一套烧录脚本。</p>
+      </div>
+
+      <h3 style="margin-top:16px;"><a href="https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-guides/tools/idf-py.html" target="_blank">ESP-IDF idf.py</a> / <a href="https://www.st.com/en/development-tools/stm32cubemx.html" target="_blank">STM32CubeMX</a> / <a href="https://www.nordicsemi.com/Products/Development-tools/nRF-Util" target="_blank">nRF Util</a></h3>
+      <div class="meta">官方工具链</div>
+      <div class="p">
+        <p>如果不走统一框架，另一条可行路径是让代理直接调厂商原生 CLI：ESP-IDF 负责 build/flash，STM32CubeMX/CubeProgrammer 负责代码骨架和烧录，Nordic 侧用 nRF Util / nRF Connect SDK。</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>What A Real End-to-end Pipeline Looks Like</h2>
+      <ul class="list">
+        <li>需求输入：传感器、采样周期、通信协议、低功耗/OTA/日志需求。</li>
+        <li>硬件抽象：把需求映射成 board capabilities、peripheral graph、RTOS/SDK 约束。</li>
+        <li>代码生成：先生成平台无关逻辑，再下沉到 ESP32 / STM32 / nRF 的适配层。</li>
+        <li>构建与烧录：PlatformIO 或 Zephyr `west` 统一调度；或厂商 CLI 直连。</li>
+        <li>验证：编译日志、flash 成功、串口 smoke test、HIL regression。</li>
+      </ul>
+      <div class="p" style="margin-top:10px;">
+        <p>所以，如果你问“给一个需求，能不能自动生成代码并最终烧录”，答案是：可以，但工程实现必须以统一抽象层和自动化 runner 为前提；如果直接跳过这些基础设施，只靠语言模型裸写板级代码，稳定性会非常差。</p>
+      </div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

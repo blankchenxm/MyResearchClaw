@@ -22,6 +22,7 @@ Extract:
 | `year_end` | end year | current year |
 | `conference_groups` | venue groups such as `ai_ml`, `iot_systems`, `security` | ask if missing |
 | `specific_venues` | explicit venue override | optional |
+| `output_html` | optional standalone HTML output path when the user wants a topic-specific page without overwriting the shared dashboard | optional |
 
 If venue intent is missing, ask which venue family the user wants.
 
@@ -223,6 +224,12 @@ Fill:
 - `{{ENGINEERING_LINK}}`
 
 Render cards for every paper. Use the paper's existing progress and note link when present.
+
+If the user explicitly asks for topic-specific standalone HTML that must not overwrite existing results:
+
+- still update `output/papers.json`
+- additionally generate a dedicated paper report HTML such as `output/{topic_slug}-papers.html`
+- use `assets/results.html` as the base template for that standalone report
 
 ## Response Format
 

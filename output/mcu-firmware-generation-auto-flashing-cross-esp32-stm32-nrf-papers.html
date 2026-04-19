@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCU固件生成与自动烧录（跨 ESP32/STM32/nRF）— Papers</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;background:#0d1117;color:#e6edf3;line-height:1.7}.wrap{max-width:1100px;margin:0 auto;padding:28px 20px 60px}.hero{padding:26px 28px;border:1px solid #263041;border-radius:20px;background:linear-gradient(135deg,#151b24,#0f141c);margin-bottom:22px}.hero h1{font-size:34px;line-height:1.15;margin-bottom:10px}.hero p{color:#9fb0c7}.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.badge{padding:7px 12px;border:1px solid #2b3648;border-radius:999px;background:#111722;color:#9fb0c7;font-size:12px}.section{margin-top:24px}.section h2{font-size:20px;margin-bottom:12px}.card{border:1px solid #273244;border-radius:16px;padding:18px 18px 16px;background:#121923;margin-bottom:14px}.card h3{font-size:18px;line-height:1.35;margin-bottom:8px}.card a{color:#7cc0ff;text-decoration:none}.meta2{font-size:13px;color:#98a9c0;margin-bottom:10px}.summary{color:#d9e4f1}.summary p{margin:8px 0}.note{padding:16px 18px;border-left:4px solid #62c3ff;background:#0f1a22;border-radius:10px;color:#d9e4f1}.list{padding-left:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>MCU 固件生成与自动烧录（跨 ESP32 / STM32 / nRF）— 论文调查</h1>
+    <p>按 conference-scout 流程整理。重点关注：是否存在“根据需求自动生成代码并完成烧录”的跨芯片闭环，以及研究是否已经覆盖跨平台迁移。</p>
+    <div class="meta">
+      <div class="badge">年份：2024–2026</div>
+      <div class="badge">方向：Embedded AI / Firmware Generation / HIL / Cross-platform Migration</div>
+      <div class="badge">结论：自动生成已可行，跨平台稳定落地依赖抽象层与工具链封装</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="note">
+      从研究上看，“生成 MCU 代码”已经不是问题本身，真正的问题是：如何绑定外设、如何解耦芯片族差异、如何完成编译/烧录/HIL 验证。也就是说，自动化链的核心不是单纯的 code generation，而是 toolchain orchestration + hardware-aware grounding。
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>代表性论文</h2>
+
+    <article class="card">
+      <h3><a href="https://autoembed.github.io/" target="_blank">AutoEmbed: Automated Software Development for Embedded IoT Systems</a></h3>
+      <div class="meta2">2026 · 系统化自动嵌入式开发平台 · 有开源/可执行原型</div>
+      <div class="summary">
+        <p>AutoEmbed 是目前最直接回答你问题的研究型系统之一。它明确提出完整四阶段流水线：library solving、knowledge generation、prompt assembly、LLM-driven code synthesis。</p>
+        <p>关键不在于“让 LLM 写代码”，而在于先做组件级依赖求解和硬件知识注入，再生成代码。这个设计非常适合跨 ESP32 / STM32 / nRF 的需求，因为平台差异主要体现在外设、库和工具链，而不是应用逻辑本身。</p>
+      </div>
+    </article>
+
+    <article class="card">
+      <h3><a href="https://arxiv.org/abs/2412.09058" target="_blank">EmbedGenius: Towards Automated Software Development for Generic Embedded IoT Systems</a></h3>
+      <div class="meta2">2024/2025 · arXiv · 全自动嵌入式 IoT 软件开发</div>
+      <div class="summary">
+        <p>EmbedGenius 提出的是“generic embedded IoT systems”的完整自动开发路线，强调 hardware-in-the-loop 视角。这意味着系统不是只追求代码可编译，而是追求和真实硬件行为一致。</p>
+        <p>对你的需求来说，这篇工作说明跨芯片自动化的关键是把设备能力、组件依赖和 deployment 过程一并纳入，而不是只做 prompt engineering。</p>
+      </div>
+    </article>
+
+    <article class="card">
+      <h3><a href="https://arxiv.org/abs/2506.11003" target="_blank">EmbedAgent: Benchmarking Large Language Models in Embedded System Development</a></h3>
+      <div class="meta2">2025 · arXiv · 跨平台迁移 benchmark</div>
+      <div class="summary">
+        <p>EmbedAgent 的价值不只是 benchmark，而是它显式把 embedded programmer、architect、integrator 这些真实角色纳入评测，并覆盖 cross-platform migration。</p>
+        <p>这意味着研究社区已经把“从一个板迁到另一个板”视为核心能力，而不是边角问题。对于 ESP32、STM32、nRF 这类族系切换，这是非常贴近实际工程的评价维度。</p>
+      </div>
+    </article>
+
+    <article class="card">
+      <h3><a href="https://embedder.dev/" target="_blank">Embedder / AI Firmware Engineer</a></h3>
+      <div class="meta2">2025–2026 · 虽是产品，但代表研究落地趋势</div>
+      <div class="summary">
+        <p>严格来说这不是论文，但它体现了学术路线的工程化落点：自动检测项目构建系统、识别硬件配置、生成并迭代固件。它说明“自动生成 + 自动适配”已经开始从研究走向产品形态。</p>
+      </div>
+    </article>
+  </section>
+
+  <section class="section">
+    <h2>研究结论</h2>
+    <ul class="list">
+      <li>“根据需求自动生成 MCU 代码”已经有明确研究路径，特别是在 IoT 场景和通用嵌入式平台上。</li>
+      <li>“自动烧录”本身不是研究难点，真正难点在于跨芯片工具链、SDK、驱动、引脚和板级差异的统一抽象。</li>
+      <li>最可行的跨平台路线是：需求层 → 平台无关应用逻辑 → 芯片族适配层 → 编译/烧录 runner，而不是直接让模型裸写三套完全不同代码。</li>
+    </ul>
+  </section>
+</div>
+</body>
+</html>

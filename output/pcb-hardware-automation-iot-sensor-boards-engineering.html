@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCB硬件自动化流程（面向 IoT 传感器板）— Engineering</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;background:#0d1117;color:#e6edf3;line-height:1.75}.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 60px}.hero{padding:26px 28px;border:1px solid #263041;border-radius:20px;background:linear-gradient(135deg,#151b24,#0f141c);margin-bottom:22px}.hero h1{font-size:34px;line-height:1.15;margin-bottom:10px}.hero p{color:#9fb0c7}.grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:18px}.card{border:1px solid #273244;border-radius:16px;padding:18px;background:#121923}.card h2{font-size:19px;margin-bottom:10px}.card h3{font-size:17px;margin-bottom:8px}.card a{color:#7cc0ff;text-decoration:none}.meta{color:#9fb0c7;font-size:13px;margin-bottom:8px}.p{color:#d9e4f1}.p p{margin:8px 0}.callout{padding:16px 18px;border-left:4px solid #62c3ff;background:#0f1a22;border-radius:12px}.list{padding-left:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>PCB硬件自动化流程（面向 IoT 传感器板）— Engineering</h1>
+    <p>按 engineering-scout 流程整理。重点判断：现实工程里是否已经存在“输入功能需求 -> 自动生成完整 PCB 文件”的实现路径，以及这些路径卡在哪里。</p>
+  </section>
+
+  <section class="card callout">
+    <strong>结论先行：</strong> 现实中已经出现“需求到 schematic / KiCad 工程”的开源与商业原型，但多数系统仍把完整 PCB layout 视为半自动阶段。最成熟的产品形态是“AI 生成原理图 + 器件选择 + 工具内辅助布局布线”，而不是完全无人值守地输出最终可投产板。
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Open Source</h2>
+
+      <h3><a href="https://github.com/Shaurya-Sethi/circuitron" target="_blank">Circuitron</a></h3>
+      <div class="meta">GitHub · 自然语言到 `.sch` / `.kicad_pcb` / ERC</div>
+      <div class="p">
+        <p>Circuitron 是目前最接近“自然语言需求 -> PCB 工程文件”的开源原型之一。它明确声称可产出 KiCad 所需的 `.sch` 与 `.kicad_pcb`，而不是只停在文字建议或 JSON 中间表示。</p>
+        <p>实现思路明显是 agentic：需求解析、知识图谱/元件知识检索、图结构构建、ERC/修正迭代，再导出 KiCad 资产。对 IoT 板来说，它的价值在于能把“传感器 + MCU + 电源 + 无线”的重复设计模板自动化。</p>
+      </div>
+
+      <h3 style="margin-top:16px;"><a href="https://github.com/circuit-synth/circuit-synth" target="_blank">circuit-synth</a></h3>
+      <div class="meta">GitHub · Python-defined circuits + 生成 schematic / PCB outputs</div>
+      <div class="p">
+        <p>这条路线不是自然语言直接生成，而是“电路代码化”。它把电路定义写成结构化代码，再导出 BOM、schematic、PCB 相关产物。这对自动化系统特别重要，因为代码化电路比自然语言更容易做参数化、版本控制和约束检查。</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Products</h2>
+
+      <h3><a href="https://www.flux.ai/Copilot" target="_blank">Flux Copilot</a></h3>
+      <div class="meta">官方产品 · AI-assisted schematic design</div>
+      <div class="p">
+        <p>Flux 的官方文档写得很明确：Copilot 目前主要理解 schematic，对 PCB layout 的理解仍有限。这意味着它已经进入“需求到原理图助手”的成熟产品阶段，但还没有把完整布局布线完全交给 AI。</p>
+        <p>从实现上看，它更像嵌入在浏览器 EDA 中的设计协同层：器件数据、原理图编辑、AI 对话和 PCB 编辑器共享一套工程上下文。</p>
+      </div>
+
+      <h3 style="margin-top:16px;"><a href="https://www.celus.io/solutions/engineers" target="_blank">CELUS</a></h3>
+      <div class="meta">官方产品 · requirements → architecture / components / schematic handoff</div>
+      <div class="p">
+        <p>CELUS 更接近你要的“从需求出发”的产品路线。它强调从 requirements 生成架构、器件选型和 schematic 级输出，再交给专业 EDA 工具做后续实现。</p>
+        <p>它的现实意义在于验证了一个工程共识：真正能商业化的自动化链，通常是把“需求到设计意图”自动化，把最后的 layout/signoff 仍留给 EDA 工具和工程师。</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Implementation Path</h2>
+      <ul class="list">
+        <li>需求输入：传感器类型、采样频率、功耗、通信方式、尺寸/成本约束。</li>
+        <li>功能块编译：MCU / PMIC / Sensor / Radio / Connector / Storage。</li>
+        <li>元件选择：根据供应链和 footprint 约束匹配真实器件。</li>
+        <li>原理图生成：自动连线、电源树、去耦、电平转换、I2C/SPI/UART 关系。</li>
+        <li>PCB 生成：placement seeds、keepout、差分/阻抗规则、自动布线建议。</li>
+        <li>验证：ERC / DRC / footprint 检查 / 电源完整性 / 制造输出。</li>
+      </ul>
+      <div class="p" style="margin-top:10px;">
+        <p>因此，如果你的目标是“我给一个 IoT 需求，最后自动输出完整 PCB 文件”，现实路径已经可以走到很后面，但最后一段通常还需要人工收尾，尤其是高密度、射频、EMC 敏感和机械约束复杂的板子。</p>
+      </div>
+    </section>
+  </div>
+</div>
+</body>
+</html>
