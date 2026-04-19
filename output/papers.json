@@ -182,17 +182,18 @@
       "rank": 1,
       "summary_en": "AutoEmbed is directly aligned with the question of whether a generic embedded IoT requirement can be turned into working firmware with LLMs. The system is described as a four-stage pipeline covering library solving, knowledge generation, prompt assembly, and LLM-driven code synthesis, which means it is not just asking a model to emit code from a blank prompt. That architecture matters because the hard part in ESP32, STM32, and nRF automation is selecting the right hardware-specific libraries and assembling enough grounded context before generation starts. As a SenSys 2026 paper, it is one of the clearest recent signals that requirement-to-firmware automation for embedded IoT has moved from scattered demos into serious systems research.",
       "summary_zh": "AutoEmbed 与你关心的问题几乎是正面对齐的：能不能把通用嵌入式 IoT 需求自动变成可工作的固件。公开页面给出的系统结构是四阶段流水线，依次包含 library solving、knowledge generation、prompt assembly 和 LLM-driven code synthesis，也就是说它并不是让模型对着空 prompt 直接裸写代码。这个架构很关键，因为在 ESP32、STM32、nRF 这类平台上，真正困难的部分往往是先选对硬件相关库、再把足够扎实的上下文喂给生成器，而不是最后几步代码输出本身。作为 SenSys 2026 的论文，它是目前最直接的证据之一，说明“需求到固件”的自动化已经从零散 demo 进入到较严肃的系统研究阶段。",
-      "status": "unread",
-      "progress": 0,
+      "status": "reading",
+      "progress": 100,
       "topic": "MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)",
       "date_added": "2026-04-19",
+      "last_updated": "2026-04-19",
       "tags": [
         "llm",
         "firmware-generation",
         "iot",
         "sensorsys"
       ],
-      "note_path": null
+      "note_path": "output/notes/mcu-esp32-stm32-nrf/autoembed-towards-automated-software-development-for-generic-embedded-iot-systems-via-llms_2026.md"
     },
     {
       "id": "platform-specific-code-generation-from-platform-independent-timed-models_2015",
