@@ -14,6 +14,13 @@
       "year_range": "2020-2026",
       "venues": "UIST, arXiv, board-level EDA / schematic automation",
       "papers_added": 6
+    },
+    {
+      "date": "2026-04-20",
+      "topic": "芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）",
+      "year_range": "2018-2026",
+      "venues": "arXiv, JSys, WACV, JCDL, document understanding / systems engineering",
+      "papers_added": 6
     }
   ],
   "papers": [
@@ -418,6 +425,159 @@
       ],
       "note_path": null,
       "pdf_url": "https://arxiv.org/pdf/2408.15372"
+    },
+    {
+      "id": "specmap-hierarchical-llm-agent-for-datasheet-to-code-traceability-link-recovery-in-systems-engineering_2026",
+      "title": "SpecMap: Hierarchical LLM Agent for Datasheet-to-Code Traceability Link Recovery in Systems Engineering",
+      "authors": "Vedant Nipane et al.",
+      "year": 2026,
+      "venue": "arXiv",
+      "citations": 0,
+      "url": "https://arxiv.org/abs/2601.11688",
+      "arxiv_id": "2601.11688",
+      "is_arxiv": true,
+      "rank": 1,
+      "summary_en": "SpecMap is one of the most directly relevant recent papers for datasheet understanding in embedded systems. Instead of treating the datasheet as plain text, it builds a hierarchical datasheet-to-code traceability pipeline that narrows from repository structure to files and finally to low-level symbols such as registers, macros, structs, and constants. This matters for MCU datasheets because the practically useful output is rarely just a summary; engineers need to connect register descriptions, timing constraints, and peripheral semantics back to implementation artifacts. The paper reports up to 73.3% file mapping accuracy while cutting LLM token use by 84%, which makes it a strong reference for large-scale datasheet grounding rather than simple PDF OCR.",
+      "summary_zh": "SpecMap 是这条题目里最直接相关的近期论文之一，因为它讨论的不是泛化 PDF 摘要，而是“如何把 datasheet 里的规格真正映射到代码实现”。它把流程拆成分层的 datasheet-to-code traceability：先理解仓库结构，再定位相关文件，最后细化到寄存器、宏、结构体、常量等符号级别。这对 MCU/SoC datasheet 场景特别重要，因为工程上真正有价值的结果并不是抽一段摘要，而是把寄存器定义、外设语义、配置常量乃至时序约束对接到实现。论文给出的结果是文件级映射准确率最高到 73.3%，同时把 LLM token 开销降低了 84%，说明这类任务必须走结构化分层检索，而不是只靠顺序读 PDF。",
+      "status": "unread",
+      "progress": 0,
+      "topic": "芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）",
+      "date_added": "2026-04-20",
+      "tags": [
+        "datasheet",
+        "embedded",
+        "traceability",
+        "llm"
+      ],
+      "note_path": null,
+      "pdf_url": "https://arxiv.org/pdf/2601.11688"
+    },
+    {
+      "id": "automatically-extracting-hardware-descriptions-from-pdf-technical-documentation_2023",
+      "title": "Automatically Extracting Hardware Descriptions from PDF Technical Documentation",
+      "authors": "Niklas Hauser and Jan Pennekamp",
+      "year": 2023,
+      "venue": "JSys",
+      "citations": 0,
+      "url": "https://salkinium.com/hp23.pdf",
+      "arxiv_id": null,
+      "is_arxiv": false,
+      "rank": 2,
+      "summary_en": "This paper is one of the strongest engineering-facing references for MCU datasheet extraction from vendor PDFs. It designs a modular processor that deterministically extracts device identifiers, interrupt tables, package and pinout information, pin functions, and register maps from thousands of microcontroller documents. The importance here is that it targets the exact pain point of embedded software porting: the structured hardware description exists in the PDF, but not in a form that toolchains can consume. It is especially useful because it demonstrates that a large part of datasheet extraction can be solved with robust layout- and table-aware processing before bringing in heavier multimodal reasoning.",
+      "summary_zh": "这篇论文是 MCU datasheet 提取里非常硬核、而且明显面向工程落地的一篇代表作。它实现了一个模块化处理器，可以从成千上万份微控制器 PDF 技术文档中稳定提取设备标识、中断表、封装与引脚、引脚功能、寄存器映射等关键结构化数据。它的重要性在于：作者解决的正是嵌入式软件移植时最痛的那部分工作，即硬件描述明明都在 PDF 里，却不能直接被构建系统、HAL 生成器或代码模板利用。对这次主题尤其有价值的是，它说明很多 datasheet 信息提取不必一开始就依赖大模型自由推理，而是可以先用高质量的版面和表格处理把可确定的结构化信息稳定抽出来。",
+      "status": "unread",
+      "progress": 0,
+      "topic": "芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）",
+      "date_added": "2026-04-20",
+      "tags": [
+        "datasheet",
+        "hardware-description",
+        "register-map",
+        "table-extraction"
+      ],
+      "note_path": null,
+      "pdf_url": "https://salkinium.com/hp23.pdf"
+    },
+    {
+      "id": "automated-hemt-model-construction-from-datasheets-via-multi-modal-intelligence-and-prior-knowledge-free-optimization_2025",
+      "title": "Automated HEMT Model Construction from Datasheets via Multi-Modal Intelligence and Prior-Knowledge-Free Optimization",
+      "authors": "Yuang Peng et al.",
+      "year": 2025,
+      "venue": "arXiv",
+      "citations": 0,
+      "url": "https://arxiv.org/abs/2507.21430",
+      "arxiv_id": "2507.21430",
+      "is_arxiv": true,
+      "rank": 3,
+      "summary_en": "Although this paper focuses on HEMT devices rather than MCUs, it is highly relevant because it tackles a hard datasheet problem that text parsers usually miss: characteristic curves hidden in PDF figures. The proposed pipeline combines computer vision, an LLM, and optimization to parse heterogeneous datasheet layouts and digitize device curves directly from PDF documents. For SoC and sensor datasheets, the analog is clear: many important facts live in timing plots, performance envelopes, and physical characteristic charts rather than plain tables. This paper is a strong signal that any serious datasheet extraction pipeline must treat curve digitization and multimodal figure understanding as first-class tasks.",
+      "summary_zh": "虽然这篇论文处理的是 HEMT 器件模型，而不是 MCU 本身，但它对你这个题目非常关键，因为它正面解决了传统文本解析器最难处理的一类 datasheet 信息：藏在 PDF 图里的性能曲线。作者把计算机视觉、LLM 和后端优化组合起来，直接从 PDF datasheet 中解析异构版面并数字化器件特性曲线。对 SoC 和传感器 datasheet 来说，这种能力几乎是同构需求，因为很多重要信息并不在纯文本段落或简单表格里，而是藏在时序窗口、频率响应图、功耗曲线、热特性图和物理结构示意图中。这篇论文的意义在于，它非常明确地说明：如果要把芯片 datasheet 做成可计算、可问答、可生成代码的资产，图表数字化和多模态图理解必须是一级能力。",
+      "status": "unread",
+      "progress": 0,
+      "topic": "芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）",
+      "date_added": "2026-04-20",
+      "tags": [
+        "datasheet",
+        "multimodal",
+        "curve-digitization",
+        "device-modeling"
+      ],
+      "note_path": null,
+      "pdf_url": "https://arxiv.org/pdf/2507.21430"
+    },
+    {
+      "id": "td-interpreter-enhancing-the-understanding-of-timing-diagrams-with-visual-language-learning_2025",
+      "title": "TD-Interpreter: Enhancing the Understanding of Timing Diagrams with Visual-Language Learning",
+      "authors": "Jie He et al.",
+      "year": 2025,
+      "venue": "arXiv",
+      "citations": 0,
+      "url": "https://arxiv.org/abs/2507.16844",
+      "arxiv_id": "2507.16844",
+      "is_arxiv": true,
+      "rank": 4,
+      "summary_en": "TD-Interpreter is directly relevant to the timing-diagram part of the problem. Instead of generic OCR, it treats timing diagrams as a visual-language reasoning task and fine-tunes LLaVA to answer design and verification questions over timing diagrams. This is important because timing diagrams encode relations between signals, delays, and state changes that are not recoverable from tokenized text alone. For chip datasheets, it suggests that extracting timing constraints requires a specialized diagram-understanding stage rather than only page-level document parsing.",
+      "summary_zh": "TD-Interpreter 与你关心的“时序图怎么处理”几乎是直接对应的工作。它没有把时序图当成普通图片 OCR，而是把它建模成视觉-语言推理问题，并通过微调 LLaVA 来回答工程师围绕 timing diagram 的设计与验证问题。这个思路非常关键，因为时序图真正难的地方不在识别文字标签，而在理解信号之间的相对时序关系、边沿条件、保持/建立窗口和状态变化。对芯片 datasheet 来说，这意味着“抽取 timing 信息”不能只靠页面级文本解析，而要单独有一层针对时序图的结构化理解或问答模型。",
+      "status": "unread",
+      "progress": 0,
+      "topic": "芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）",
+      "date_added": "2026-04-20",
+      "tags": [
+        "timing-diagram",
+        "vlm",
+        "diagram-understanding"
+      ],
+      "note_path": null,
+      "pdf_url": "https://arxiv.org/pdf/2507.16844"
+    },
+    {
+      "id": "chartocr-data-extraction-from-charts-images-via-a-deep-hybrid-framework_2021",
+      "title": "ChartOCR: Data Extraction From Charts Images via a Deep Hybrid Framework",
+      "authors": "Junyu Luo et al.",
+      "year": 2021,
+      "venue": "WACV",
+      "citations": 0,
+      "url": "https://openaccess.thecvf.com/content/WACV2021/papers/Luo_ChartOCR_Data_Extraction_From_Charts_Images_via_a_Deep_Hybrid_WACV_2021_paper.pdf",
+      "arxiv_id": null,
+      "is_arxiv": false,
+      "rank": 5,
+      "summary_en": "ChartOCR is a strong paper to include because datasheets are full of charts whose underlying numerical tables are not published. The method combines key-point detection and rule-based reasoning into a deep hybrid framework that generalizes across multiple chart types rather than solving only one plot family. For chip datasheets, this directly maps to extracting values from performance curves, power plots, voltage derating charts, and frequency-response diagrams. Even when the exact domain differs, the paper provides a concrete technical reference for turning chart images back into machine-usable numeric data.",
+      "summary_zh": "ChartOCR 值得放进这个主题里，因为大量 datasheet 图表其实都面临同一个问题：图已经给出来了，但底层数值表并没有公开。它把关键点检测与规则推理结合成 deep hybrid framework，不是只针对一种图表类型，而是尽量跨柱状图、折线图、饼图等多类图表工作。映射到芯片 datasheet 场景，意义非常直接：功耗曲线、频率-电压关系图、灵敏度曲线、温漂曲线乃至某些模拟时序窗口图，本质上都需要先把图像重新数字化，才能进入后续的问答、检索、约束计算或自动代码生成。",
+      "status": "unread",
+      "progress": 0,
+      "topic": "芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）",
+      "date_added": "2026-04-20",
+      "tags": [
+        "chart-extraction",
+        "ocr",
+        "cv",
+        "datasheet-figures"
+      ],
+      "note_path": null
+    },
+    {
+      "id": "extracting-scientific-figures-with-distantly-supervised-neural-networks_2018",
+      "title": "Extracting Scientific Figures with Distantly Supervised Neural Networks",
+      "authors": "Noah Siegel et al.",
+      "year": 2018,
+      "venue": "JCDL",
+      "citations": 0,
+      "url": "https://arxiv.org/abs/1804.02445",
+      "arxiv_id": "1804.02445",
+      "is_arxiv": true,
+      "rank": 6,
+      "summary_en": "This paper is broader than datasheets, but it remains foundational for figure-heavy PDF extraction. It shows how charts, diagrams, and tables can be detected at scale in rasterized PDF pages, and reports an average precision of 96.8% using distantly supervised labels from large document corpora. In a datasheet pipeline, this kind of figure detector is the stage that decides what gets routed to specialized modules: timing diagrams to diagram understanding, plots to chart digitization, and tables to table parsers. That routing step is essential when PDFs are 100-plus pages and only a fraction of pages carry the critical hardware information.",
+      "summary_zh": "这篇论文比 datasheet 主题更广，但它对“长 PDF 里如何先找出关键图表”非常基础。它展示了如何在栅格化 PDF 页面中大规模检测图、表和图示，并用远监督方式把训练集扩展到数百万级，最终达到很高的检测精度。对芯片 datasheet 处理流水线来说，这一层的作用是“路由器”：先把一百多页 PDF 里的关键图表找出来，再把 timing diagram 发给时序图理解模块，把性能曲线发给图表数字化模块，把寄存器表发给表格解析模块。没有这一层，高成本的多模态处理就很难在工程上扩展到真实文档规模。",
+      "status": "unread",
+      "progress": 0,
+      "topic": "芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）",
+      "date_added": "2026-04-20",
+      "tags": [
+        "figure-extraction",
+        "pdf",
+        "document-understanding"
+      ],
+      "note_path": null,
+      "pdf_url": "https://arxiv.org/pdf/1804.02445"
     }
   ]
 }
