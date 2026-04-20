@@ -21,6 +21,10 @@ body.light {
   position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font-size:16px;
 }
+.chat-toggle {
+  position:fixed; top:64px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font-size:16px;
+}
 .hero { background:linear-gradient(145deg, rgba(103,164,255,0.14), rgba(56,217,199,0.06)); border:1px solid var(--line); border-radius:24px; padding:28px 30px; margin-bottom:24px; }
 .eyebrow { font:600 12px 'JetBrains Mono',monospace; color:var(--amber); letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
 .hero h1 { font-size:42px; line-height:1.08; font-weight:900; max-width:980px; }
@@ -29,6 +33,7 @@ body.light {
 .badge { border:1px solid var(--line); background:rgba(255,255,255,0.04); border-radius:999px; padding:8px 14px; font:500 12px 'JetBrains Mono',monospace; color:var(--dim); }
 .nav { display:flex; gap:10px; margin-bottom:22px; }
 .nav a { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; }
+.nav-btn { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; cursor:pointer; }
 .grid { display:grid; grid-template-columns:1fr; gap:18px; }
 .section { background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:22px; }
 .section-title { display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:16px; }
@@ -48,14 +53,37 @@ body.light {
 .takeaway { background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:16px 18px; color:var(--text); line-height:1.8; }
 .status-card { margin-bottom:18px; background:rgba(56,217,199,0.07); border:1px solid rgba(56,217,199,0.16); border-radius:16px; padding:14px 16px; color:var(--dim); }
 .status-card.error { background:rgba(255,141,107,0.08); border-color:rgba(255,141,107,0.18); }
+.chat-drawer {
+  position:fixed; top:0; right:-420px; width:400px; max-width:calc(100vw - 24px); height:100vh; z-index:9998;
+  background:var(--panel); border-left:1px solid var(--line); box-shadow:-12px 0 36px rgba(0,0,0,0.28);
+  transition:right .2s ease; display:flex; flex-direction:column;
+}
+.chat-drawer.open { right:0; }
+.chat-header { padding:16px 18px; border-bottom:1px solid var(--line); display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.chat-title { font-size:16px; font-weight:800; }
+.chat-subtitle { font:500 11px 'JetBrains Mono', monospace; color:var(--muted); margin-top:4px; }
+.chat-history { flex:1; overflow:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
+.chat-msg { border:1px solid var(--line); border-radius:16px; padding:12px 14px; line-height:1.75; font-size:14px; white-space:pre-wrap; }
+.chat-msg.user { background:rgba(103,164,255,0.08); border-color:rgba(103,164,255,0.18); }
+.chat-msg.assistant { background:rgba(56,217,199,0.06); border-color:rgba(56,217,199,0.16); }
+.chat-empty { color:var(--muted); line-height:1.8; font-size:14px; padding:6px 4px; }
+.chat-compose { border-top:1px solid var(--line); padding:14px 16px 16px; display:flex; flex-direction:column; gap:10px; }
+.chat-input {
+  width:100%; min-height:92px; resize:vertical; border-radius:14px; border:1px solid var(--line);
+  background:var(--panel-2); color:var(--text); padding:12px 14px; font:inherit;
+}
+.chat-actions { display:flex; justify-content:flex-end; gap:10px; }
+.chat-status { color:var(--muted); font-size:12px; min-height:18px; }
 @media (max-width: 900px) {
   .wrap { padding:16px 16px 60px; }
   .hero h1 { font-size:32px; }
+  .chat-drawer { width:100vw; max-width:100vw; }
 }
 </style>
 </head>
 <body>
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+  <button class="chat-toggle" onclick="toggleChatDrawer()" title="Toggle project chat">💬</button>
   <div class="wrap">
     <div class="nav">
       <a href="/kanban.html">← Back to Papers</a>
@@ -118,8 +146,31 @@ body.light {
       </section>
     </div>
   </div>
+<aside id="chat-drawer" class="chat-drawer" aria-hidden="true">
+  <div class="chat-header">
+    <div>
+      <div class="chat-title">Project Chat</div>
+      <div class="chat-subtitle">{{TOPIC}} · engineering</div>
+    </div>
+    <button class="nav-btn" onclick="toggleChatDrawer()">Close</button>
+  </div>
+  <div id="chat-history" class="chat-history">
+    <div class="chat-empty">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>
+  </div>
+  <div class="chat-compose">
+    <div id="chat-status" class="chat-status"></div>
+    <textarea id="chat-input" class="chat-input" placeholder="直接提问。当前工程页内容和 Codex 网络搜索都会作为可用能力。"></textarea>
+    <div class="chat-actions">
+      <button class="nav-btn" onclick="submitChat()">Send</button>
+    </div>
+  </div>
+</aside>
 <script>
 const API = 'http://localhost:5678';
+const PROJECT_TOPIC = '{{TOPIC}}';
+const PROJECT_PAGE_TYPE = 'engineering';
+let chatLoaded = false;
+let chatPending = false;
 
 async function init() {
   applyTheme();
@@ -179,6 +230,70 @@ function showStatus(text, isError=false) {
   el.textContent = text;
 }
 
+function escapeHtml(text) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderChatHistory(messages) {
+  const el = document.getElementById('chat-history');
+  if (!messages.length) {
+    el.innerHTML = '<div class="chat-empty">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>';
+    return;
+  }
+  el.innerHTML = messages.map(msg => `<div class="chat-msg ${msg.role}">${escapeHtml(msg.content || '')}</div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+async function loadChatHistory() {
+  const r = await fetch(`${API}/api/chat-history?topic=${encodeURIComponent(PROJECT_TOPIC)}&page_type=${encodeURIComponent(PROJECT_PAGE_TYPE)}`);
+  if (!r.ok) throw new Error('history failed');
+  const data = await r.json();
+  renderChatHistory(data.messages || []);
+  chatLoaded = true;
+}
+
+async function toggleChatDrawer() {
+  const drawer = document.getElementById('chat-drawer');
+  const opening = !drawer.classList.contains('open');
+  drawer.classList.toggle('open', opening);
+  drawer.setAttribute('aria-hidden', opening ? 'false' : 'true');
+  if (opening && !chatLoaded) {
+    try {
+      document.getElementById('chat-status').textContent = 'Loading history...';
+      await loadChatHistory();
+      document.getElementById('chat-status').textContent = '';
+    } catch (err) {
+      document.getElementById('chat-status').textContent = 'Failed to load chat history.';
+    }
+  }
+}
+
+async function submitChat() {
+  if (chatPending) return;
+  const input = document.getElementById('chat-input');
+  const message = input.value.trim();
+  if (!message) return;
+  chatPending = true;
+  document.getElementById('chat-status').textContent = 'Thinking...';
+  try {
+    const r = await fetch(`${API}/api/chat`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ topic: PROJECT_TOPIC, page_type: PROJECT_PAGE_TYPE, message })
+    });
+    const data = await r.json();
+    if (!r.ok || !data.ok) throw new Error(data.error || 'chat failed');
+    input.value = '';
+    renderChatHistory(data.messages || []);
+    document.getElementById('chat-status').textContent = '';
+    chatLoaded = true;
+  } catch (err) {
+    document.getElementById('chat-status').textContent = err.message || 'Chat failed.';
+  } finally {
+    chatPending = false;
+  }
+}
+
 function applyTheme() {
   const light = localStorage.getItem('theme') === 'light';
   document.body.classList.toggle('light', light);
@@ -192,6 +307,13 @@ function toggleTheme() {
 }
 
 window.addEventListener('load', init);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const drawer = document.getElementById('chat-drawer');
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+  }
+});
 </script>
 </body>
 </html>

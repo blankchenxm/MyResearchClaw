@@ -35,6 +35,7 @@ PAPERS_JSON = os.path.join(OUTPUT_DIR, "papers.json")
 NOTES_DIR = os.path.join(OUTPUT_DIR, "notes")
 PDFS_DIR = os.path.join(OUTPUT_DIR, "pdfs")
 LOGS_DIR = os.path.join(OUTPUT_DIR, "logs")
+CHATS_DIR = os.path.join(OUTPUT_DIR, "chats")
 ENGINEERING_STATUS_JSON = os.path.join(OUTPUT_DIR, "engineering_status.json")
 SKILLS_DIR = os.path.join(ROOT, "skills")
 KANBAN_TEMPLATE = os.path.join(SKILLS_DIR, "conference-scout", "assets", "kanban.html")
@@ -107,6 +108,157 @@ def load_json_file(path, default):
 def save_json_file(path, data):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
+
+
+def strip_html_tags(text):
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", text)).strip()
+
+
+def chat_key(topic, page_type):
+    return f"{slugify_topic(topic)}-{page_type}"
+
+
+def chat_path(topic, page_type):
+    return os.path.join(CHATS_DIR, f"{chat_key(topic, page_type)}.json")
+
+
+def load_chat_history(topic, page_type):
+    return load_json_file(chat_path(topic, page_type), {"topic": topic, "page_type": page_type, "messages": []})
+
+
+def save_chat_history(topic, page_type, history):
+    os.makedirs(CHATS_DIR, exist_ok=True)
+    payload = {"topic": topic, "page_type": page_type, "messages": history}
+    save_json_file(chat_path(topic, page_type), payload)
+
+
+def build_project_context(topic, page_type):
+    if page_type == "papers":
+        data = load_papers()
+        papers = [p for p in data.get("papers", []) if p.get("topic") == topic]
+        lines = [
+            f"Topic: {topic}",
+            f"Project page type: papers",
+            f"Paper count: {len(papers)}",
+        ]
+        for idx, paper in enumerate(papers[:12], start=1):
+            lines.extend(
+                [
+                    f"{idx}. {paper.get('title','Untitled')} — {paper.get('venue','Unknown')} {paper.get('year','')}",
+                    f"   Authors: {paper.get('authors','Unknown authors')}",
+                    f"   Summary EN: {paper.get('summary_en','')}",
+                    f"   Summary ZH: {paper.get('summary_zh','')}",
+                    f"   Status: {paper.get('status','unread')} | Progress: {paper.get('progress',0)}",
+                ]
+            )
+        return "\n".join(lines)
+
+    slug = slugify_topic(topic)
+    engineering_candidates = [
+        os.path.join(OUTPUT_DIR, f"{slug}-engineering.html"),
+        ENGINEERING_HTML,
+    ]
+    html_text = ""
+    for path in engineering_candidates:
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as f:
+                html_text = f.read()
+            if topic in html_text or path == engineering_candidates[0]:
+                break
+    context_text = strip_html_tags(html_text)[:12000]
+    return f"Topic: {topic}\nProject page type: engineering\nPage content:\n{context_text}"
+
+
+def run_chat_query(topic, page_type, message, history):
+    os.makedirs(LOGS_DIR, exist_ok=True)
+    log_path = os.path.join(LOGS_DIR, f"chat-{chat_key(topic, page_type)}.log")
+    context = build_project_context(topic, page_type)
+    history_lines = []
+    for item in history[-10:]:
+        role = item.get("role", "assistant").upper()
+        history_lines.append(f"{role}: {item.get('content','')}")
+    history_block = "\n".join(history_lines) if history_lines else "(empty)"
+    prompt = f"""You are the embedded assistant for a MyResearchClaw project page.
+
+Page topic: {topic}
+Page type: {page_type}
+
+You already know the current project context below. Use it as primary context. You may also use web search when needed for the user's question because this project allows Codex network search.
+
+Project context:
+{context}
+
+Conversation so far:
+{history_block}
+
+User question:
+{message}
+
+Instructions:
+- Answer directly and concretely.
+- Prefer using the current project context first.
+- If the user asks for clarification, comparison, synthesis, or follow-up reasoning, keep the answer tied to this project.
+- If web search is useful, use it.
+- Keep answers concise but informative.
+"""
+
+    with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8", suffix=".txt", delete=False) as output_file:
+        output_path = output_file.name
+
+    cmd = [
+        RESOLVED_CODEX_BIN,
+        "--search",
+        "exec",
+        "--cd",
+        ROOT,
+        "--sandbox",
+        "danger-full-access",
+        "--skip-git-repo-check",
+        "--output-last-message",
+        output_path,
+        "--color",
+        "never",
+        "-m",
+        MODEL,
+        prompt,
+    ]
+
+    codex_dir = os.path.dirname(RESOLVED_CODEX_BIN)
+    env = os.environ.copy()
+    env["PATH"] = codex_dir + os.pathsep + env.get("PATH", "")
+    try:
+        proc = subprocess.run(
+            cmd,
+            cwd=ROOT,
+            env=env,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            timeout=240,
+        )
+        with open(log_path, "a", encoding="utf-8") as log_file:
+            log_file.write(
+                f"\n=== {datetime.now().isoformat(timespec='seconds')} ===\n"
+                f"Topic: {topic}\nPage type: {page_type}\nUser: {message}\n"
+                f"Command: {' '.join(cmd)}\n"
+                f"Output:\n{proc.stdout}\n"
+            )
+        if proc.returncode != 0:
+            raise RuntimeError(proc.stdout.strip() or f"codex exited {proc.returncode}")
+        try:
+            with open(output_path, encoding="utf-8") as f:
+                answer = f.read().strip()
+        except OSError:
+            answer = ""
+        if not answer:
+            answer = proc.stdout.strip()
+        return answer.strip()
+    finally:
+        try:
+            os.unlink(output_path)
+        except OSError:
+            pass
 
 
 def citation_badge(citations):
@@ -770,6 +922,7 @@ def generate_engineering_bg(topic, year_range, venues):
 
     cmd = [
         RESOLVED_CODEX_BIN,
+        "--search",
         "exec",
         "--cd",
         ROOT,
@@ -780,7 +933,6 @@ def generate_engineering_bg(topic, year_range, venues):
         output_path,
         "--color",
         "never",
-        "--search",
         "-m",
         MODEL,
         prompt,
@@ -1240,6 +1392,23 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
 
+        elif path == "/api/chat-history":
+            query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            topic = (query.get("topic") or [""])[0].strip()
+            page_type = (query.get("page_type") or ["papers"])[0].strip() or "papers"
+            if not topic:
+                self.send_response(400)
+                self.send_cors()
+                self.end_headers()
+                return
+            history = load_chat_history(topic, page_type)
+            body = json.dumps(history, ensure_ascii=False).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_cors()
+            self.end_headers()
+            self.wfile.write(body)
+
         elif path.startswith("/api/notes/"):
             paper_id = path[len("/api/notes/"):]
             paper = find_paper_by_id(paper_id)
@@ -1306,6 +1475,46 @@ class Handler(BaseHTTPRequestHandler):
                     }
                 ).encode()
             )
+
+        elif self.path == "/api/chat":
+            length = int(self.headers.get("Content-Length", 0))
+            try:
+                body = json.loads(self.rfile.read(length))
+            except Exception:
+                self.send_response(400)
+                self.send_cors()
+                self.end_headers()
+                return
+
+            topic = (body.get("topic") or "").strip()
+            page_type = (body.get("page_type") or "papers").strip() or "papers"
+            message = (body.get("message") or "").strip()
+
+            if not topic or not message:
+                self.send_response(400)
+                self.send_cors()
+                self.end_headers()
+                return
+
+            try:
+                history_payload = load_chat_history(topic, page_type)
+                history = history_payload.get("messages", [])
+                history.append({"role": "user", "content": message, "time": datetime.now().isoformat(timespec="seconds")})
+                answer = run_chat_query(topic, page_type, message, history)
+                history.append({"role": "assistant", "content": answer, "time": datetime.now().isoformat(timespec="seconds")})
+                save_chat_history(topic, page_type, history)
+                response = {"ok": True, "reply": answer, "messages": history}
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_cors()
+                self.end_headers()
+                self.wfile.write(json.dumps(response, ensure_ascii=False).encode("utf-8"))
+            except Exception as exc:
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_cors()
+                self.end_headers()
+                self.wfile.write(json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False).encode("utf-8"))
 
         else:
             self.send_response(404)

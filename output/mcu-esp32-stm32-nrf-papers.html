@@ -34,6 +34,10 @@ body.light {
   position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:16px;
 }
+.chat-toggle {
+  position:fixed; top:64px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:16px;
+}
 .server-banner {
   background:rgba(255,141,107,0.08); border:1px solid rgba(255,141,107,0.16);
   padding:10px 16px; border-radius:14px; font:12px 'JetBrains Mono', monospace; color:var(--accent3);
@@ -104,11 +108,11 @@ body.light {
 .btn-read { color:#c0b6ff; background:rgba(162,155,254,0.08); border-color:rgba(162,155,254,0.18); }
 .btn-read.reading { color:var(--accent4); background:rgba(255,214,110,0.08); border-color:rgba(255,214,110,0.18); }
 .btn-done, .btn-notes { color:var(--accent2); background:rgba(56,217,199,0.08); border-color:rgba(56,217,199,0.18); }
-.notes-shell { display:grid; grid-template-columns:minmax(0, 0.98fr) minmax(380px, 0.92fr); gap:18px; align-items:start; }
+.notes-shell { display:grid; grid-template-columns:minmax(0, 0.98fr) minmax(380px, 0.92fr); gap:18px; align-items:start; height:calc(100vh - 140px); }
 .notes-pane, .pdf-pane {
-  background:var(--bg-card); border:1px solid var(--border); border-radius:22px; min-height:72vh;
+  background:var(--bg-card); border:1px solid var(--border); border-radius:22px; min-height:0; height:100%;
 }
-.notes-pane { padding:24px 26px 36px; }
+.notes-pane { padding:24px 26px 18px; display:flex; flex-direction:column; overflow:hidden; }
 .notes-topbar {
   display:flex; justify-content:space-between; align-items:flex-start; gap:16px;
   padding-bottom:18px; margin-bottom:18px; border-bottom:1px solid var(--border);
@@ -117,7 +121,7 @@ body.light {
 .notes-kicker { font:600 11px 'JetBrains Mono', monospace; color:var(--accent4); text-transform:uppercase; letter-spacing:.12em; }
 .notes-title { font-size:22px; line-height:1.35; font-weight:800; }
 .notes-subtitle { color:var(--text-muted); font-size:13px; }
-.notes-content { font-size:15px; line-height:1.9; color:var(--text-dim); }
+.notes-content { font-size:15px; line-height:1.9; color:var(--text-dim); overflow:auto; padding-right:8px; flex:1; min-height:0; }
 .notes-content h1 { font-size:28px; font-weight:900; margin:28px 0 16px; color:var(--text); }
 .notes-content h2 { font-size:20px; font-weight:800; color:var(--accent); margin:26px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
 .notes-content h3 { font-size:16px; font-weight:800; color:#bfd1f7; margin:18px 0 8px; }
@@ -138,21 +142,33 @@ body.light {
 }
 .pdf-title { font-size:15px; font-weight:800; }
 .pdf-links { display:flex; gap:8px; flex-wrap:wrap; }
-.pdf-body { display:grid; grid-template-columns:120px minmax(0, 1fr); min-height:0; flex:1; }
-.pdf-thumbs {
-  border-right:1px solid var(--border); overflow:auto; padding:12px; display:flex; flex-direction:column; gap:10px;
-  background:rgba(255,255,255,0.02); cursor:grab; user-select:none;
-}
-.pdf-thumbs.dragging { cursor:grabbing; }
-.thumb-card { border:1px solid var(--border); border-radius:12px; padding:8px; background:var(--bg-soft); }
-.thumb-card.active { border-color:rgba(105,166,255,0.42); box-shadow:0 0 0 1px rgba(105,166,255,0.24) inset; }
-.thumb-card canvas { width:100%; display:block; border-radius:8px; background:#fff; }
-.thumb-label { font:500 11px 'JetBrains Mono', monospace; color:var(--text-muted); text-align:center; margin-top:6px; }
-.pdf-viewer { position:relative; min-height:70vh; background:#0a0f16; }
+.pdf-body { display:block; min-height:0; flex:1; }
+.pdf-viewer { position:relative; min-height:0; height:100%; background:#0a0f16; }
 .pdf-frame { width:100%; height:100%; min-height:70vh; border:0; background:#0a0f16; }
 .pdf-empty {
   padding:24px; color:var(--text-dim); line-height:1.8; display:flex; align-items:center; justify-content:center; min-height:70vh;
 }
+.chat-drawer {
+  position:fixed; top:0; right:-420px; width:400px; max-width:calc(100vw - 24px); height:100vh; z-index:9998;
+  background:var(--bg-card); border-left:1px solid var(--border); box-shadow:-12px 0 36px rgba(0,0,0,0.28);
+  transition:right .2s ease; display:flex; flex-direction:column;
+}
+.chat-drawer.open { right:0; }
+.chat-header { padding:16px 18px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.chat-title { font-size:16px; font-weight:800; }
+.chat-subtitle { font:500 11px 'JetBrains Mono', monospace; color:var(--text-muted); margin-top:4px; }
+.chat-history { flex:1; overflow:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
+.chat-msg { border:1px solid var(--border); border-radius:16px; padding:12px 14px; line-height:1.75; font-size:14px; white-space:pre-wrap; }
+.chat-msg.user { background:rgba(105,166,255,0.08); border-color:rgba(105,166,255,0.18); }
+.chat-msg.assistant { background:rgba(56,217,199,0.06); border-color:rgba(56,217,199,0.16); }
+.chat-empty { color:var(--text-muted); line-height:1.8; font-size:14px; padding:6px 4px; }
+.chat-compose { border-top:1px solid var(--border); padding:14px 16px 16px; display:flex; flex-direction:column; gap:10px; }
+.chat-input {
+  width:100%; min-height:92px; resize:vertical; border-radius:14px; border:1px solid var(--border);
+  background:var(--bg-soft); color:var(--text); padding:12px 14px; font:inherit;
+}
+.chat-actions { display:flex; justify-content:flex-end; gap:10px; }
+.chat-status { color:var(--text-muted); font-size:12px; min-height:18px; }
 .toast {
   position:fixed; bottom:24px; right:24px; z-index:9999; max-width:520px; display:none;
   border:1px solid rgba(162,155,254,0.35); border-radius:16px; background:#1b2230; padding:16px 18px; box-shadow:0 12px 42px rgba(0,0,0,0.38);
@@ -167,22 +183,22 @@ body.light {
 @media (max-width: 1100px) {
   .hero-title { font-size:38px; }
   .notes-shell { grid-template-columns:1fr; }
-  .pdf-body { grid-template-columns:96px minmax(0, 1fr); }
 }
 @media (max-width: 720px) {
   .page-wrap { padding:16px 16px 60px; }
   .hero { padding:22px 20px; }
   .hero-top { flex-direction:column; }
   .hero-title { font-size:30px; }
-  .pdf-body { grid-template-columns:1fr; }
-  .pdf-thumbs { flex-direction:row; border-right:none; border-bottom:1px solid var(--border); overflow:auto hidden; }
-  .thumb-card { min-width:88px; }
+  .notes-shell { height:auto; }
+  .notes-pane, .pdf-pane { height:auto; min-height:50vh; }
+  .chat-drawer { width:100vw; max-width:100vw; }
 }
 </style>
 </head>
 <body>
 <div class="page-wrap">
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+  <button class="chat-toggle" onclick="toggleChatDrawer()" title="Toggle project chat">💬</button>
   <div id="server-banner" class="server-banner" style="display:none">
     本地自动精读服务未连接。启动 <code>python serve.py</code> 后可直接在页面中触发 `paper-reader`。
   </div>
@@ -192,7 +208,7 @@ body.light {
       <div>
         <div class="hero-eyebrow">Research Theme</div>
         <h1 class="hero-title">MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)</h1>
-        <div class="hero-subtitle">Updated 2026-04-19</div>
+        <div class="hero-subtitle">Updated 2026-04-20</div>
       </div>
       <div class="hero-actions">
         <button class="hero-btn engineering" onclick="openEngineeringView()">Engineering View →</button>
@@ -204,7 +220,7 @@ body.light {
     <div class="papers-grid">
       
       <!-- ── Paper 1 ── -->
-      <div class="paper-card is-confirmed" data-id="autoembed-towards-automated-software-development-for-generic-embedded-iot-systems-via-llms_2026" data-url="https://autoembed.github.io/" data-pdf-url="/api/pdf/autoembed-towards-automated-software-development-for-generic-embedded-iot-systems-via-llms_2026" data-progress="0">
+      <div class="paper-card is-reading" data-id="autoembed-towards-automated-software-development-for-generic-embedded-iot-systems-via-llms_2026" data-url="https://autoembed.github.io/" data-pdf-url="/api/pdf/autoembed-towards-automated-software-development-for-generic-embedded-iot-systems-via-llms_2026" data-progress="100">
         <div class="card-header">
           <div class="card-title"><a href="https://autoembed.github.io/" target="_blank">AutoEmbed: Towards Automated Software Development for Generic Embedded IoT Systems via LLMs</a></div>
           <span class="citations cite-none">★ 0</span>
@@ -223,12 +239,12 @@ body.light {
           <div class="summary-zh">AutoEmbed 与你关心的问题几乎是正面对齐的：能不能把通用嵌入式 IoT 需求自动变成可工作的固件。公开页面给出的系统结构是四阶段流水线，依次包含 library solving、knowledge generation、prompt assembly 和 LLM-driven code synthesis，也就是说它并不是让模型对着空 prompt 直接裸写代码。这个架构很关键，因为在 ESP32、STM32、nRF 这类平台上，真正困难的部分往往是先选对硬件相关库、再把足够扎实的上下文喂给生成器，而不是最后几步代码输出本身。作为 SenSys 2026 的论文，它是目前最直接的证据之一，说明“需求到固件”的自动化已经从零散 demo 进入到较严肃的系统研究阶段。</div>
         </div>
         <div class="progress-row">
-          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
-          <span class="progress-label"></span>
+          <div class="progress-track"><div class="progress-fill done" style="width:100%"></div></div>
+          <span class="progress-label done">✓ Complete</span>
         </div>
         <div class="card-actions">
           <a href="https://autoembed.github.io/" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('autoembed-towards-automated-software-development-for-generic-embedded-iot-systems-via-llms_2026','https://autoembed.github.io/','AutoEmbed: Towards Automated Software Development for Generic Embedded IoT Systems via LLMs')">📖 Read Paper</button>
+          <button data-role="read-btn" class="btn btn-notes" onclick="navigateTo('notes', 'autoembed-towards-automated-software-development-for-generic-embedded-iot-systems-via-llms_2026')">📄 View Notes</button>
         </div>
       </div>
 
@@ -518,7 +534,6 @@ body.light {
           </div>
         </div>
         <div class="pdf-body">
-          <div id="pdf-thumbs" class="pdf-thumbs"></div>
           <div class="pdf-viewer">
             <iframe id="pdf-frame" class="pdf-frame" title="Paper PDF Viewer"></iframe>
             <div id="pdf-empty" class="pdf-empty">当前没有可直接预览的 PDF。若论文页面可访问，右上角可直接打开原文。</div>
@@ -535,17 +550,41 @@ body.light {
 
   <footer class="kanban-footer">
     <span>Powered by MyResearchClaw</span>
-    <span>2026-04-19</span>
+    <span>2026-04-20</span>
   </footer>
 </div>
 
+<aside id="chat-drawer" class="chat-drawer" aria-hidden="true">
+  <div class="chat-header">
+    <div>
+      <div class="chat-title">Project Chat</div>
+      <div class="chat-subtitle">MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF) · papers</div>
+    </div>
+    <button class="btn" onclick="toggleChatDrawer()">Close</button>
+  </div>
+  <div id="chat-history" class="chat-history">
+    <div class="chat-empty">这里会保留当前项目的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>
+  </div>
+  <div class="chat-compose">
+    <div id="chat-status" class="chat-status"></div>
+    <textarea id="chat-input" class="chat-input" placeholder="直接提问。当前页面上下文和 Codex 网络搜索都会作为可用能力。"></textarea>
+    <div class="chat-actions">
+      <button class="btn" onclick="submitChat()">Send</button>
+    </div>
+  </div>
+</aside>
+
 <script>
 const API = 'http://localhost:5678';
+const PROJECT_TOPIC = 'MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)';
+const PROJECT_PAGE_TYPE = 'papers';
 let serverOk = false;
 let activeReadId = null;
 let pollInterval = null;
 let currentPdfUrl = '';
 let currentPaperUrl = '';
+let chatLoaded = false;
+let chatPending = false;
 
 if (window.pdfjsLib) {
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -556,7 +595,6 @@ async function init() {
   await checkServer();
   renderRoute();
   window.addEventListener('hashchange', renderRoute);
-  setupThumbDrag();
 }
 
 async function openEngineeringView() {
@@ -738,11 +776,9 @@ function extractPaperResources(md, fallbackPaperUrl, presetPdfUrl) {
 async function showPdfPanel(pdfUrl, paperUrl) {
   const frame = document.getElementById('pdf-frame');
   const empty = document.getElementById('pdf-empty');
-  const thumbs = document.getElementById('pdf-thumbs');
   const pdfLink = document.getElementById('pdf-open-link');
   const paperLink = document.getElementById('paper-open-link');
 
-  thumbs.innerHTML = '';
   frame.style.display = 'none';
   empty.style.display = 'flex';
 
@@ -764,60 +800,75 @@ async function showPdfPanel(pdfUrl, paperUrl) {
   frame.src = pdfUrl + '#toolbar=1&navpanes=0&view=FitH';
   frame.style.display = 'block';
   empty.style.display = 'none';
+}
 
-  if (!window.pdfjsLib) return;
-  try {
-    const loadingTask = pdfjsLib.getDocument(pdfUrl);
-    const pdf = await loadingTask.promise;
-    const maxThumbs = Math.min(pdf.numPages, 12);
-    for (let pageNum = 1; pageNum <= maxThumbs; pageNum++) {
-      const page = await pdf.getPage(pageNum);
-      const viewport = page.getViewport({ scale: 0.22 });
-      const canvas = document.createElement('canvas');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      const context = canvas.getContext('2d');
-      await page.render({ canvasContext: context, viewport }).promise;
+function escapeHtml(text) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
-      const card = document.createElement('button');
-      card.className = 'thumb-card' + (pageNum === 1 ? ' active' : '');
-      card.type = 'button';
-      card.innerHTML = `<div></div><div class="thumb-label">P.${pageNum}</div>`;
-      card.firstChild.replaceWith(canvas);
-      card.onclick = () => jumpToPdfPage(pdfUrl, pageNum, card);
-      thumbs.appendChild(card);
+function renderChatHistory(messages) {
+  const el = document.getElementById('chat-history');
+  if (!messages.length) {
+    el.innerHTML = '<div class="chat-empty">这里会保留当前项目的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>';
+    return;
+  }
+  el.innerHTML = messages.map(msg => `<div class="chat-msg ${msg.role}">${escapeHtml(msg.content || '')}</div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+async function loadChatHistory() {
+  if (!serverOk) return;
+  const r = await fetch(`${API}/api/chat-history?topic=${encodeURIComponent(PROJECT_TOPIC)}&page_type=${encodeURIComponent(PROJECT_PAGE_TYPE)}`);
+  if (!r.ok) throw new Error('history failed');
+  const data = await r.json();
+  renderChatHistory(data.messages || []);
+  chatLoaded = true;
+}
+
+async function toggleChatDrawer() {
+  const drawer = document.getElementById('chat-drawer');
+  const opening = !drawer.classList.contains('open');
+  drawer.classList.toggle('open', opening);
+  drawer.setAttribute('aria-hidden', opening ? 'false' : 'true');
+  if (opening && !chatLoaded) {
+    try {
+      document.getElementById('chat-status').textContent = serverOk ? 'Loading history...' : 'Local server is unavailable.';
+      await loadChatHistory();
+      document.getElementById('chat-status').textContent = '';
+    } catch (err) {
+      document.getElementById('chat-status').textContent = 'Failed to load chat history.';
     }
-  } catch (err) {
-    thumbs.innerHTML = '<div class="thumb-label">PDF 缩略图加载失败</div>';
   }
 }
 
-function jumpToPdfPage(pdfUrl, pageNum, activeCard) {
-  const frame = document.getElementById('pdf-frame');
-  frame.src = `${pdfUrl}#page=${pageNum}&view=FitH`;
-  document.querySelectorAll('.thumb-card').forEach(el => el.classList.remove('active'));
-  if (activeCard) activeCard.classList.add('active');
-}
-
-function setupThumbDrag() {
-  const thumbs = document.getElementById('pdf-thumbs');
-  let dragging = false;
-  let startY = 0;
-  let startScroll = 0;
-  thumbs.addEventListener('mousedown', e => {
-    dragging = true;
-    thumbs.classList.add('dragging');
-    startY = e.clientY;
-    startScroll = thumbs.scrollTop;
-  });
-  window.addEventListener('mouseup', () => {
-    dragging = false;
-    thumbs.classList.remove('dragging');
-  });
-  window.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    thumbs.scrollTop = startScroll - (e.clientY - startY);
-  });
+async function submitChat() {
+  if (chatPending) return;
+  const input = document.getElementById('chat-input');
+  const message = input.value.trim();
+  if (!message) return;
+  if (!serverOk) {
+    document.getElementById('chat-status').textContent = 'Local server is unavailable.';
+    return;
+  }
+  chatPending = true;
+  document.getElementById('chat-status').textContent = 'Thinking...';
+  try {
+    const r = await fetch(`${API}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic: PROJECT_TOPIC, page_type: PROJECT_PAGE_TYPE, message })
+    });
+    const data = await r.json();
+    if (!r.ok || !data.ok) throw new Error(data.error || 'chat failed');
+    input.value = '';
+    renderChatHistory(data.messages || []);
+    document.getElementById('chat-status').textContent = '';
+    chatLoaded = true;
+  } catch (err) {
+    document.getElementById('chat-status').textContent = err.message || 'Chat failed.';
+  } finally {
+    chatPending = false;
+  }
 }
 
 function showToast(url) {
@@ -841,6 +892,11 @@ function toggleTheme() {
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') document.getElementById('toast').classList.remove('show');
+  if (e.key === 'Escape') {
+    const drawer = document.getElementById('chat-drawer');
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+  }
 });
 
 window.addEventListener('load', init);
