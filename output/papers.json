@@ -439,8 +439,8 @@
       "rank": 1,
       "summary_en": "SpecMap is one of the most directly relevant recent papers for datasheet understanding in embedded systems. Instead of treating the datasheet as plain text, it builds a hierarchical datasheet-to-code traceability pipeline that narrows from repository structure to files and finally to low-level symbols such as registers, macros, structs, and constants. This matters for MCU datasheets because the practically useful output is rarely just a summary; engineers need to connect register descriptions, timing constraints, and peripheral semantics back to implementation artifacts. The paper reports up to 73.3% file mapping accuracy while cutting LLM token use by 84%, which makes it a strong reference for large-scale datasheet grounding rather than simple PDF OCR.",
       "summary_zh": "SpecMap 是这条题目里最直接相关的近期论文之一，因为它讨论的不是泛化 PDF 摘要，而是“如何把 datasheet 里的规格真正映射到代码实现”。它把流程拆成分层的 datasheet-to-code traceability：先理解仓库结构，再定位相关文件，最后细化到寄存器、宏、结构体、常量等符号级别。这对 MCU/SoC datasheet 场景特别重要，因为工程上真正有价值的结果并不是抽一段摘要，而是把寄存器定义、外设语义、配置常量乃至时序约束对接到实现。论文给出的结果是文件级映射准确率最高到 73.3%，同时把 LLM token 开销降低了 84%，说明这类任务必须走结构化分层检索，而不是只靠顺序读 PDF。",
-      "status": "unread",
-      "progress": 0,
+      "status": "reading",
+      "progress": 92,
       "topic": "芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）",
       "date_added": "2026-04-20",
       "tags": [
@@ -449,8 +449,11 @@
         "traceability",
         "llm"
       ],
-      "note_path": null,
-      "pdf_url": "https://arxiv.org/pdf/2601.11688"
+      "note_path": "output/notes/datasheet-pdf-mcu-soc/specmap-hierarchical-llm-agent-for-datasheet-to-code-traceability-link-recovery-in-systems-engineering_2026.md",
+      "pdf_url": "https://arxiv.org/pdf/2601.11688",
+      "pdf_local_path": "output/pdfs/datasheet-pdf-mcu-soc/specmap-hierarchical-llm-agent-for-datasheet-to-code-traceability-link-recovery-in-systems-engineering_2026.pdf",
+      "pdf_source_url": "https://arxiv.org/pdf/2601.11688",
+      "last_updated": "2026-04-20"
     },
     {
       "id": "automatically-extracting-hardware-descriptions-from-pdf-technical-documentation_2023",

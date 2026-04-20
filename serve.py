@@ -1276,6 +1276,14 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         pass
 
+    def send_json(self, status, payload):
+        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_cors()
+        self.end_headers()
+        self.wfile.write(body)
+
     def send_cors(self):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
@@ -1397,17 +1405,10 @@ class Handler(BaseHTTPRequestHandler):
             topic = (query.get("topic") or [""])[0].strip()
             page_type = (query.get("page_type") or ["papers"])[0].strip() or "papers"
             if not topic:
-                self.send_response(400)
-                self.send_cors()
-                self.end_headers()
+                self.send_json(400, {"ok": False, "error": "missing topic"})
                 return
             history = load_chat_history(topic, page_type)
-            body = json.dumps(history, ensure_ascii=False).encode("utf-8")
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_cors()
-            self.end_headers()
-            self.wfile.write(body)
+            self.send_json(200, history)
 
         elif path.startswith("/api/notes/"):
             paper_id = path[len("/api/notes/"):]
@@ -1436,8 +1437,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 body = json.loads(self.rfile.read(length))
             except Exception:
-                self.send_response(400)
-                self.end_headers()
+                self.send_json(400, {"ok": False, "error": "invalid json body"})
                 return
 
             url = body.get("url", "").strip()
@@ -1445,8 +1445,7 @@ class Handler(BaseHTTPRequestHandler):
             title = body.get("title", "").strip()
 
             if not url or not paper_id:
-                self.send_response(400)
-                self.end_headers()
+                self.send_json(400, {"ok": False, "error": "missing url or paper_id"})
                 return
 
             threading.Thread(
@@ -1455,25 +1454,16 @@ class Handler(BaseHTTPRequestHandler):
                 daemon=True,
             ).start()
 
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_cors()
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "started", "paper_id": paper_id}).encode())
+            self.send_json(200, {"status": "started", "paper_id": paper_id})
 
         elif self.path == "/api/generate-engineering":
             started = maybe_start_engineering_generation(force=True)
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_cors()
-            self.end_headers()
-            self.wfile.write(
-                json.dumps(
-                    {
-                        "status": "started" if started else "running",
-                        "topic": latest_search_context()["topic"],
-                    }
-                ).encode()
+            self.send_json(
+                200,
+                {
+                    "status": "started" if started else "running",
+                    "topic": latest_search_context()["topic"],
+                },
             )
 
         elif self.path == "/api/chat":
@@ -1481,9 +1471,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 body = json.loads(self.rfile.read(length))
             except Exception:
-                self.send_response(400)
-                self.send_cors()
-                self.end_headers()
+                self.send_json(400, {"ok": False, "error": "invalid json body"})
                 return
 
             topic = (body.get("topic") or "").strip()
@@ -1491,9 +1479,7 @@ class Handler(BaseHTTPRequestHandler):
             message = (body.get("message") or "").strip()
 
             if not topic or not message:
-                self.send_response(400)
-                self.send_cors()
-                self.end_headers()
+                self.send_json(400, {"ok": False, "error": "missing topic or message"})
                 return
 
             try:
@@ -1504,17 +1490,9 @@ class Handler(BaseHTTPRequestHandler):
                 history.append({"role": "assistant", "content": answer, "time": datetime.now().isoformat(timespec="seconds")})
                 save_chat_history(topic, page_type, history)
                 response = {"ok": True, "reply": answer, "messages": history}
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self.send_cors()
-                self.end_headers()
-                self.wfile.write(json.dumps(response, ensure_ascii=False).encode("utf-8"))
+                self.send_json(200, response)
             except Exception as exc:
-                self.send_response(500)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self.send_cors()
-                self.end_headers()
-                self.wfile.write(json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False).encode("utf-8"))
+                self.send_json(500, {"ok": False, "error": str(exc)})
 
         else:
             self.send_response(404)

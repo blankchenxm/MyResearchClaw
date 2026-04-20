@@ -233,6 +233,16 @@ function escapeHtml(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+async function readJsonResponse(r) {
+  const raw = await r.text();
+  if (!raw.trim()) throw new Error(`Empty response (${r.status})`);
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`Invalid JSON response (${r.status})`);
+  }
+}
+
 function renderChatHistory(messages) {
   const el = document.getElementById('chat-history');
   if (!messages.length) {
@@ -245,8 +255,8 @@ function renderChatHistory(messages) {
 
 async function loadChatHistory() {
   const r = await fetch(`${API}/api/chat-history?topic=${encodeURIComponent(PROJECT_TOPIC)}&page_type=${encodeURIComponent(PROJECT_PAGE_TYPE)}`);
-  if (!r.ok) throw new Error('history failed');
-  const data = await r.json();
+  const data = await readJsonResponse(r);
+  if (!r.ok) throw new Error(data.error || 'history failed');
   renderChatHistory(data.messages || []);
   chatLoaded = true;
 }
@@ -280,7 +290,7 @@ async function submitChat() {
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ topic: PROJECT_TOPIC, page_type: PROJECT_PAGE_TYPE, message })
     });
-    const data = await r.json();
+    const data = await readJsonResponse(r);
     if (!r.ok || !data.ok) throw new Error(data.error || 'chat failed');
     input.value = '';
     renderChatHistory(data.messages || []);
