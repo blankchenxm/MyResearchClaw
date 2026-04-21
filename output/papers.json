@@ -603,8 +603,8 @@
       "rank": 1,
       "summary_en": "AlterEgo is still the clearest reference for a silent-speech system that combines non-invasive neuromuscular sensing with private bone-conduction feedback. The IUI 2018 paper describes a wearable that captures subtle facial and neck signals during internal articulation, without requiring the user to visibly mouth words, and reports a 92% median accuracy on a digit-recognition task. What makes it important for your topic is the closed-loop architecture: silent input on the sensing side, and bone-conduction audio on the output side. Even though the language modeling stack is much older than today's LLM pipelines, AlterEgo established the product shape that many later EMG+AI systems are converging toward.",
       "summary_zh": "AlterEgo 仍然是“静默输入 + 私密反馈”这条路线最经典的系统论文之一，因为它把非侵入式神经肌肉信号采集和骨传导回传真正组合成了一个闭环设备。IUI 2018 这篇论文展示了一个可穿戴系统，能够在用户不张嘴、没有明显嘴唇动作的情况下，捕捉面部与颈部的细微神经肌肉信号，并在数字识别任务上报告 92% 的中位准确率。它对你这个题目最重要的意义在于，骨传导在这里不是输入，而是私密输出通道；输入侧则是对内在发音意图的解码。虽然当时还没有今天的大模型重打分或 agent 框架，但 AlterEgo 基本定义了后续很多 EMG silent speech 产品想要逼近的设备形态。",
-      "status": "unread",
-      "progress": 0,
+      "status": "reading",
+      "progress": 28,
       "topic": "Silent Speech Recognition（骨传导 + EMG + LLM）",
       "date_added": "2026-04-21",
       "tags": [
@@ -613,7 +613,10 @@
         "wearable",
         "neuromuscular"
       ],
-      "note_path": null
+      "note_path": "output/notes/silent-speech-recognition-emg-llm/alterego-a-personalized-wearable-silent-speech-interface_2018.md",
+      "last_updated": "2026-04-21",
+      "pdf_local_path": "output/pdfs/silent-speech-recognition-emg-llm/alterego-a-personalized-wearable-silent-speech-interface_2018.pdf",
+      "pdf_source_url": "https://dam-prod.media.mit.edu/x/2018/03/23/p43-kapur_BRjFwE6.pdf"
     },
     {
       "id": "a-cross-modal-approach-to-silent-speech-with-llm-enhanced-recognition_2024",
