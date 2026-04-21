@@ -314,7 +314,7 @@ Render cards for every paper. Use the paper's existing progress and note link wh
 If the user explicitly asks for topic-specific standalone HTML that must not overwrite existing results:
 
 - still update `output/papers.json`
-- additionally generate a dedicated paper report HTML such as `output/{topic_slug}-papers.html`
+- additionally generate a dedicated paper report HTML such as `output/projects/{topic_slug}/papers.html`
 - use `assets/results.html` as the base template for that standalone report
 
 ## Response Format

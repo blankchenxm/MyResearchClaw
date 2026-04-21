@@ -208,7 +208,7 @@ body.light {
       <div>
         <div class="hero-eyebrow">Research Theme</div>
         <h1 class="hero-title">芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）</h1>
-        <div class="hero-subtitle">Updated 2026-04-20</div>
+        <div class="hero-subtitle">Updated 2026-04-21</div>
       </div>
       <div class="hero-actions">
         <button class="hero-btn engineering" onclick="openEngineeringView()">Engineering View →</button>
@@ -220,7 +220,7 @@ body.light {
     <div class="papers-grid">
       
       <!-- ── Paper 1 ── -->
-      <div class="paper-card is-arxiv" data-id="specmap-hierarchical-llm-agent-for-datasheet-to-code-traceability-link-recovery-in-systems-engineering_2026" data-url="https://arxiv.org/abs/2601.11688" data-pdf-url="https://arxiv.org/pdf/2601.11688" data-progress="0">
+      <div class="paper-card is-reading" data-id="specmap-hierarchical-llm-agent-for-datasheet-to-code-traceability-link-recovery-in-systems-engineering_2026" data-url="https://arxiv.org/abs/2601.11688" data-pdf-url="/api/pdf/specmap-hierarchical-llm-agent-for-datasheet-to-code-traceability-link-recovery-in-systems-engineering_2026" data-progress="100">
         <div class="card-header">
           <div class="card-title"><a href="https://arxiv.org/abs/2601.11688" target="_blank">SpecMap: Hierarchical LLM Agent for Datasheet-to-Code Traceability Link Recovery in Systems Engineering</a></div>
           <span class="citations cite-none">★ 0</span>
@@ -239,12 +239,12 @@ body.light {
           <div class="summary-zh">SpecMap 是这条题目里最直接相关的近期论文之一，因为它讨论的不是泛化 PDF 摘要，而是“如何把 datasheet 里的规格真正映射到代码实现”。它把流程拆成分层的 datasheet-to-code traceability：先理解仓库结构，再定位相关文件，最后细化到寄存器、宏、结构体、常量等符号级别。这对 MCU/SoC datasheet 场景特别重要，因为工程上真正有价值的结果并不是抽一段摘要，而是把寄存器定义、外设语义、配置常量乃至时序约束对接到实现。论文给出的结果是文件级映射准确率最高到 73.3%，同时把 LLM token 开销降低了 84%，说明这类任务必须走结构化分层检索，而不是只靠顺序读 PDF。</div>
         </div>
         <div class="progress-row">
-          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
-          <span class="progress-label"></span>
+          <div class="progress-track"><div class="progress-fill done" style="width:100%"></div></div>
+          <span class="progress-label done">✓ Complete</span>
         </div>
         <div class="card-actions">
           <a href="https://arxiv.org/abs/2601.11688" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('specmap-hierarchical-llm-agent-for-datasheet-to-code-traceability-link-recovery-in-systems-engineering_2026','https://arxiv.org/abs/2601.11688','SpecMap: Hierarchical LLM Agent for Datasheet-to-Code Traceability Link Recovery in Systems Engineering')">📖 Read Paper</button>
+          <button data-role="read-btn" class="btn btn-notes" onclick="navigateTo('notes', 'specmap-hierarchical-llm-agent-for-datasheet-to-code-traceability-link-recovery-in-systems-engineering_2026')">📄 View Notes</button>
         </div>
       </div>
 
@@ -434,7 +434,7 @@ body.light {
 
   <footer class="kanban-footer">
     <span>Powered by MyResearchClaw</span>
-    <span>2026-04-20</span>
+    <span>2026-04-21</span>
   </footer>
 </div>
 
@@ -487,7 +487,7 @@ async function openEngineeringView() {
       await fetch(`${API}/api/generate-engineering`, { method: 'POST' });
     } catch {}
   }
-  location.href = '/datasheet-pdf-mcu-soc-engineering.html';
+  location.href = '/projects/datasheet-pdf-mcu-soc/engineering.html';
 }
 
 async function checkServer() {
@@ -692,7 +692,9 @@ function escapeHtml(text) {
 
 async function readJsonResponse(r) {
   const raw = await r.text();
-  if (!raw.trim()) throw new Error(`Empty response (${r.status})`);
+  if (!raw.trim()) {
+    throw new Error(`Empty response (${r.status})`);
+  }
   try {
     return JSON.parse(raw);
   } catch (err) {

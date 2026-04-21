@@ -86,7 +86,7 @@ body.light {
   <button class="chat-toggle" onclick="toggleChatDrawer()" title="Toggle project chat">💬</button>
   <div class="wrap">
     <div class="nav">
-      <a href="/kanban.html">← Back to Papers</a>
+      <a href="{{BACK_TO_PAPERS_LINK}}">← Back to Papers</a>
     </div>
 
     <section class="hero">
@@ -169,12 +169,15 @@ body.light {
 const API = 'http://localhost:5678';
 const PROJECT_TOPIC = '{{TOPIC}}';
 const PROJECT_PAGE_TYPE = 'engineering';
+const AUTO_GENERATE_ENGINEERING = {{AUTO_GENERATE_ENGINEERING}};
 let chatLoaded = false;
 let chatPending = false;
 
 async function init() {
   applyTheme();
-  await ensureEngineeringReady();
+  if (AUTO_GENERATE_ENGINEERING) {
+    await ensureEngineeringReady();
+  }
 }
 
 async function ensureEngineeringReady() {

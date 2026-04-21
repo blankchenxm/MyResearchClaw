@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦀</text></svg>">
-<title>MyResearchClaw — MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)</title>
+<title>MyResearchClaw — Silent Speech Recognition（骨传导 + EMG + LLM）</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -207,8 +207,8 @@ body.light {
     <div class="hero-top">
       <div>
         <div class="hero-eyebrow">Research Theme</div>
-        <h1 class="hero-title">MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)</h1>
-        <div class="hero-subtitle">Updated 2026-04-20</div>
+        <h1 class="hero-title">Silent Speech Recognition（骨传导 + EMG + LLM）</h1>
+        <div class="hero-subtitle">Updated 2026-04-21</div>
       </div>
       <div class="hero-actions">
         <button class="hero-btn engineering" onclick="openEngineeringView()">Engineering View →</button>
@@ -220,292 +220,205 @@ body.light {
     <div class="papers-grid">
       
       <!-- ── Paper 1 ── -->
-      <div class="paper-card is-reading" data-id="autoembed-towards-automated-software-development-for-generic-embedded-iot-systems-via-llms_2026" data-url="https://autoembed.github.io/" data-pdf-url="/api/pdf/autoembed-towards-automated-software-development-for-generic-embedded-iot-systems-via-llms_2026" data-progress="100">
+      <div class="paper-card is-confirmed" data-id="alterego-a-personalized-wearable-silent-speech-interface_2018" data-url="https://dam-prod.media.mit.edu/x/2018/03/23/p43-kapur_BRjFwE6.pdf" data-pdf-url="https://dam-prod.media.mit.edu/x/2018/03/23/p43-kapur_BRjFwE6.pdf" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://autoembed.github.io/" target="_blank">AutoEmbed: Towards Automated Software Development for Generic Embedded IoT Systems via LLMs</a></div>
+          <div class="card-title"><a href="https://dam-prod.media.mit.edu/x/2018/03/23/p43-kapur_BRjFwE6.pdf" target="_blank">AlterEgo: A Personalized Wearable Silent Speech Interface</a></div>
           <span class="citations cite-none">★ 0</span>
         </div>
-        <div class="card-authors">Huanqi Yang et al.</div>
+        <div class="card-authors">Arnav Kapur et al.</div>
         <div class="card-meta">
-          <span class="venue-badge">SenSys 2026</span>
-          <span class="card-tag tag-cyan">llm</span>
-          <span class="card-tag tag-purple">firmware-generation</span>
-          <span class="card-tag tag-pink">iot</span>
+          <span class="venue-badge">IUI 2018</span>
+          <span class="card-tag tag-cyan">silent speech</span>
+          <span class="card-tag tag-purple">bone conduction</span>
+          <span class="card-tag tag-pink">wearable</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">AutoEmbed is directly aligned with the question of whether a generic embedded IoT requirement can be turned into working firmware with LLMs. The system is described as a four-stage pipeline covering library solving, knowledge generation, prompt assembly, and LLM-driven code synthesis, which means it is not just asking a model to emit code from a blank prompt. That architecture matters because the hard part in ESP32, STM32, and nRF automation is selecting the right hardware-specific libraries and assembling enough grounded context before generation starts. As a SenSys 2026 paper, it is one of the clearest recent signals that requirement-to-firmware automation for embedded IoT has moved from scattered demos into serious systems research.</div>
+          <div class="summary-en">AlterEgo is still the clearest reference for a silent-speech system that combines non-invasive neuromuscular sensing with private bone-conduction feedback. The IUI 2018 paper describes a wearable that captures subtle facial and neck signals during internal articulation, without requiring the user to visibly mouth words, and reports a 92% median accuracy on a digit-recognition task. What makes it important for your topic is the closed-loop architecture: silent input on the sensing side, and bone-conduction audio on the output side. Even though the language modeling stack is much older than today&#x27;s LLM pipelines, AlterEgo established the product shape that many later EMG+AI systems are converging toward.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">AutoEmbed 与你关心的问题几乎是正面对齐的：能不能把通用嵌入式 IoT 需求自动变成可工作的固件。公开页面给出的系统结构是四阶段流水线，依次包含 library solving、knowledge generation、prompt assembly 和 LLM-driven code synthesis，也就是说它并不是让模型对着空 prompt 直接裸写代码。这个架构很关键，因为在 ESP32、STM32、nRF 这类平台上，真正困难的部分往往是先选对硬件相关库、再把足够扎实的上下文喂给生成器，而不是最后几步代码输出本身。作为 SenSys 2026 的论文，它是目前最直接的证据之一，说明“需求到固件”的自动化已经从零散 demo 进入到较严肃的系统研究阶段。</div>
+          <div class="summary-zh">AlterEgo 仍然是“静默输入 + 私密反馈”这条路线最经典的系统论文之一，因为它把非侵入式神经肌肉信号采集和骨传导回传真正组合成了一个闭环设备。IUI 2018 这篇论文展示了一个可穿戴系统，能够在用户不张嘴、没有明显嘴唇动作的情况下，捕捉面部与颈部的细微神经肌肉信号，并在数字识别任务上报告 92% 的中位准确率。它对你这个题目最重要的意义在于，骨传导在这里不是输入，而是私密输出通道；输入侧则是对内在发音意图的解码。虽然当时还没有今天的大模型重打分或 agent 框架，但 AlterEgo 基本定义了后续很多 EMG silent speech 产品想要逼近的设备形态。</div>
         </div>
         <div class="progress-row">
-          <div class="progress-track"><div class="progress-fill done" style="width:100%"></div></div>
-          <span class="progress-label done">✓ Complete</span>
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://autoembed.github.io/" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-notes" onclick="navigateTo('notes', 'autoembed-towards-automated-software-development-for-generic-embedded-iot-systems-via-llms_2026')">📄 View Notes</button>
+          <a href="https://dam-prod.media.mit.edu/x/2018/03/23/p43-kapur_BRjFwE6.pdf" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('alterego-a-personalized-wearable-silent-speech-interface_2018','https://dam-prod.media.mit.edu/x/2018/03/23/p43-kapur_BRjFwE6.pdf','AlterEgo: A Personalized Wearable Silent Speech Interface')">📖 Read Paper</button>
         </div>
       </div>
 
       <!-- ── Paper 2 ── -->
-      <div class="paper-card is-confirmed" data-id="platform-specific-code-generation-from-platform-independent-timed-models_2015" data-url="https://dblp.org/rec/conf/rtss/KimFSL15" data-pdf-url="https://repository.upenn.edu/bitstreams/9c9bd30e-6c44-4003-ba46-1e8663a2d1c2/download" data-progress="0">
+      <div class="paper-card is-arxiv" data-id="a-cross-modal-approach-to-silent-speech-with-llm-enhanced-recognition_2024" data-url="https://arxiv.org/abs/2403.05583" data-pdf-url="https://arxiv.org/pdf/2403.05583.pdf" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://dblp.org/rec/conf/rtss/KimFSL15" target="_blank">Platform-Specific Code Generation from Platform-Independent Timed Models</a></div>
-          <span class="citations cite-high">★ 224</span>
+          <div class="card-title"><a href="https://arxiv.org/abs/2403.05583" target="_blank">A Cross-Modal Approach to Silent Speech with LLM-Enhanced Recognition</a></div>
+          <span class="citations cite-none">★ 0</span>
         </div>
-        <div class="card-authors">BaekGyu Kim et al.</div>
+        <div class="card-authors">Tyler Benster et al.</div>
         <div class="card-meta">
-          <span class="venue-badge">RTSS 2015</span>
-          <span class="card-tag tag-cyan">code-generation</span>
-          <span class="card-tag tag-purple">timed-models</span>
-          <span class="card-tag tag-pink">embedded-software</span>
+          <span class="venue-badge arxiv">arXiv 2024</span>
+          <span class="card-tag tag-cyan">silent speech</span>
+          <span class="card-tag tag-purple">emg</span>
+          <span class="card-tag tag-pink">llm</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">This paper studies how to compile platform-independent timed models into platform-specific embedded code while preserving timing semantics. Its significance for modern MCU automation is that it formalizes the boundary between application intent and board-specific implementation, which is exactly the boundary a firmware agent has to cross when targeting ESP32, STM32, or nRF devices. Rather than treating firmware generation as free-form coding, the paper treats it as constrained synthesis against timing models and deployment assumptions. That perspective remains useful for any requirement-to-firmware pipeline that needs deterministic behavior instead of approximate code generation.</div>
+          <div class="summary-en">This is the most directly relevant paper for the “EMG plus large model” direction. It introduces MONA for cross-modal alignment between EMG and audio representations, then adds LISA, an LLM-based scoring adjustment layer, to improve decoding quality on open-vocabulary silent speech. The paper reports a drop in WER from 28.8% to 12.2% on the Gaddy 2020 benchmark, and from 23.3% to 3.7% on vocal EMG recordings. For engineering, the key lesson is that the LLM should not replace the signal model; it works best as a language-aware rescoring and correction layer on top of a strong EMG decoder.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">这篇论文研究如何把平台无关的时序模型编译成平台相关的嵌入式代码，同时尽量保持原始时序语义不被破坏。它对今天的 MCU 自动化仍然重要，因为它非常清楚地定义了“应用意图”和“板级实现”之间的那条边界，而这正是面向 ESP32、STM32、nRF 的固件 agent 必须跨过去的地方。论文并没有把固件生成当成自由写代码，而是把它视为受时序模型和部署约束驱动的综合问题。对于任何追求确定性而不是随意生成代码的自动化固件流程，这个视角仍然很有价值。</div>
+          <div class="summary-zh">这篇论文是“EMG + 大模型”方向里与你需求最直接对齐的一篇。它先用 MONA 做 EMG 与语音表征之间的跨模态对齐，再引入 LISA 这个基于大语言模型的重打分层，来提升开放词表静默语音识别的结果质量。论文报告在 Gaddy 2020 基准上把 WER 从 28.8% 降到 12.2%，在 vocal EMG 记录上更把 23.3% 降到 3.7%。从工程角度看，这篇工作的核心启发不是“让 LLM 直接替代 EMG 解码器”，而是把大模型放在后端做语言约束、候选重排和错误修正。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://dblp.org/rec/conf/rtss/KimFSL15" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('platform-specific-code-generation-from-platform-independent-timed-models_2015','https://dblp.org/rec/conf/rtss/KimFSL15','Platform-Specific Code Generation from Platform-Independent Timed Models')">📖 Read Paper</button>
+          <a href="https://arxiv.org/abs/2403.05583" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('a-cross-modal-approach-to-silent-speech-with-llm-enhanced-recognition_2024','https://arxiv.org/abs/2403.05583','A Cross-Modal Approach to Silent Speech with LLM-Enhanced Recognition')">📖 Read Paper</button>
         </div>
       </div>
 
       <!-- ── Paper 3 ── -->
-      <div class="paper-card is-confirmed" data-id="automatic-generation-of-hardware-dependent-software-for-mpsocs-from-abstract-system-specifications_2008" data-url="https://dblp.org/rec/conf/aspdac/SchirnerGD08" data-pdf-url="" data-progress="0">
+      <div class="paper-card is-arxiv" data-id="wireless-silent-speech-interface-using-multi-channel-textile-emg-sensors-integrated-into-headphones_2025" data-url="https://arxiv.org/abs/2504.13921" data-pdf-url="https://arxiv.org/pdf/2504.13921.pdf" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://dblp.org/rec/conf/aspdac/SchirnerGD08" target="_blank">Automatic generation of hardware dependent software for MPSoCs from abstract system specifications</a></div>
-          <span class="citations cite-mid">★ 26</span>
+          <div class="card-title"><a href="https://arxiv.org/abs/2504.13921" target="_blank">Wireless Silent Speech Interface Using Multi-Channel Textile EMG Sensors Integrated into Headphones</a></div>
+          <span class="citations cite-none">★ 0</span>
         </div>
-        <div class="card-authors">Gunar Schirner et al.</div>
+        <div class="card-authors">Chenyu Tang et al.</div>
         <div class="card-meta">
-          <span class="venue-badge">ASP-DAC 2008</span>
-          <span class="card-tag tag-cyan">code-generation</span>
-          <span class="card-tag tag-purple">mpsoc</span>
-          <span class="card-tag tag-pink">synthesis</span>
+          <span class="venue-badge arxiv">arXiv 2025</span>
+          <span class="card-tag tag-cyan">silent speech</span>
+          <span class="card-tag tag-purple">emg</span>
+          <span class="card-tag tag-pink">headphones</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">This ASP-DAC paper is an early but still relevant example of generating hardware-dependent software from abstract specifications. The important engineering lesson is that code generation becomes tractable once the hardware contract and communication structure are expressed in a formal intermediate representation. That maps well to today’s cross-chip MCU problem, where the hard part is not emitting C code, but carrying pin, bus, and peripheral assumptions across families. It supports the idea that automatic firmware generation should be built around structured device models rather than purely prompt-driven code completion.</div>
+          <div class="summary-en">This paper matters because it pushes silent-speech EMG toward a product-like headphone form factor instead of adhesive facial patches. The system integrates four textile electrodes into headphone earmuffs, uses an ESP32-S3 wireless readout module, and applies a 1D SE-ResNet to adapt to channel quality changes caused by skin-electrode coupling. On ten common voice-free control words, it reaches 96% accuracy, which is strong for a wearable command interface. If you are interested in bone-conduction-plus-EMG devices, this is one of the clearest bridges toward an around-ear consumer design, even though the paper itself focuses on EMG input rather than bone-conduction output.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">这篇 ASP-DAC 论文是较早但仍然很有参考价值的例子：从抽象系统规格自动生成依赖硬件的软件。它给出的核心工程启发是，一旦硬件契约和通信结构被放进形式化中间表示，代码生成就会变得可控。这个结论与今天跨 ESP32、STM32、nRF 的 MCU 自动适配问题高度一致，因为真正困难的不是输出 C 代码，而是如何把引脚、总线和外设假设稳定地带过不同芯片族。它支持这样一种路线：自动固件生成应该建立在结构化设备模型之上，而不是单纯依赖 prompt 驱动的代码补全。</div>
+          <div class="summary-zh">这篇论文的重要性在于，它把静默语音 EMG 从传统贴片式面部电极，往更像消费设备的耳机形态推进了一步。系统把四个纺织电极直接集成进耳罩，用 ESP32-S3 做无线采集模块，再通过 1D SE-ResNet 动态适应皮肤-电极耦合变化带来的通道质量波动。在 10 个常见静默控制词上，它做到 96% 的准确率，这对可穿戴指令接口已经相当有代表性。对你关心的“骨传导 + EMG”路线来说，这篇工作虽然输入侧仍是 EMG，但在设备形态上已经明显朝着 around-ear、可结合私密音频回传的产品方向靠近。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://dblp.org/rec/conf/aspdac/SchirnerGD08" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('automatic-generation-of-hardware-dependent-software-for-mpsocs-from-abstract-system-specifications_2008','https://dblp.org/rec/conf/aspdac/SchirnerGD08','Automatic generation of hardware dependent software for MPSoCs from abstract system specifications')">📖 Read Paper</button>
+          <a href="https://arxiv.org/abs/2504.13921" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('wireless-silent-speech-interface-using-multi-channel-textile-emg-sensors-integrated-into-headphones_2025','https://arxiv.org/abs/2504.13921','Wireless Silent Speech Interface Using Multi-Channel Textile EMG Sensors Integrated into Headphones')">📖 Read Paper</button>
         </div>
       </div>
 
       <!-- ── Paper 4 ── -->
-      <div class="paper-card is-confirmed" data-id="rapidpatch-firmware-hotpatching-for-real-time-embedded-devices_2022" data-url="https://dblp.org/rec/conf/uss/HeZ0L0000022" data-pdf-url="" data-progress="0">
+      <div class="paper-card is-confirmed" data-id="sentence-level-silent-speech-recognition-using-a-wearable-emg-eeg-sensor-system-with-ai-driven-sensor-fusion-and-language-model_2025" data-url="https://www.mdpi.com/1424-8220/25/19/6168" data-pdf-url="https://www.mdpi.com/1424-8220/25/19/6168/pdf?download=1" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://dblp.org/rec/conf/uss/HeZ0L0000022" target="_blank">RapidPatch: Firmware Hotpatching for Real-Time Embedded Devices</a></div>
-          <span class="citations cite-high">★ 163</span>
+          <div class="card-title"><a href="https://www.mdpi.com/1424-8220/25/19/6168" target="_blank">Sentence-Level Silent Speech Recognition Using a Wearable EMG/EEG Sensor System with AI-Driven Sensor Fusion and Language Model</a></div>
+          <span class="citations cite-none">★ 0</span>
         </div>
-        <div class="card-authors">Yi He et al.</div>
+        <div class="card-authors">Nicholas Satterlee et al.</div>
         <div class="card-meta">
-          <span class="venue-badge">USENIX Security 2022</span>
-          <span class="card-tag tag-cyan">hotpatching</span>
-          <span class="card-tag tag-purple">real-time</span>
-          <span class="card-tag tag-pink">firmware</span>
+          <span class="venue-badge">Sensors 2025</span>
+          <span class="card-tag tag-cyan">silent speech</span>
+          <span class="card-tag tag-purple">emg</span>
+          <span class="card-tag tag-pink">eeg</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">RapidPatch tackles a production-facing firmware problem: how to update real-time embedded code without rebooting the device or violating timing guarantees. That matters here because automated firmware generation is only half the story; the generated image must also be safely delivered, patched, and maintained on deployed devices. The paper moves the discussion from one-shot flashing toward fine-grained lifecycle management, which is much closer to how industrial MCU fleets operate. For cross-platform automation, it highlights that deployment constraints can be as important as code synthesis itself.</div>
+          <div class="summary-en">This paper is useful because it shows a sentence-level silent-speech pipeline on a low-channel wearable setup instead of stopping at isolated words. The system combines single-channel EMG and EEG, uses a moving-window few-shot Siamese model to segment continuous biosignals, and then applies a statistical language model as post-processing to repair lexical and syntactic mistakes. It reports 95.25% sentence-level recognition on a four-sentence military command set. The model is not an LLM in the modern sense, but it demonstrates the exact systems logic that later EMG+LLM stacks follow: first decode biosignals, then use language priors to clean up the sequence.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">RapidPatch 关注的是量产环境里真正棘手的问题：如何在不重启设备、也不破坏实时性的前提下更新嵌入式固件。它之所以与本题相关，是因为“自动生成固件”只是前半段，后半段还包括如何把生成结果安全地下发、修补并维持在设备上。论文把讨论重点从一次性刷写推进到更细粒度的生命周期管理，这比单纯烧录更接近工业 MCU 设备的真实运维方式。对跨平台自动化来说，它提示我们：部署约束的重要性并不亚于代码综合本身。</div>
+          <div class="summary-zh">这篇工作值得纳入，是因为它没有停留在孤立词分类，而是把低通道可穿戴设备真正推进到了句级静默语音识别。系统同时使用单通道 EMG 和 EEG，用 moving-window few-shot Siamese 模型去切分连续生理信号，再在后处理阶段叠加统计语言模型来修复词汇和语法错误。论文在四条军事指令组成的句集上报告了 95.25% 的句级识别率。它用的还不是今天意义上的大语言模型，但系统结构上已经非常接近“先做信号解码，再用语言先验纠错”的 EMG+LLM 工程范式。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://dblp.org/rec/conf/uss/HeZ0L0000022" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('rapidpatch-firmware-hotpatching-for-real-time-embedded-devices_2022','https://dblp.org/rec/conf/uss/HeZ0L0000022','RapidPatch: Firmware Hotpatching for Real-Time Embedded Devices')">📖 Read Paper</button>
+          <a href="https://www.mdpi.com/1424-8220/25/19/6168" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('sentence-level-silent-speech-recognition-using-a-wearable-emg-eeg-sensor-system-with-ai-driven-sensor-fusion-and-language-model_2025','https://www.mdpi.com/1424-8220/25/19/6168','Sentence-Level Silent Speech Recognition Using a Wearable EMG/EEG Sensor System with AI-Driven Sensor Fusion and Language Model')">📖 Read Paper</button>
         </div>
       </div>
 
       <!-- ── Paper 5 ── -->
-      <div class="paper-card is-confirmed" data-id="hera-hotpatching-of-embedded-real-time-applications_2021" data-url="https://dblp.org/rec/conf/ndss/NieslerSD21" data-pdf-url="" data-progress="0">
+      <div class="paper-card is-confirmed" data-id="a-silent-speech-decoding-system-from-eeg-and-emg-with-heterogenous-electrode-configurations_2025" data-url="https://www.isca-archive.org/interspeech_2025/inoue25b_interspeech.html" data-pdf-url="https://www.isca-archive.org/interspeech_2025/inoue25b_interspeech.pdf" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://dblp.org/rec/conf/ndss/NieslerSD21" target="_blank">HERA: Hotpatching of Embedded Real-time Applications</a></div>
-          <span class="citations cite-mid">★ 47</span>
+          <div class="card-title"><a href="https://www.isca-archive.org/interspeech_2025/inoue25b_interspeech.html" target="_blank">A Silent Speech Decoding System from EEG and EMG with Heterogenous Electrode Configurations</a></div>
+          <span class="citations cite-none">★ 0</span>
         </div>
-        <div class="card-authors">Christian Niesler et al.</div>
+        <div class="card-authors">Masakazu Inoue et al.</div>
         <div class="card-meta">
-          <span class="venue-badge">NDSS 2021</span>
-          <span class="card-tag tag-cyan">hotpatching</span>
-          <span class="card-tag tag-purple">embedded-security</span>
-          <span class="card-tag tag-pink">real-time</span>
+          <span class="venue-badge">Interspeech 2025</span>
+          <span class="card-tag tag-cyan">silent speech</span>
+          <span class="card-tag tag-purple">eeg</span>
+          <span class="card-tag tag-pink">emg</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">HERA also studies live updating for embedded real-time software, but from the angle of preserving correctness under stringent timing and memory constraints. For MCU automation, this paper matters because an end-to-end pipeline is only believable if it can update running devices without destabilizing them. The work makes clear that automated deployment on small controllers is not simply a compiler problem; it is a systems problem involving memory layouts, patch compatibility, and execution safety. That is directly relevant to any claim of autonomous flashing across multiple MCU families.</div>
+          <div class="summary-en">This Interspeech paper tackles one of the most practical deployment problems: silent-speech models usually break when the electrode montage changes. The authors train networks that can handle heterogeneous EEG/EMG placements and show strong multi-task transfer on a larger pooled dataset, reaching 95.3% word classification for healthy users and 54.5% for a speech-impaired patient. They also report gains in cross-language calibration. For engineering, that makes it an important reference on how to survive real-world variation in sensor placement rather than only optimizing a lab-perfect setup.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">HERA 同样研究嵌入式实时软件的在线更新，但更强调在严格的时序和内存约束下如何保持系统正确性。对 MCU 自动化来说，它的重要性在于：如果一条端到端自动流水线连在线设备的稳定更新都做不到，那它就谈不上真正可部署。论文说明，小型控制器上的自动化部署绝不只是编译问题，而是涉及内存布局、补丁兼容性和执行安全的一整套系统问题。这一点直接关系到“跨多类 MCU 自动烧录”是否真的可信。</div>
+          <div class="summary-zh">这篇 Interspeech 论文解决的是落地时最真实的一个痛点：一旦电极布局变了，很多静默语音模型就会明显掉性能。作者训练了能处理 heterogeneous EEG/EMG 电极配置的网络，并在更大规模的汇总数据上做多任务训练，达到健康被试 95.3% 的词分类准确率，以及一位言语障碍患者 54.5% 的准确率。论文还报告了跨语言校准的提升。对工程实现来说，这篇工作的价值不在于“多刷几个点数”，而在于它正面回答了设备重新佩戴、跨用户、跨语言这些真实部署场景中的鲁棒性问题。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://dblp.org/rec/conf/ndss/NieslerSD21" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('hera-hotpatching-of-embedded-real-time-applications_2021','https://dblp.org/rec/conf/ndss/NieslerSD21','HERA: Hotpatching of Embedded Real-time Applications')">📖 Read Paper</button>
+          <a href="https://www.isca-archive.org/interspeech_2025/inoue25b_interspeech.html" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('a-silent-speech-decoding-system-from-eeg-and-emg-with-heterogenous-electrode-configurations_2025','https://www.isca-archive.org/interspeech_2025/inoue25b_interspeech.html','A Silent Speech Decoding System from EEG and EMG with Heterogenous Electrode Configurations')">📖 Read Paper</button>
         </div>
       </div>
 
       <!-- ── Paper 6 ── -->
-      <div class="paper-card is-confirmed" data-id="library-portability-to-para-rehosting-natively-executing-microcontroller-software-on-commodity-hardware_2021" data-url="https://dblp.org/rec/conf/ndss/LiGLSL21" data-pdf-url="" data-progress="0">
+      <div class="paper-card is-arxiv" data-id="a-parallel-ultra-low-power-silent-speech-interface-based-on-a-wearable-fully-dry-emg-neckband_2025" data-url="https://arxiv.org/abs/2509.21964" data-pdf-url="https://arxiv.org/pdf/2509.21964.pdf" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://dblp.org/rec/conf/ndss/LiGLSL21" target="_blank">From Library Portability to Para-rehosting: Natively Executing Microcontroller Software on Commodity Hardware</a></div>
-          <span class="citations cite-mid">★ 80</span>
+          <div class="card-title"><a href="https://arxiv.org/abs/2509.21964" target="_blank">A Parallel Ultra-Low Power Silent Speech Interface based on a Wearable, Fully-dry EMG Neckband</a></div>
+          <span class="citations cite-none">★ 0</span>
         </div>
-        <div class="card-authors">Wenqiang Li et al.</div>
+        <div class="card-authors">Fiona Meier et al.</div>
         <div class="card-meta">
-          <span class="venue-badge">NDSS 2021</span>
-          <span class="card-tag tag-cyan">rehosting</span>
-          <span class="card-tag tag-purple">microcontroller</span>
-          <span class="card-tag tag-pink">analysis</span>
+          <span class="venue-badge arxiv">arXiv 2025</span>
+          <span class="card-tag tag-cyan">silent speech</span>
+          <span class="card-tag tag-purple">neckband</span>
+          <span class="card-tag tag-pink">low power</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">This paper shows how MCU firmware can be rehosted on commodity hardware by neutralizing hardware dependencies. The immediate relevance is to automated firmware generation loops: if you can run generated firmware off-target, you can validate and debug it before touching a real ESP32, STM32, or nRF board. That shortens the iteration cycle and makes autonomous code generation much more realistic. In practice, rehosting is one of the strongest enablers for scaling firmware agents beyond toy examples.</div>
+          <div class="summary-en">This work is one of the strongest references if you care about low-power, wearable, day-to-day silent speech input rather than only algorithm benchmarks. It uses a fully dry textile neckband with 14 differential EMG channels and the BioGAP-Ultra platform, running at about 22 mW total power for acquisition and wireless transmission. The paper reports 87% average accuracy for vocalized commands and 68% for silent ones, then explicitly evaluates session-to-session performance under device repositioning. That combination of dry electrodes, low power, and remount robustness is exactly the kind of engineering detail that matters for a real product.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">这篇论文展示了如何通过移除或适配硬件依赖，让 MCU 固件在通用硬件上运行。它对自动化固件生成特别重要，因为一旦能在离板环境里先运行和调试生成结果，就能在真正接触 ESP32、STM32、nRF 硬件之前完成大量验证。这样会显著缩短自动生成代码的迭代闭环，也让 agent 式固件生成更接近可用工程系统。现实里，rehosting 是把固件自动化从玩具 demo 推向可扩展实践的重要支撑能力。</div>
+          <div class="summary-zh">如果你更关心的是“能否做成低功耗、可长期佩戴的静默输入设备”，而不只是算法分数，这篇工作非常值得看。它采用 fully-dry 的纺织颈带，提供 14 路差分 EMG 通道，并基于 BioGAP-Ultra 平台把总功耗压到约 22 mW，用于采集与无线传输。论文报告 vocalized 命令 87% 的平均准确率、silent 命令 68% 的平均准确率，并且专门评估了设备重新佩戴后的跨 session 表现。dry 电极、超低功耗、重戴鲁棒性，这三点正是产品化时最关键的工程约束。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://dblp.org/rec/conf/ndss/LiGLSL21" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('library-portability-to-para-rehosting-natively-executing-microcontroller-software-on-commodity-hardware_2021','https://dblp.org/rec/conf/ndss/LiGLSL21','From Library Portability to Para-rehosting: Natively Executing Microcontroller Software on Commodity Hardware')">📖 Read Paper</button>
+          <a href="https://arxiv.org/abs/2509.21964" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('a-parallel-ultra-low-power-silent-speech-interface-based-on-a-wearable-fully-dry-emg-neckband_2025','https://arxiv.org/abs/2509.21964','A Parallel Ultra-Low Power Silent Speech Interface based on a Wearable, Fully-dry EMG Neckband')">📖 Read Paper</button>
         </div>
       </div>
 
       <!-- ── Paper 7 ── -->
-      <div class="paper-card is-confirmed" data-id="sota-secure-over-the-air-programming-of-iot-devices_2018" data-url="https://dblp.org/rec/conf/milcom/YesilyurtAUB18" data-pdf-url="" data-progress="0">
+      <div class="paper-card is-arxiv" data-id="silentwear-an-ultra-low-power-wearable-system-for-emg-based-silent-speech-recognition_2026" data-url="https://arxiv.org/abs/2603.02847" data-pdf-url="https://arxiv.org/pdf/2603.02847.pdf" data-progress="0">
         <div class="card-header">
-          <div class="card-title"><a href="https://dblp.org/rec/conf/milcom/YesilyurtAUB18" target="_blank">SOTA: Secure Over-The-Air Programming of IoT Devices</a></div>
-          <span class="citations cite-mid">★ 41</span>
-        </div>
-        <div class="card-authors">Halim Burak Yesilyurt et al.</div>
-        <div class="card-meta">
-          <span class="venue-badge">MILCOM 2018</span>
-          <span class="card-tag tag-cyan">ota</span>
-          <span class="card-tag tag-purple">security</span>
-          <span class="card-tag tag-pink">iot</span>
-        </div>
-        <div class="summary-block">
-          <div class="summary-label">EN</div>
-          <div class="summary-en">SOTA studies secure OTA programming for IoT devices, emphasizing authenticated updates and safe deployment rather than only flash mechanics. This is directly relevant if you want a requirement-to-code-to-flash pipeline that scales beyond a USB cable on a lab bench. The paper frames firmware delivery as a trust and recovery problem, which is exactly what cross-device automation needs once multiple boards are deployed in the field. It is a reminder that automation without secure update infrastructure is incomplete.</div>
-          <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">SOTA 研究的是 IoT 设备的安全 OTA 编程，它关心的重点不是单纯如何把二进制写进 Flash，而是如何保证更新认证、完整性和故障恢复。对“需求到代码再到烧录”的自动化闭环来说，这一点非常关键，因为真正有价值的流程不能只在实验台上通过串口刷写，而要能面向实际部署环境。论文把固件交付视为信任链和恢复机制问题，这正是跨设备自动化最终必须补上的部分。它提醒我们，没有安全更新基础设施的自动化，本质上是不完整的。</div>
-        </div>
-        <div class="progress-row">
-          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
-          <span class="progress-label"></span>
-        </div>
-        <div class="card-actions">
-          <a href="https://dblp.org/rec/conf/milcom/YesilyurtAUB18" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('sota-secure-over-the-air-programming-of-iot-devices_2018','https://dblp.org/rec/conf/milcom/YesilyurtAUB18','SOTA: Secure Over-The-Air Programming of IoT Devices')">📖 Read Paper</button>
-        </div>
-      </div>
-
-      <!-- ── Paper 8 ── -->
-      <div class="paper-card is-confirmed" data-id="remote-progressive-firmware-update-for-flash-based-networked-embedded-systems_2009" data-url="https://dblp.org/rec/conf/islped/KimC09" data-pdf-url="" data-progress="0">
-        <div class="card-header">
-          <div class="card-title"><a href="https://dblp.org/rec/conf/islped/KimC09" target="_blank">Remote progressive firmware update for flash-based networked embedded systems</a></div>
-          <span class="citations cite-mid">★ 48</span>
-        </div>
-        <div class="card-authors">Jinsik Kim et al.</div>
-        <div class="card-meta">
-          <span class="venue-badge">ISLPED 2009</span>
-          <span class="card-tag tag-cyan">ota</span>
-          <span class="card-tag tag-purple">flash-update</span>
-          <span class="card-tag tag-pink">embedded</span>
-        </div>
-        <div class="summary-block">
-          <div class="summary-label">EN</div>
-          <div class="summary-en">This paper presents progressive firmware update for flash-based embedded systems, reducing the burden of replacing whole images on constrained devices. Its relevance today is that many cross-MCU automation claims ignore the cost of bandwidth, energy, and flash wear when deploying generated images. By treating update as an incremental systems problem, the paper gives a more realistic model for field deployment. That is particularly useful for battery-powered IoT nodes where full reflashing is often the wrong operational primitive.</div>
-          <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">这篇论文提出面向 Flash 型嵌入式系统的渐进式远程固件更新方法，目的是降低受限设备整包替换的代价。它今天依然相关，因为很多“自动化烧录”方案只关注代码生成，却忽略了带宽、能耗和 Flash 磨损这些现实部署成本。论文把更新问题建模成增量式系统问题，而不是一次性整体重刷，这更接近 IoT 节点的实际运行条件。对于电池供电的小设备来说，这种思路尤其重要。</div>
-        </div>
-        <div class="progress-row">
-          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
-          <span class="progress-label"></span>
-        </div>
-        <div class="card-actions">
-          <a href="https://dblp.org/rec/conf/islped/KimC09" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('remote-progressive-firmware-update-for-flash-based-networked-embedded-systems_2009','https://dblp.org/rec/conf/islped/KimC09','Remote progressive firmware update for flash-based networked embedded systems')">📖 Read Paper</button>
-        </div>
-      </div>
-
-      <!-- ── Paper 9 ── -->
-      <div class="paper-card is-confirmed" data-id="no-reboot-and-zero-flash-over-the-air-programming-for-wireless-sensor-networks_2012" data-url="https://dblp.org/rec/conf/secon/ShafiAH12" data-pdf-url="" data-progress="0">
-        <div class="card-header">
-          <div class="card-title"><a href="https://dblp.org/rec/conf/secon/ShafiAH12" target="_blank">No-reboot and zero-flash over-the-air programming for Wireless Sensor Networks</a></div>
-          <span class="citations cite-mid">★ 16</span>
-        </div>
-        <div class="card-authors">Nasif Bin Shafi et al.</div>
-        <div class="card-meta">
-          <span class="venue-badge">SECON 2012</span>
-          <span class="card-tag tag-cyan">ota</span>
-          <span class="card-tag tag-purple">wsn</span>
-          <span class="card-tag tag-pink">flash</span>
-        </div>
-        <div class="summary-block">
-          <div class="summary-label">EN</div>
-          <div class="summary-en">This paper targets extremely constrained wireless sensor nodes and proposes OTA updating without reboot and without extra flash reservation. That is a strong fit for your question because it exposes the operational limits that any automatic code-and-flash pipeline must handle on small MCUs. The main lesson is that update automation is dominated by memory layout, availability, and runtime continuity, not only by compiler support. In other words, the last mile of automated flashing is mostly systems engineering.</div>
-          <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">这篇论文面向极度受限的无线传感节点，提出了无需重启、也不依赖额外 Flash 空间的 OTA 更新方案。它与您的问题高度相关，因为它直接揭示了自动代码生成和自动烧录在小 MCU 上真正要面对的资源边界。论文传递出的核心信息是：更新自动化主要受内存布局、在线可用性和运行连续性支配，而不只是编译器或代码生成能力。换句话说，自动烧录的最后一公里，本质上是系统工程问题。</div>
-        </div>
-        <div class="progress-row">
-          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
-          <span class="progress-label"></span>
-        </div>
-        <div class="card-actions">
-          <a href="https://dblp.org/rec/conf/secon/ShafiAH12" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('no-reboot-and-zero-flash-over-the-air-programming-for-wireless-sensor-networks_2012','https://dblp.org/rec/conf/secon/ShafiAH12','No-reboot and zero-flash over-the-air programming for Wireless Sensor Networks')">📖 Read Paper</button>
-        </div>
-      </div>
-
-      <!-- ── Paper 10 ── -->
-      <div class="paper-card is-arxiv" data-id="autopatch-automated-generation-of-hotpatches-for-real-time-embedded-devices_2024" data-url="https://arxiv.org/abs/2408.15372" data-pdf-url="https://arxiv.org/pdf/2408.15372" data-progress="0">
-        <div class="card-header">
-          <div class="card-title"><a href="https://arxiv.org/abs/2408.15372" target="_blank">AutoPatch: Automated Generation of Hotpatches for Real-Time Embedded Devices</a></div>
+          <div class="card-title"><a href="https://arxiv.org/abs/2603.02847" target="_blank">SilentWear: an Ultra-Low Power Wearable System for EMG-based Silent Speech Recognition</a></div>
           <span class="citations cite-none">★ 0</span>
         </div>
-        <div class="card-authors">Mohsen Salehi et al.</div>
+        <div class="card-authors">Giusy Spacone et al.</div>
         <div class="card-meta">
-          <span class="venue-badge arxiv">arXiv 2024</span>
-          <span class="card-tag tag-cyan">hotpatching</span>
-          <span class="card-tag tag-purple">automation</span>
-          <span class="card-tag tag-pink">embedded</span>
+          <span class="venue-badge arxiv">arXiv 2026</span>
+          <span class="card-tag tag-cyan">silent speech</span>
+          <span class="card-tag tag-purple">mcu</span>
+          <span class="card-tag tag-pink">edge ai</span>
         </div>
         <div class="summary-block">
           <div class="summary-label">EN</div>
-          <div class="summary-en">AutoPatch pushes further toward automation by generating hotpatches for real-time embedded devices instead of requiring manual intervention for every fix. It is relevant because it narrows the gap between automatic code generation and automatic post-deployment maintenance. For heterogeneous MCU fleets, the difficult part is not just generating an initial firmware image, but generating safe deltas that respect timing and state continuity. This paper is one of the clearest signals that the firmware automation stack is moving from compile-time assistance toward runtime lifecycle automation.</div>
+          <div class="summary-en">SilentWear is the most deployable-looking recent paper in this set because it closes the loop from wearable EMG sensing to on-device recognition. The system uses a textile neck interface with 14 differential channels, a 15k-parameter SpeechNet CNN, and an MCU implementation that reaches 63.9 microjoules per inference with 2.47 ms latency. It also reports more than 27 hours of continuous operation at 20.5 mW total power and shows a practical incremental fine-tuning strategy to recover accuracy after repositioning. In other words, this paper is not just about classification; it is about what an actual embedded silent-speech appliance could look like.</div>
           <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">AutoPatch 更进一步，它尝试自动为实时嵌入式设备生成热补丁，而不是每次都依赖工程师手工修复。它的重要性在于把自动化从“初始代码生成”推进到了“部署后维护”阶段。对于异构 MCU 设备群来说，难点不仅在于生成首版固件，还在于如何生成既安全又不破坏时序和状态连续性的增量补丁。它是一个很明显的信号：固件自动化正在从编译期辅助走向运行期生命周期管理。</div>
+          <div class="summary-zh">SilentWear 是这组论文里“最像真正产品原型”的一篇，因为它把可穿戴 EMG 采集和端侧识别完整闭环起来了。系统使用 14 路差分纺织颈带电极、一个只有 15k 参数的 SpeechNet CNN，并在商用 MCU 上做到 63.9 微焦每次推理、2.47 ms 时延。论文还给出 20.5 mW 总功耗下超过 27 小时的连续运行能力，并展示了设备重戴后通过少量增量微调恢复准确率的策略。换句话说，这篇论文讨论的已经不只是“能不能识别”，而是一个真正嵌入式 silent speech 设备该长成什么样。</div>
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
           <span class="progress-label"></span>
         </div>
         <div class="card-actions">
-          <a href="https://arxiv.org/abs/2408.15372" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('autopatch-automated-generation-of-hotpatches-for-real-time-embedded-devices_2024','https://arxiv.org/abs/2408.15372','AutoPatch: Automated Generation of Hotpatches for Real-Time Embedded Devices')">📖 Read Paper</button>
+          <a href="https://arxiv.org/abs/2603.02847" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('silentwear-an-ultra-low-power-wearable-system-for-emg-based-silent-speech-recognition_2026','https://arxiv.org/abs/2603.02847','SilentWear: an Ultra-Low Power Wearable System for EMG-based Silent Speech Recognition')">📖 Read Paper</button>
         </div>
       </div>
     </div>
@@ -550,7 +463,7 @@ body.light {
 
   <footer class="kanban-footer">
     <span>Powered by MyResearchClaw</span>
-    <span>2026-04-20</span>
+    <span>2026-04-21</span>
   </footer>
 </div>
 
@@ -558,7 +471,7 @@ body.light {
   <div class="chat-header">
     <div>
       <div class="chat-title">Project Chat</div>
-      <div class="chat-subtitle">MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF) · papers</div>
+      <div class="chat-subtitle">Silent Speech Recognition（骨传导 + EMG + LLM） · papers</div>
     </div>
     <button class="btn" onclick="toggleChatDrawer()">Close</button>
   </div>
@@ -576,7 +489,7 @@ body.light {
 
 <script>
 const API = 'http://localhost:5678';
-const PROJECT_TOPIC = 'MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)';
+const PROJECT_TOPIC = 'Silent Speech Recognition（骨传导 + EMG + LLM）';
 const PROJECT_PAGE_TYPE = 'papers';
 let serverOk = false;
 let activeReadId = null;
@@ -603,7 +516,7 @@ async function openEngineeringView() {
       await fetch(`${API}/api/generate-engineering`, { method: 'POST' });
     } catch {}
   }
-  location.href = '/mcu-esp32-stm32-nrf-engineering.html';
+  location.href = '/projects/silent-speech-recognition-emg-llm/engineering.html';
 }
 
 async function checkServer() {
@@ -808,7 +721,9 @@ function escapeHtml(text) {
 
 async function readJsonResponse(r) {
   const raw = await r.text();
-  if (!raw.trim()) throw new Error(`Empty response (${r.status})`);
+  if (!raw.trim()) {
+    throw new Error(`Empty response (${r.status})`);
+  }
   try {
     return JSON.parse(raw);
   } catch (err) {

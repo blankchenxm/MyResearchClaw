@@ -31,6 +31,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 PORT = 5678
 ROOT = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(ROOT, "output")
+PROJECTS_DIR = os.path.join(OUTPUT_DIR, "projects")
 PAPERS_JSON = os.path.join(OUTPUT_DIR, "papers.json")
 NOTES_DIR = os.path.join(OUTPUT_DIR, "notes")
 PDFS_DIR = os.path.join(OUTPUT_DIR, "pdfs")
@@ -114,6 +115,29 @@ def strip_html_tags(text):
     return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", text)).strip()
 
 
+def topic_project_dir(topic_or_slug):
+    slug = topic_or_slug if re.fullmatch(r"[a-z0-9-]+", topic_or_slug or "") else slugify_topic(topic_or_slug)
+    return os.path.join(PROJECTS_DIR, slug)
+
+
+def topic_papers_relpath(topic_or_slug):
+    slug = topic_or_slug if re.fullmatch(r"[a-z0-9-]+", topic_or_slug or "") else slugify_topic(topic_or_slug)
+    return f"projects/{slug}/papers.html"
+
+
+def topic_engineering_relpath(topic_or_slug):
+    slug = topic_or_slug if re.fullmatch(r"[a-z0-9-]+", topic_or_slug or "") else slugify_topic(topic_or_slug)
+    return f"projects/{slug}/engineering.html"
+
+
+def topic_papers_abspath(topic_or_slug):
+    return os.path.join(OUTPUT_DIR, topic_papers_relpath(topic_or_slug))
+
+
+def topic_engineering_abspath(topic_or_slug):
+    return os.path.join(OUTPUT_DIR, topic_engineering_relpath(topic_or_slug))
+
+
 def chat_key(topic, page_type):
     return f"{slugify_topic(topic)}-{page_type}"
 
@@ -155,6 +179,7 @@ def build_project_context(topic, page_type):
 
     slug = slugify_topic(topic)
     engineering_candidates = [
+        topic_engineering_abspath(slug),
         os.path.join(OUTPUT_DIR, f"{slug}-engineering.html"),
         ENGINEERING_HTML,
     ]
@@ -670,8 +695,8 @@ def render_topic_index_html(searches, papers):
           </div>
           <p class="topic-venues">{escape(row["venues"])}</p>
           <div class="topic-actions">
-            <a href="/{row["slug"]}-papers.html">Open Papers →</a>
-            <a href="/{row["slug"]}-engineering.html">Engineering View →</a>
+            <a href="/projects/{row["slug"]}/papers.html">Open Papers →</a>
+            <a href="/projects/{row["slug"]}/engineering.html">Engineering View →</a>
           </div>
         </article>"""
         for row in topic_rows
@@ -741,7 +766,7 @@ body.light {{
     <section class="hero">
       <div class="hero-eyebrow">MyResearchClaw</div>
       <h1>Topic Navigator</h1>
-      <p>当前仅保留两个主题。先从对应的 Papers 页面进入，再在页面顶部点击 Engineering View；后续精读笔记会按主题写入 <code>output/notes/&lt;topic-slug&gt;/</code>。</p>
+      <p>所有主题页面现在都收纳在 <code>output/projects/&lt;topic-slug&gt;/</code> 下。先进入对应的 Papers 页面，再在页面顶部点击 Engineering View；精读笔记仍会按主题写入 <code>output/notes/&lt;topic-slug&gt;/</code>。</p>
     </section>
     <section class="topics">
       {cards_html}
@@ -815,8 +840,8 @@ def write_topic_dashboard(topic, year_range, venues):
     data = load_papers()
     topic_papers = [paper for paper in data.get("papers", []) if paper.get("topic") == topic]
     slug = slugify_topic(topic)
-    papers_name = f"{slug}-papers.html"
-    engineering_name = f"{slug}-engineering.html"
+    papers_name = topic_papers_relpath(slug)
+    engineering_name = topic_engineering_relpath(slug)
     papers_html = render_dashboard_html(
         active_topic=topic,
         active_year_range=year_range,
@@ -824,7 +849,9 @@ def write_topic_dashboard(topic, year_range, venues):
         engineering_link=f"/{engineering_name}",
         papers=topic_papers,
     )
-    with open(os.path.join(OUTPUT_DIR, papers_name), "w", encoding="utf-8") as f:
+    papers_file = os.path.join(OUTPUT_DIR, papers_name)
+    os.makedirs(os.path.dirname(papers_file), exist_ok=True)
+    with open(papers_file, "w", encoding="utf-8") as f:
         f.write(papers_html)
     return papers_name, engineering_name
 
@@ -844,6 +871,8 @@ def ensure_engineering_page():
         template.replace("{{TOPIC}}", escape(topic))
         .replace("{{YEAR_RANGE}}", escape(year_range))
         .replace("{{LAST_UPDATED}}", escape(data.get("last_updated") or today_iso()))
+        .replace("{{BACK_TO_PAPERS_LINK}}", "/kanban.html")
+        .replace("{{AUTO_GENERATE_ENGINEERING}}", "true")
         .replace("{{OPEN_SOURCE_COUNT}}", "0")
         .replace("{{PRODUCT_COUNT}}", "0")
         .replace("{{NEWS_COUNT}}", "0")
@@ -1299,9 +1328,9 @@ class Handler(BaseHTTPRequestHandler):
 
         if path.endswith(".html") and path not in ("/kanban.html", "/engineering.html"):
             rel_name = path.lstrip("/")
-            safe_name = os.path.basename(rel_name)
-            html_file = os.path.join(OUTPUT_DIR, safe_name)
-            if os.path.exists(html_file):
+            html_file = os.path.normpath(os.path.join(OUTPUT_DIR, rel_name))
+            output_root = os.path.normpath(OUTPUT_DIR)
+            if html_file.startswith(output_root + os.sep) and os.path.exists(html_file):
                 body = open(html_file, "rb").read()
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")

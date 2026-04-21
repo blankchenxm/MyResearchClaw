@@ -17,10 +17,10 @@ Use the `skills/` tree as the active Codex layout.
 
 ## Working Model
 
-- `conference-scout` updates `output/papers.json`, regenerates `output/kanban.html`, and may generate topic-specific paper pages such as `output/{topic_slug}-papers.html`.
+ - `conference-scout` updates `output/papers.json`, regenerates `output/kanban.html`, and may generate topic-specific paper pages such as `output/projects/{topic_slug}/papers.html`.
 - For "顶会论文", "完整调查", or latest-paper requests, `conference-scout` must use a topic-appropriate full venue profile and a venue completeness check instead of a narrowed ad hoc subset.
 - `paper-reader` writes `output/notes/{topic_slug}/{paper_id}.md`, updates paper status, and regenerates the kanban.
-- `engineering-scout` writes implementation-oriented results and may generate topic-specific engineering pages such as `output/{topic_slug}-engineering.html`.
+ - `engineering-scout` writes implementation-oriented results and may generate topic-specific engineering pages such as `output/projects/{topic_slug}/engineering.html`.
 - For broad topic investigation, run `conference-scout` and `engineering-scout` together unless the user explicitly narrows scope.
 - Preserve existing paper state such as `status`, `progress`, and `note_path` unless the task explicitly changes them.
 
@@ -43,8 +43,8 @@ For individual paper reads, arXiv, DOI landing pages, ACM DL, and Semantic Schol
 
 - Keep notes as Markdown under `output/notes/{topic_slug}/`.
 - Keep `output/kanban.html` as the default entry page. When multiple topics exist, it may act as a topic navigator instead of a single-topic paper board.
-- Keep topic-specific paper pages under `output/{topic_slug}-papers.html`.
-- Keep topic-specific engineering pages under `output/{topic_slug}-engineering.html`.
+- Keep topic-specific paper pages under `output/projects/{topic_slug}/papers.html`.
+- Keep topic-specific engineering pages under `output/projects/{topic_slug}/engineering.html`.
 - Deduplicate papers primarily by URL and secondarily by stable identifiers such as arXiv ID.
 
 ## Runtime

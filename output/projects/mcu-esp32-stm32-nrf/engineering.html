@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Engineering Scout — PCB硬件自动化流程(面向 IoT传感器板)</title>
+<title>Engineering Scout — MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -86,15 +86,15 @@ body.light {
   <button class="chat-toggle" onclick="toggleChatDrawer()" title="Toggle project chat">💬</button>
   <div class="wrap">
     <div class="nav">
-      <a href="/pcb-iot-papers.html">← Back to Papers</a>
+      <a href="/projects/mcu-esp32-stm32-nrf/papers.html">← Back to Papers</a>
     </div>
 
     <section class="hero">
       <div class="eyebrow">Engineering Scout</div>
-      <h1>PCB硬件自动化流程(面向 IoT传感器板)</h1>
+      <h1>MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)</h1>
       <p>这一页聚焦“论文之外”的工程落地信息：GitHub 开源实现、现实产品与功能、以及相关新闻与实际部署信号，帮助你判断一个研究主题距离工程可用还有多远。</p>
       <div class="meta">
-        <div class="badge">Range: 2020-2026</div>
+        <div class="badge">Range: 2008-2026</div>
         <div class="badge">Updated: 2026-04-19</div>
         <div class="badge">Open source: 3</div>
         <div class="badge">Products: 3</div>
@@ -111,7 +111,7 @@ body.light {
           <span>High-level engineering readout</span>
         </div>
         <div class="takeaways">
-          <div class="takeaway">需求到“完整可投产 PCB 文件”的全自动链路已经出现原型，但当前最稳的落地方式仍然是“需求到原理图/BOM/约束，再由人审完成布局与可制造性收尾”。</div><div class="takeaway">可行实现路径已经比较清晰：自然语言需求 -&gt; 组件/功能块检索 -&gt; datasheet grounding -&gt; 原理图合成 -&gt; ERC/约束验证 -&gt; KiCad/EDA 文件输出。真正的瓶颈在布局、SI/PI、封装与制造规则。</div><div class="takeaway">工程上最成熟的不是一个万能 agent，而是把 SKiDL/KiCad/约束检查器/零件数据库串成流水线。也就是说，IoT PCB 自动化更像“多工具编排”，而不是单模型端到端生成。</div>
+          <div class="takeaway">“根据需求自动生成代码并完成烧录”已经比 PCB 自动化成熟得多。代码生成、构建、刷写各环节都有现成工具链，难点主要在芯片族差异与硬件抽象。</div><div class="takeaway">跨 ESP32 / STM32 / nRF 的现实路径不是让模型直接裸写三套代码，而是先建立统一设备能力模型，再映射到 ESP-IDF、STM32CubeMX、Zephyr/nRF 工具链。</div><div class="takeaway">真正能落地的系统通常长这样：需求 -&gt; 板级/外设抽象 -&gt; 代码模板或 agent 生成 -&gt; 官方构建系统 -&gt; 官方刷写/OTA 工具。这比单一聊天模型可靠得多。</div>
         </div>
       </section>
 
@@ -121,7 +121,7 @@ body.light {
           <span>3 repos / projects</span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://github.com/Shaurya-Sethi/circuitron" target="_blank">Circuitron</a></h3><span class="tag">open_source</span></div><div class="org">Shaurya Sethi / GitHub · 2025</div><div class="summary">面向自然语言 PCB 设计的 agent 原型，能够把需求转成 SKiDL、原理图和 `.kicad_pcb` 等工件，已经非常接近“需求到 KiCad 文件”的自动化链路。</div><div class="how">实现路径是“文本需求 -&gt; SKiDL Python 电路描述 -&gt; KiCad 工件生成 -&gt; 迭代修正”。这说明完整 PCB 文件可以被自动生成，但质量仍依赖后续约束检查与人工审阅。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/circuit-synth/circuit-synth" target="_blank">circuit-synth</a></h3><span class="tag">open_source</span></div><div class="org">circuit-synth / GitHub · 2026</div><div class="summary">一个以 Python 定义电路、再导出 KiCad 项目的开源栈，强调可编程电路描述和自动生成原理图/PCB。</div><div class="how">它不是纯文本到 PCB 的黑盒，而是把设计抽象成代码，再接 KiCad 输出。这类“代码化电路描述 + EDA 导出”的模式很适合 IoT 传感板模板复用。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/rjwalters/kicad-tools" target="_blank">kicad-tools</a></h3><span class="tag">open_source</span></div><div class="org">rjwalters / GitHub · 2025</div><div class="summary">提供程序化解析和修改 KiCad schematic / PCB 文件的 Python 工具，适合作为 agent 的执行后端。</div><div class="how">如果前端 agent 负责需求理解和约束生成，`kicad-tools` 这种库就能承担文件级编辑、规则修复和批量重写，是自动化 PCB 流水线里很关键的“文件操作层”。</div></div>
+          <div class="item"><div class="item-top"><h3><a href="https://github.com/platformio/platformio-core" target="_blank">PlatformIO Core</a></h3><span class="tag">open_source</span></div><div class="org">PlatformIO · active</div><div class="summary">PlatformIO 是最现实的跨芯片族自动构建入口之一，支持多平台、多 board、多环境配置。</div><div class="how">它的关键价值在于把 ESP32、STM32、Nordic 等平台放到统一配置文件和统一 CLI 下，从而让 agent 只需决定目标环境与依赖，而不必重写整个构建链。</div></div><div class="item"><div class="item-top"><h3><a href="https://docs.zephyrproject.org/latest/develop/west/build-flash-debug.html" target="_blank">Zephyr</a></h3><span class="tag">open_source</span></div><div class="org">Zephyr Project · active</div><div class="summary">Zephyr 提供跨板卡的 `west build` / `west flash` 统一工作流，是自动化固件生成后接上部署的典型后端。</div><div class="how">如果需求层先被编译成 Zephyr 抽象，后续只要替换 board 与 device tree，就能复用大部分应用逻辑；这非常适合跨 ESP32 / nRF / STM32 的自动适配。</div></div><div class="item"><div class="item-top"><h3><a href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-py.html" target="_blank">ESP-IDF</a></h3><span class="tag">open_source</span></div><div class="org">Espressif · active</div><div class="summary">ESP-IDF 官方工具链已经把创建项目、构建、刷写等操作统一进 `idf.py`，非常适合作为 agent 的执行目标。</div><div class="how">自动系统并不需要自己实现刷写协议，只要生成正确工程并调用官方 `idf.py build` / `flash`，就能把“代码生成”和“烧录执行”稳妥接起来。</div></div>
         </div>
       </section>
 
@@ -131,7 +131,7 @@ body.light {
           <span>3 products / features</span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://www.flux.ai/Copilot" target="_blank">Flux Copilot</a></h3><span class="tag">product</span></div><div class="org">Flux · 2023-2026</div><div class="summary">目前最接近“AI 辅助硬件设计”的商业产品之一，主打在原理图阶段提供器件建议、连接解释和设计协助。</div><div class="how">官方文档明确写到它当前主要理解 schematic，对 PCB layout 的理解仍有限。这和研究结论一致：真正难的是从原理图跨到布局与制造约束。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.celus.io/knowledge/design-assistant-accelerating-electronics-design-with-natural-language" target="_blank">CELUS Design Assistant</a></h3><span class="tag">product</span></div><div class="org">CELUS · 2026</div><div class="summary">CELUS 已把自然语言需求输入接到了电子设计平台上，强调从需求理解、器件选择到 schematic/BOM 生成的加速。</div><div class="how">它更像“需求到设计包”的前半段引擎：先拆功能块，再做元件匹配和系统设计，再交给 EDA 工具继续收尾。对 IoT 板来说，这是一条很现实的工程路径。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.kicad.org/" target="_blank">KiCad</a></h3><span class="tag">product</span></div><div class="org">KiCad Project · active</div><div class="summary">KiCad 本身不是 AI 产品，但它是当前开源自动化链路里最重要的目标格式和执行后端。</div><div class="how">大量自动化项目最终都落在 KiCad 的 schematic 与 PCB 文件上，因为它开放、可脚本化、生态完整。现实里“自动生成 PCB 文件”通常意味着最终落到 KiCad-compatible 项目。</div></div>
+          <div class="item"><div class="item-top"><h3><a href="https://embedder.com/" target="_blank">Embedder</a></h3><span class="tag">product</span></div><div class="org">Embedder · 2026</div><div class="summary">Embedder 已经把“AI firmware engineer”产品化，明确支持 STM32、ESP32、nRF52 等 MCU，并强调基于 datasheet 的引用式代码生成。</div><div class="how">它的实现思路非常接近你想要的路线：先 ingest datasheet / schematic / reference manual，再建立硬件知识图谱，最后生成带出处的驱动与初始化代码。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.st.com/STM32CubeMX" target="_blank">STM32CubeMX</a></h3><span class="tag">product</span></div><div class="org">STMicroelectronics · active</div><div class="summary">STM32CubeMX 本身就是配置到初始化代码生成的成熟产品，已经把大量板级初始化劳动自动化。</div><div class="how">现实中的自动化系统完全可以把需求映射到 CubeMX 配置，再调用其代码生成能力，把芯片特定启动、时钟、外设初始化从 agent 中外包出去。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.nordicsemi.com/Products/Development-tools/nRF-Util" target="_blank">nRF Util</a></h3><span class="tag">product</span></div><div class="org">Nordic Semiconductor · active</div><div class="summary">Nordic 的统一 CLI 已经覆盖设备发现、DFU、烧录包等功能，是自动部署到 nRF 平台的官方执行端。</div><div class="how">这说明跨芯片自动化时，agent 不必直接理解每个厂家的底层烧录协议，而可以把最后一跳委托给厂商维护的工具。</div></div>
         </div>
       </section>
 
@@ -141,7 +141,7 @@ body.light {
           <span>3 recent signals</span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://www.flux.ai/p/blog/flux-copilot-the-first-ai-powered-hardware-design-assistant" target="_blank">Flux Copilot launch post</a></h3><span class="tag">news</span></div><div class="org">Flux · 2023</div><div class="summary">官方把 Copilot 定位为 PCB 工具内的 AI 硬件设计助手，说明商业产品已经开始把 LLM 直接嵌入 EDA 工作流。</div><div class="how">这类发布信号的重要性在于：市场已经认可“AI 帮工程师做原理图和设计解释”是可卖的，但还没有宣称布局与量产完全自动化。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.electronicdesign.com/technologies/industrial/article/21264919/electronic-design-flux-releases-copilot-ai-powered-hardware-design-assistant" target="_blank">Electronic Design on Flux Copilot</a></h3><span class="tag">news</span></div><div class="org">Electronic Design · 2023</div><div class="summary">行业媒体把 Flux 视为 AI PCB assistant 的代表案例，同时也指出其准确性和成熟度仍处于早期阶段。</div><div class="how">这与科研和开源原型形成互相印证：需求到原理图已经能做出样子，但需求到可靠板级实现还需要强约束和人工兜底。</div></div><div class="item"><div class="item-top"><h3><a href="https://circuit-synth.readthedocs.io/_/downloads/en/latest/pdf/" target="_blank">Circuit-Synth docs: generate complete KiCad project</a></h3><span class="tag">news</span></div><div class="org">Circuit-Synth · 2026</div><div class="summary">文档已经把“生成完整 KiCad 项目”作为面向用户的公开能力来描述，说明开源生态正在把 AI/代码化硬件设计推向可操作工具链。</div><div class="how">虽然这还不等于工业级自动布线和量产，但它是非常直接的部署信号：需求到板级文件的路径已经从研究想法变成可下载可运行的软件。</div></div>
+          <div class="item"><div class="item-top"><h3><a href="https://www.prnewswire.com/news-releases/embedder-v0-3-1-nominated-for-embedded-award-2026-as-ai-firmware-platform-moves-into-production-302708498.html" target="_blank">Embedder production push at Embedded World 2026</a></h3><span class="tag">news</span></div><div class="org">PR Newswire / Embedder · 2026-03-10</div><div class="summary">Embedder 在 2026 年 Embedded World 的公开动作说明，“AI 固件工程平台”已经不只是概念验证，而是在向生产部署靠近。</div><div class="how">这类信号意味着市场开始接受“需求+文档 -&gt; 自动生成驱动/初始化/工程骨架”的产品形态，也证明工程落地正在从内部工具走向商业平台。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.eejournal.com/article/meet-the-embedder-ai-firmware-engineer/" target="_blank">EEJournal profile of Embedder</a></h3><span class="tag">news</span></div><div class="org">EEJournal · 2026</div><div class="summary">行业媒体开始把 AI firmware engineer 当成一个独立赛道来看待，而不是普通代码助手的延伸。</div><div class="how">这对你的问题有现实意义：自动生成并烧录 MCU 固件的能力，已经开始形成专门产品，而不再只是拼装通用 LLM。</div></div><div class="item"><div class="item-top"><h3><a href="https://docs.platformio.org/en/latest/projectconf/sections/env/index.html" target="_blank">PlatformIO multi-environment workflow</a></h3><span class="tag">news</span></div><div class="org">PlatformIO Docs · active</div><div class="summary">PlatformIO 官方文档长期把多环境项目作为一等能力，这本身就是跨芯片自动适配的重要部署信号。</div><div class="how">对自动化系统来说，这意味着“同一份需求映射多个芯片后端”是可以落到标准工程结构上的，而不是每次都要发明新的 build orchestration。</div></div>
         </div>
       </section>
     </div>
@@ -150,7 +150,7 @@ body.light {
   <div class="chat-header">
     <div>
       <div class="chat-title">Project Chat</div>
-      <div class="chat-subtitle">PCB硬件自动化流程(面向 IoT传感器板) · engineering</div>
+      <div class="chat-subtitle">MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF) · engineering</div>
     </div>
     <button class="nav-btn" onclick="toggleChatDrawer()">Close</button>
   </div>
@@ -167,7 +167,7 @@ body.light {
 </aside>
 <script>
 const API = 'http://localhost:5678';
-const PROJECT_TOPIC = 'PCB硬件自动化流程(面向 IoT传感器板)';
+const PROJECT_TOPIC = 'MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)';
 const PROJECT_PAGE_TYPE = 'engineering';
 let chatLoaded = false;
 let chatPending = false;

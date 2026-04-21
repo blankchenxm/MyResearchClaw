@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Engineering Scout — Silent Speech Recognition（骨传导 + EMG + LLM）</title>
+<title>Engineering Scout — PCB硬件自动化流程(面向 IoT传感器板)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -86,23 +86,23 @@ body.light {
   <button class="chat-toggle" onclick="toggleChatDrawer()" title="Toggle project chat">💬</button>
   <div class="wrap">
     <div class="nav">
-      <a href="/kanban.html">← Back to Papers</a>
+      <a href="/projects/pcb-iot/papers.html">← Back to Papers</a>
     </div>
 
     <section class="hero">
       <div class="eyebrow">Engineering Scout</div>
-      <h1>Silent Speech Recognition（骨传导 + EMG + LLM）</h1>
+      <h1>PCB硬件自动化流程(面向 IoT传感器板)</h1>
       <p>这一页聚焦“论文之外”的工程落地信息：GitHub 开源实现、现实产品与功能、以及相关新闻与实际部署信号，帮助你判断一个研究主题距离工程可用还有多远。</p>
       <div class="meta">
-        <div class="badge">Range: 2018-2026</div>
-        <div class="badge">Updated: 2026-04-21</div>
-        <div class="badge">Open source: 0</div>
-        <div class="badge">Products: 0</div>
-        <div class="badge">News: 0</div>
+        <div class="badge">Range: 2020-2026</div>
+        <div class="badge">Updated: 2026-04-19</div>
+        <div class="badge">Open source: 3</div>
+        <div class="badge">Products: 3</div>
+        <div class="badge">News: 3</div>
       </div>
     </section>
 
-    <div id="status-card" class="status-card" style="display:none"></div>
+    
 
     <div class="grid">
       <section class="section">
@@ -111,37 +111,37 @@ body.light {
           <span>High-level engineering readout</span>
         </div>
         <div class="takeaways">
-          <div class="takeaway">Engineering scout page has not been generated yet. Run `engineering-scout` for this topic to populate GitHub projects, products, and deployment signals.</div>
+          <div class="takeaway">需求到“完整可投产 PCB 文件”的全自动链路已经出现原型，但当前最稳的落地方式仍然是“需求到原理图/BOM/约束，再由人审完成布局与可制造性收尾”。</div><div class="takeaway">可行实现路径已经比较清晰：自然语言需求 -&gt; 组件/功能块检索 -&gt; datasheet grounding -&gt; 原理图合成 -&gt; ERC/约束验证 -&gt; KiCad/EDA 文件输出。真正的瓶颈在布局、SI/PI、封装与制造规则。</div><div class="takeaway">工程上最成熟的不是一个万能 agent，而是把 SKiDL/KiCad/约束检查器/零件数据库串成流水线。也就是说，IoT PCB 自动化更像“多工具编排”，而不是单模型端到端生成。</div>
         </div>
       </section>
 
       <section class="section">
         <div class="section-title">
           <h2>Open Source</h2>
-          <span>0 repos / projects</span>
+          <span>3 repos / projects</span>
         </div>
         <div class="items">
-          <div class="item"><div class="summary">No engineering results generated yet.</div></div>
+          <div class="item"><div class="item-top"><h3><a href="https://github.com/Shaurya-Sethi/circuitron" target="_blank">Circuitron</a></h3><span class="tag">open_source</span></div><div class="org">Shaurya Sethi / GitHub · 2025</div><div class="summary">面向自然语言 PCB 设计的 agent 原型，能够把需求转成 SKiDL、原理图和 `.kicad_pcb` 等工件，已经非常接近“需求到 KiCad 文件”的自动化链路。</div><div class="how">实现路径是“文本需求 -&gt; SKiDL Python 电路描述 -&gt; KiCad 工件生成 -&gt; 迭代修正”。这说明完整 PCB 文件可以被自动生成，但质量仍依赖后续约束检查与人工审阅。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/circuit-synth/circuit-synth" target="_blank">circuit-synth</a></h3><span class="tag">open_source</span></div><div class="org">circuit-synth / GitHub · 2026</div><div class="summary">一个以 Python 定义电路、再导出 KiCad 项目的开源栈，强调可编程电路描述和自动生成原理图/PCB。</div><div class="how">它不是纯文本到 PCB 的黑盒，而是把设计抽象成代码，再接 KiCad 输出。这类“代码化电路描述 + EDA 导出”的模式很适合 IoT 传感板模板复用。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/rjwalters/kicad-tools" target="_blank">kicad-tools</a></h3><span class="tag">open_source</span></div><div class="org">rjwalters / GitHub · 2025</div><div class="summary">提供程序化解析和修改 KiCad schematic / PCB 文件的 Python 工具，适合作为 agent 的执行后端。</div><div class="how">如果前端 agent 负责需求理解和约束生成，`kicad-tools` 这种库就能承担文件级编辑、规则修复和批量重写，是自动化 PCB 流水线里很关键的“文件操作层”。</div></div>
         </div>
       </section>
 
       <section class="section">
         <div class="section-title">
           <h2>Products</h2>
-          <span>0 products / features</span>
+          <span>3 products / features</span>
         </div>
         <div class="items">
-          <div class="item"><div class="summary">No product results generated yet.</div></div>
+          <div class="item"><div class="item-top"><h3><a href="https://www.flux.ai/Copilot" target="_blank">Flux Copilot</a></h3><span class="tag">product</span></div><div class="org">Flux · 2023-2026</div><div class="summary">目前最接近“AI 辅助硬件设计”的商业产品之一，主打在原理图阶段提供器件建议、连接解释和设计协助。</div><div class="how">官方文档明确写到它当前主要理解 schematic，对 PCB layout 的理解仍有限。这和研究结论一致：真正难的是从原理图跨到布局与制造约束。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.celus.io/knowledge/design-assistant-accelerating-electronics-design-with-natural-language" target="_blank">CELUS Design Assistant</a></h3><span class="tag">product</span></div><div class="org">CELUS · 2026</div><div class="summary">CELUS 已把自然语言需求输入接到了电子设计平台上，强调从需求理解、器件选择到 schematic/BOM 生成的加速。</div><div class="how">它更像“需求到设计包”的前半段引擎：先拆功能块，再做元件匹配和系统设计，再交给 EDA 工具继续收尾。对 IoT 板来说，这是一条很现实的工程路径。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.kicad.org/" target="_blank">KiCad</a></h3><span class="tag">product</span></div><div class="org">KiCad Project · active</div><div class="summary">KiCad 本身不是 AI 产品，但它是当前开源自动化链路里最重要的目标格式和执行后端。</div><div class="how">大量自动化项目最终都落在 KiCad 的 schematic 与 PCB 文件上，因为它开放、可脚本化、生态完整。现实里“自动生成 PCB 文件”通常意味着最终落到 KiCad-compatible 项目。</div></div>
         </div>
       </section>
 
       <section class="section">
         <div class="section-title">
           <h2>News & Deployment Signals</h2>
-          <span>0 recent signals</span>
+          <span>3 recent signals</span>
         </div>
         <div class="items">
-          <div class="item"><div class="summary">No news or deployment signals generated yet.</div></div>
+          <div class="item"><div class="item-top"><h3><a href="https://www.flux.ai/p/blog/flux-copilot-the-first-ai-powered-hardware-design-assistant" target="_blank">Flux Copilot launch post</a></h3><span class="tag">news</span></div><div class="org">Flux · 2023</div><div class="summary">官方把 Copilot 定位为 PCB 工具内的 AI 硬件设计助手，说明商业产品已经开始把 LLM 直接嵌入 EDA 工作流。</div><div class="how">这类发布信号的重要性在于：市场已经认可“AI 帮工程师做原理图和设计解释”是可卖的，但还没有宣称布局与量产完全自动化。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.electronicdesign.com/technologies/industrial/article/21264919/electronic-design-flux-releases-copilot-ai-powered-hardware-design-assistant" target="_blank">Electronic Design on Flux Copilot</a></h3><span class="tag">news</span></div><div class="org">Electronic Design · 2023</div><div class="summary">行业媒体把 Flux 视为 AI PCB assistant 的代表案例，同时也指出其准确性和成熟度仍处于早期阶段。</div><div class="how">这与科研和开源原型形成互相印证：需求到原理图已经能做出样子，但需求到可靠板级实现还需要强约束和人工兜底。</div></div><div class="item"><div class="item-top"><h3><a href="https://circuit-synth.readthedocs.io/_/downloads/en/latest/pdf/" target="_blank">Circuit-Synth docs: generate complete KiCad project</a></h3><span class="tag">news</span></div><div class="org">Circuit-Synth · 2026</div><div class="summary">文档已经把“生成完整 KiCad 项目”作为面向用户的公开能力来描述，说明开源生态正在把 AI/代码化硬件设计推向可操作工具链。</div><div class="how">虽然这还不等于工业级自动布线和量产，但它是非常直接的部署信号：需求到板级文件的路径已经从研究想法变成可下载可运行的软件。</div></div>
         </div>
       </section>
     </div>
@@ -150,7 +150,7 @@ body.light {
   <div class="chat-header">
     <div>
       <div class="chat-title">Project Chat</div>
-      <div class="chat-subtitle">Silent Speech Recognition（骨传导 + EMG + LLM） · engineering</div>
+      <div class="chat-subtitle">PCB硬件自动化流程(面向 IoT传感器板) · engineering</div>
     </div>
     <button class="nav-btn" onclick="toggleChatDrawer()">Close</button>
   </div>
@@ -167,35 +167,16 @@ body.light {
 </aside>
 <script>
 const API = 'http://localhost:5678';
-const PROJECT_TOPIC = 'Silent Speech Recognition（骨传导 + EMG + LLM）';
+const PROJECT_TOPIC = 'PCB硬件自动化流程(面向 IoT传感器板)';
 const PROJECT_PAGE_TYPE = 'engineering';
-const AUTO_GENERATE_ENGINEERING = true;
 let chatLoaded = false;
 let chatPending = false;
 
 async function init() {
   applyTheme();
-  if (AUTO_GENERATE_ENGINEERING) {
-    await ensureEngineeringReady();
-  }
 }
 
-async function ensureEngineeringReady() {
-  try {
-    const status = await fetchStatus();
-    const shouldStart = !status.page_ready || status.status === 'idle' || status.status === 'error' || status.topic !== status.expected_topic;
-    if (shouldStart) {
-      showStatus('正在生成 Engineering View：自动收集 GitHub 开源实现、产品与新闻信号。');
-      await fetch(`${API}/api/generate-engineering`, { method:'POST' });
-      pollStatus();
-    } else if (status.status === 'running') {
-      showStatus(status.message || 'Engineering scout 正在运行中。');
-      pollStatus();
-    }
-  } catch {
-    showStatus('无法连接本地服务。启动 `python serve.py` 后刷新页面即可自动生成。', true);
-  }
-}
+async function ensureEngineeringReady() { return; }
 
 async function fetchStatus() {
   const r = await fetch(`${API}/api/engineering-status`);
@@ -237,6 +218,16 @@ function escapeHtml(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+async function readJsonResponse(r) {
+  const raw = await r.text();
+  if (!raw.trim()) throw new Error(`Empty response (${r.status})`);
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`Invalid JSON response (${r.status})`);
+  }
+}
+
 function renderChatHistory(messages) {
   const el = document.getElementById('chat-history');
   if (!messages.length) {
@@ -245,18 +236,6 @@ function renderChatHistory(messages) {
   }
   el.innerHTML = messages.map(msg => `<div class="chat-msg ${msg.role}">${escapeHtml(msg.content || '')}</div>`).join('');
   el.scrollTop = el.scrollHeight;
-}
-
-async function readJsonResponse(r) {
-  const raw = await r.text();
-  if (!raw.trim()) {
-    throw new Error(`Empty response (${r.status})`);
-  }
-  try {
-    return JSON.parse(raw);
-  } catch (err) {
-    throw new Error(`Invalid JSON response (${r.status})`);
-  }
 }
 
 async function loadChatHistory() {

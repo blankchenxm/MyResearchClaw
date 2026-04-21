@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦀</text></svg>">
+<title>MyResearchClaw — PCB硬件自动化流程(面向 IoT传感器板)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#0c1118; --bg-card:#151c27; --bg-soft:#0f1520; --bg-header:#101722; --accent:#69a6ff;
+  --accent2:#38d9c7; --accent3:#ff8d6b; --accent4:#ffd66e; --text:#edf3ff; --text-dim:#94a6c2;
+  --text-muted:#687892; --border:rgba(255,255,255,0.08); --border-hover:rgba(105,166,255,0.28);
+}
+html, body { background:var(--bg); color:var(--text); min-height:100vh; font-family:'Noto Sans SC',sans-serif; }
+body {
+  background:
+    radial-gradient(circle at top right, rgba(105,166,255,0.14), transparent 24%),
+    radial-gradient(circle at top left, rgba(56,217,199,0.08), transparent 20%),
+    var(--bg);
+}
+body.light {
+  --bg:#f4f7fb; --bg-card:#ffffff; --bg-soft:#eef3f8; --bg-header:#edf2f8; --accent:#2364d2;
+  --accent2:#0f9f90; --accent3:#d66033; --accent4:#b98911; --text:#18202c; --text-dim:#425469;
+  --text-muted:#66768c; --border:rgba(15,23,42,0.10); --border-hover:rgba(35,100,210,0.22);
+}
+::-webkit-scrollbar { width:8px; height:8px; }
+::-webkit-scrollbar-thumb { background:rgba(105,166,255,0.35); border-radius:99px; }
+.page-wrap { max-width:1440px; margin:0 auto; padding:24px 28px 80px; }
+.theme-toggle {
+  position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:16px;
+}
+.chat-toggle {
+  position:fixed; top:64px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:16px;
+}
+.server-banner {
+  background:rgba(255,141,107,0.08); border:1px solid rgba(255,141,107,0.16);
+  padding:10px 16px; border-radius:14px; font:12px 'JetBrains Mono', monospace; color:var(--accent3);
+  margin-bottom:18px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+}
+.server-banner code {
+  background:rgba(255,141,107,0.1); border:1px solid rgba(255,141,107,0.18);
+  padding:2px 8px; border-radius:8px;
+}
+.hero {
+  border:1px solid var(--border); border-radius:28px; padding:30px 32px;
+  background:linear-gradient(145deg, rgba(105,166,255,0.14), rgba(56,217,199,0.04));
+  margin-bottom:24px;
+}
+.hero-top { display:flex; justify-content:space-between; gap:16px; align-items:start; }
+.hero-eyebrow { font:600 12px 'JetBrains Mono', monospace; color:var(--accent4); text-transform:uppercase; letter-spacing:.14em; margin-bottom:12px; }
+.hero-title { font-size:48px; line-height:1.04; font-weight:900; max-width:980px; }
+.hero-subtitle { margin-top:14px; color:var(--text-muted); font:500 12px 'JetBrains Mono', monospace; }
+.hero-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.hero-btn, .btn {
+  display:inline-flex; align-items:center; gap:6px; cursor:pointer; text-decoration:none;
+  border:1px solid var(--border); border-radius:999px; padding:10px 14px; font-size:13px;
+  color:var(--text); background:rgba(255,255,255,0.04); transition:all .15s;
+}
+.hero-btn:hover, .btn:hover { border-color:var(--border-hover); transform:translateY(-1px); }
+.hero-btn.engineering { background:rgba(56,217,199,0.08); color:var(--accent2); border-color:rgba(56,217,199,0.18); }
+.papers-grid { display:grid; grid-template-columns:1fr; gap:18px; }
+.paper-card {
+  background:var(--bg-card); border:1px solid var(--border); border-radius:22px; padding:22px 24px;
+  transition:border-color .15s, transform .15s; display:flex; flex-direction:column;
+}
+.paper-card:hover { border-color:var(--border-hover); transform:translateY(-1px); }
+.paper-card.is-arxiv { border-left:4px solid #d69e2e; }
+.paper-card.is-confirmed { border-left:4px solid var(--accent); }
+.paper-card.is-reading { border-left:4px solid var(--accent4); }
+.paper-card.is-done { border-left:4px solid var(--accent2); }
+.card-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px; }
+.card-title { font-size:20px; font-weight:800; line-height:1.42; flex:1; }
+.card-title a { color:inherit; text-decoration:none; }
+.card-title a:hover { color:var(--accent); }
+.citations { font:700 12px 'JetBrains Mono', monospace; padding:5px 10px; border-radius:999px; white-space:nowrap; }
+.cite-high { color:var(--accent2); background:rgba(56,217,199,0.1); border:1px solid rgba(56,217,199,0.18); }
+.cite-mid { color:#c0b6ff; background:rgba(162,155,254,0.12); border:1px solid rgba(162,155,254,0.2); }
+.cite-low, .cite-none { color:var(--text-muted); background:rgba(255,255,255,0.04); border:1px solid var(--border); }
+.card-authors { font-size:13px; color:var(--text-muted); margin-bottom:12px; }
+.card-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.venue-badge { font-size:11px; padding:4px 10px; border-radius:999px; font-weight:700; color:var(--accent); border:1px solid rgba(105,166,255,0.24); background:rgba(105,166,255,0.1); }
+.venue-badge.arxiv { color:#f7c978; border-color:rgba(247,201,120,0.24); background:rgba(247,201,120,0.1); }
+.card-tag { font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid; font-weight:500; }
+.tag-cyan { color:var(--accent2); border-color:rgba(56,217,199,0.18); background:rgba(56,217,199,0.06); }
+.tag-purple { color:#c0b6ff; border-color:rgba(162,155,254,0.18); background:rgba(162,155,254,0.06); }
+.tag-pink { color:#ff9ac2; border-color:rgba(255,154,194,0.18); background:rgba(255,154,194,0.06); }
+.summary-block { border-top:1px solid var(--border); padding-top:14px; margin-bottom:14px; }
+.summary-label { font:600 10px 'JetBrains Mono', monospace; color:var(--text-muted); margin-bottom:6px; letter-spacing:.08em; text-transform:uppercase; }
+.summary-en, .summary-zh { font-size:14px; line-height:1.82; }
+.summary-en { color:var(--text-dim); margin-bottom:12px; }
+.summary-zh { color:#c8d5e8; border-left:3px solid rgba(105,166,255,0.28); padding-left:12px; }
+.progress-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.progress-track { flex:1; height:6px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,0.06); }
+.progress-fill { height:100%; width:0%; background:linear-gradient(90deg, var(--accent), #94b8ff); transition:width 1.1s ease; }
+.progress-fill.active { background:linear-gradient(90deg, var(--accent4), var(--accent)); animation:progPulse 1.8s ease-in-out infinite; }
+.progress-fill.done { background:var(--accent2); animation:none; }
+.progress-label { font:500 11px 'JetBrains Mono', monospace; color:var(--text-muted); min-width:115px; text-align:right; }
+.progress-label.done { color:var(--accent2); }
+@keyframes progPulse { 0%,100% { opacity:1; } 50% { opacity:.55; } }
+.card-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.btn-view { color:var(--accent); background:rgba(105,166,255,0.08); border-color:rgba(105,166,255,0.18); }
+.btn-read { color:#c0b6ff; background:rgba(162,155,254,0.08); border-color:rgba(162,155,254,0.18); }
+.btn-read.reading { color:var(--accent4); background:rgba(255,214,110,0.08); border-color:rgba(255,214,110,0.18); }
+.btn-done, .btn-notes { color:var(--accent2); background:rgba(56,217,199,0.08); border-color:rgba(56,217,199,0.18); }
+.notes-shell { display:grid; grid-template-columns:minmax(0, 0.98fr) minmax(380px, 0.92fr); gap:18px; align-items:start; height:calc(100vh - 140px); }
+.notes-pane, .pdf-pane {
+  background:var(--bg-card); border:1px solid var(--border); border-radius:22px; min-height:0; height:100%;
+}
+.notes-pane { padding:24px 26px 18px; display:flex; flex-direction:column; overflow:hidden; }
+.notes-topbar {
+  display:flex; justify-content:space-between; align-items:flex-start; gap:16px;
+  padding-bottom:18px; margin-bottom:18px; border-bottom:1px solid var(--border);
+}
+.notes-title-wrap { display:flex; flex-direction:column; gap:6px; }
+.notes-kicker { font:600 11px 'JetBrains Mono', monospace; color:var(--accent4); text-transform:uppercase; letter-spacing:.12em; }
+.notes-title { font-size:22px; line-height:1.35; font-weight:800; }
+.notes-subtitle { color:var(--text-muted); font-size:13px; }
+.notes-content { font-size:15px; line-height:1.9; color:var(--text-dim); overflow:auto; padding-right:8px; flex:1; min-height:0; }
+.notes-content h1 { font-size:28px; font-weight:900; margin:28px 0 16px; color:var(--text); }
+.notes-content h2 { font-size:20px; font-weight:800; color:var(--accent); margin:26px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+.notes-content h3 { font-size:16px; font-weight:800; color:#bfd1f7; margin:18px 0 8px; }
+.notes-content h4 { font-size:14px; font-weight:700; color:var(--text); margin:14px 0 6px; }
+.notes-content p { margin:12px 0; }
+.notes-content strong { color:var(--text); }
+.notes-content code { background:rgba(255,255,255,0.06); border:1px solid var(--border); padding:2px 6px; border-radius:6px; font-family:'JetBrains Mono',monospace; font-size:13px; }
+.notes-content pre { background:var(--bg-soft); border:1px solid var(--border); border-radius:14px; padding:16px; overflow:auto; margin:16px 0; }
+.notes-content pre code { background:none; border:none; padding:0; }
+.notes-content table { width:100%; border-collapse:collapse; margin:18px 0; font-size:14px; }
+.notes-content th, .notes-content td { border:1px solid var(--border); padding:10px 12px; text-align:left; }
+.notes-content th { background:rgba(105,166,255,0.08); color:var(--accent); }
+.notes-content blockquote { border-left:3px solid var(--accent); background:rgba(105,166,255,0.05); color:var(--text-muted); margin:16px 0; padding:10px 14px; border-radius:0 10px 10px 0; }
+.notes-content ul, .notes-content ol { padding-left:24px; margin:12px 0; }
+.pdf-pane { display:flex; flex-direction:column; overflow:hidden; }
+.pdf-topbar {
+  padding:18px 18px 14px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:12px;
+}
+.pdf-title { font-size:15px; font-weight:800; }
+.pdf-links { display:flex; gap:8px; flex-wrap:wrap; }
+.pdf-body { display:block; min-height:0; flex:1; }
+.pdf-viewer { position:relative; min-height:0; height:100%; background:#0a0f16; }
+.pdf-frame { width:100%; height:100%; min-height:70vh; border:0; background:#0a0f16; }
+.pdf-empty {
+  padding:24px; color:var(--text-dim); line-height:1.8; display:flex; align-items:center; justify-content:center; min-height:70vh;
+}
+.chat-drawer {
+  position:fixed; top:0; right:-420px; width:400px; max-width:calc(100vw - 24px); height:100vh; z-index:9998;
+  background:var(--bg-card); border-left:1px solid var(--border); box-shadow:-12px 0 36px rgba(0,0,0,0.28);
+  transition:right .2s ease; display:flex; flex-direction:column;
+}
+.chat-drawer.open { right:0; }
+.chat-header { padding:16px 18px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.chat-title { font-size:16px; font-weight:800; }
+.chat-subtitle { font:500 11px 'JetBrains Mono', monospace; color:var(--text-muted); margin-top:4px; }
+.chat-history { flex:1; overflow:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
+.chat-msg { border:1px solid var(--border); border-radius:16px; padding:12px 14px; line-height:1.75; font-size:14px; white-space:pre-wrap; }
+.chat-msg.user { background:rgba(105,166,255,0.08); border-color:rgba(105,166,255,0.18); }
+.chat-msg.assistant { background:rgba(56,217,199,0.06); border-color:rgba(56,217,199,0.16); }
+.chat-empty { color:var(--text-muted); line-height:1.8; font-size:14px; padding:6px 4px; }
+.chat-compose { border-top:1px solid var(--border); padding:14px 16px 16px; display:flex; flex-direction:column; gap:10px; }
+.chat-input {
+  width:100%; min-height:92px; resize:vertical; border-radius:14px; border:1px solid var(--border);
+  background:var(--bg-soft); color:var(--text); padding:12px 14px; font:inherit;
+}
+.chat-actions { display:flex; justify-content:flex-end; gap:10px; }
+.chat-status { color:var(--text-muted); font-size:12px; min-height:18px; }
+.toast {
+  position:fixed; bottom:24px; right:24px; z-index:9999; max-width:520px; display:none;
+  border:1px solid rgba(162,155,254,0.35); border-radius:16px; background:#1b2230; padding:16px 18px; box-shadow:0 12px 42px rgba(0,0,0,0.38);
+}
+.toast.show { display:block; }
+.toast-title { font:600 11px 'JetBrains Mono', monospace; color:var(--text-muted); margin-bottom:8px; }
+.toast-cmd { font:500 13px 'JetBrains Mono', monospace; background:rgba(255,255,255,0.06); padding:10px 12px; border-radius:10px; color:#fff; word-break:break-word; }
+.kanban-footer {
+  margin-top:34px; padding-top:18px; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  font:500 11px 'JetBrains Mono', monospace; color:var(--text-muted);
+}
+@media (max-width: 1100px) {
+  .hero-title { font-size:38px; }
+  .notes-shell { grid-template-columns:1fr; }
+}
+@media (max-width: 720px) {
+  .page-wrap { padding:16px 16px 60px; }
+  .hero { padding:22px 20px; }
+  .hero-top { flex-direction:column; }
+  .hero-title { font-size:30px; }
+  .notes-shell { height:auto; }
+  .notes-pane, .pdf-pane { height:auto; min-height:50vh; }
+  .chat-drawer { width:100vw; max-width:100vw; }
+}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+  <button class="chat-toggle" onclick="toggleChatDrawer()" title="Toggle project chat">💬</button>
+  <div id="server-banner" class="server-banner" style="display:none">
+    本地自动精读服务未连接。启动 <code>python serve.py</code> 后可直接在页面中触发 `paper-reader`。
+  </div>
+
+  <section class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="hero-eyebrow">Research Theme</div>
+        <h1 class="hero-title">PCB硬件自动化流程(面向 IoT传感器板)</h1>
+        <div class="hero-subtitle">Updated 2026-04-21</div>
+      </div>
+      <div class="hero-actions">
+        <button class="hero-btn engineering" onclick="openEngineeringView()">Engineering View →</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="papers-view">
+    <div class="papers-grid">
+      
+      <!-- ── Paper 1 ── -->
+      <div class="paper-card is-confirmed" data-id="polymorphic-blocks-unifying-high-level-specification-and-low-level-control-for-circuit-board-design_2020" data-url="https://dblp.org/rec/conf/uist/LinRCJNDH20" data-pdf-url="" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://dblp.org/rec/conf/uist/LinRCJNDH20" target="_blank">Polymorphic Blocks: Unifying High-level Specification and Low-level Control for Circuit Board Design</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-authors">Richard Lin et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge">UIST 2020</span>
+          <span class="card-tag tag-cyan">pcb</span>
+          <span class="card-tag tag-purple">hci</span>
+          <span class="card-tag tag-pink">blocks</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">This UIST paper proposes a block-based circuit board design workflow that lets users move between reusable functional blocks and low-level electrical editing without losing consistency. The key idea is to make board design more compositional, so designers can assemble sensor, power, and compute modules instead of redrawing every net from scratch. For IoT sensor boards, that matters because most products are variants of a few recurring motifs: MCU, radio, battery charging, sensors, and connectors. The paper is important as a human-computer interaction view of hardware automation: it does not fully auto-generate a manufacturable PCB, but it shows how higher-level design intent can be preserved through to board implementation.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">这篇 UIST 论文提出了一种面向电路板设计的模块化工作流，让设计者可以在高层功能块和低层电气编辑之间来回切换，同时保持连接关系一致。它的核心思想是把常见的传感器、电源、计算与接口模块封装成可组合的设计单元，而不是每次都从头画原理图。对 IoT 传感器板来说，这一点很关键，因为大量项目本质上只是 MCU、无线、供电和若干传感器的不同组合。它虽然还没有做到“输入需求后自动输出可投产 PCB”，但清楚展示了从设计意图到板级实现之间可以被自动化承接的那一层。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://dblp.org/rec/conf/uist/LinRCJNDH20" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('polymorphic-blocks-unifying-high-level-specification-and-low-level-control-for-circuit-board-design_2020','https://dblp.org/rec/conf/uist/LinRCJNDH20','Polymorphic Blocks: Unifying High-level Specification and Low-level Control for Circuit Board Design')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 2 ── -->
+      <div class="paper-card is-arxiv" data-id="hierarchical-automatic-power-plane-generation-with-genetic-optimization-and-multilayer-perceptron_2022" data-url="https://arxiv.org/abs/2210.16314" data-pdf-url="https://arxiv.org/pdf/2210.16314" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://arxiv.org/abs/2210.16314" target="_blank">Hierarchical Automatic Power Plane Generation with Genetic Optimization and Multilayer Perceptron</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-authors">Haiguang Liao et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge arxiv">arXiv 2022</span>
+          <span class="card-tag tag-cyan">pcb</span>
+          <span class="card-tag tag-purple">power-plane</span>
+          <span class="card-tag tag-pink">optimization</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">This work focuses on one of the hardest subproblems in PCB automation: power plane generation under electrical and geometric constraints. The method combines a genetic optimizer with a multilayer perceptron to search layouts that minimize disconnected islands and improve manufacturable power distribution. For IoT boards, the contribution is narrower than full-board synthesis, but strategically important because power integrity is one of the reasons end-to-end automation usually breaks down. It shows that practical automation is likely to emerge first as a pipeline of specialized solvers, not as one monolithic text-to-PCB model.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">这项工作聚焦于 PCB 自动化里非常关键、也最难完全自动处理的子问题之一：在电气和几何约束下自动生成 power plane。作者把遗传优化与多层感知机结合起来，目标是减少孤岛、提升供电平面的可制造性与质量。对 IoT 板卡来说，它解决的不是整板自动生成，而是完整流程中的关键瓶颈，因为供电完整性往往决定自动化布局能否真正落地。它也说明一个现实判断：PCB 自动化更可能先由多个专用求解器串起来，而不是一步到位的单模型文本到 PCB。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://arxiv.org/abs/2210.16314" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('hierarchical-automatic-power-plane-generation-with-genetic-optimization-and-multilayer-perceptron_2022','https://arxiv.org/abs/2210.16314','Hierarchical Automatic Power Plane Generation with Genetic Optimization and Multilayer Perceptron')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 3 ── -->
+      <div class="paper-card is-arxiv" data-id="pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026" data-url="https://arxiv.org/abs/2602.00510" data-pdf-url="/api/pdf/pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://arxiv.org/abs/2602.00510" target="_blank">PCBSchemaGen: Constraint-Guided Schematic Design via LLM for Printed Circuit Boards (PCB)</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-authors">Huanghaohe Zou et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge arxiv">arXiv 2026</span>
+          <span class="card-tag tag-cyan">pcb</span>
+          <span class="card-tag tag-purple">llm</span>
+          <span class="card-tag tag-pink">schematic</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">PCBSchemaGen is one of the clearest recent attempts to go from requirements to board-level schematic structure with an LLM in the loop. The system does not trust raw text generation alone; it adds datasheet-grounded constraints, pin-role semantics, and verification against a knowledge graph extracted from real components. That architecture matters because requirement-to-PCB automation fails mostly on pin correctness, supply rails, and package-level details rather than on high-level reasoning. The paper strongly supports the view that a realistic autonomous PCB flow must be retrieval-augmented, constraint-checked, and component-aware from the beginning.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">PCBSchemaGen 是近两年里最接近“从需求走向板级原理图”的工作之一。它并不是简单让 LLM 直接生成电路，而是在生成过程中引入 datasheet 约束、pin role 语义以及基于器件知识图谱的验证机制。这个系统设计很关键，因为真实的需求到 PCB 自动化，最容易失败的不是高层推理，而是引脚映射、电源轨、封装和器件约束这些细节。它很有力地说明，真正可用的自动化 PCB 流程必须从一开始就是检索增强、约束驱动、并且对元器件细节敏感的。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://arxiv.org/abs/2602.00510" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026','https://arxiv.org/abs/2602.00510','PCBSchemaGen: Constraint-Guided Schematic Design via LLM for Printed Circuit Boards (PCB)')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 4 ── -->
+      <div class="paper-card is-arxiv" data-id="circuitlm-a-multi-agent-llm-aided-design-framework-for-generating-circuit-schematics-from-natural-language-prompts_2026" data-url="https://arxiv.org/abs/2601.04505" data-pdf-url="https://arxiv.org/pdf/2601.04505" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://arxiv.org/abs/2601.04505" target="_blank">CircuitLM: A Multi-Agent LLM-Aided Design Framework for Generating Circuit Schematics from Natural Language Prompts</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-authors">Khandakar Shakib Al Hasan et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge arxiv">arXiv 2026</span>
+          <span class="card-tag tag-cyan">pcb</span>
+          <span class="card-tag tag-purple">schematic</span>
+          <span class="card-tag tag-pink">multi-agent</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">CircuitLM frames natural-language-to-schematic generation as a multi-agent workflow rather than a single-pass LLM completion. It splits the problem into component identification, pin retrieval, reasoning, structured JSON synthesis, and final rendering, which is much closer to how a robust EDA agent would need to operate. For IoT sensor boards, that staged design is especially relevant because requirements often mix analog, digital, power, and interface concerns in the same prompt. The paper is useful not because it proves full PCB autonomy is solved, but because it outlines a plausible architecture for turning user requirements into machine-checkable circuit artifacts.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">CircuitLM 把“自然语言到原理图”的问题建模成多智能体流水线，而不是单次 LLM 补全。它把任务拆成器件识别、引脚检索、专家推理、结构化 JSON 合成以及最终可视化渲染，这比单纯文本生成更接近真实可用的 EDA agent。对 IoT 传感器板来说，这种分阶段结构尤其重要，因为用户需求往往同时包含模拟、数字、电源和接口约束。它的价值不在于已经解决完整 PCB 自主设计，而在于给出了把用户需求稳定转成可验证电路工件的一条合理架构。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://arxiv.org/abs/2601.04505" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('circuitlm-a-multi-agent-llm-aided-design-framework-for-generating-circuit-schematics-from-natural-language-prompts_2026','https://arxiv.org/abs/2601.04505','CircuitLM: A Multi-Agent LLM-Aided Design Framework for Generating Circuit Schematics from Natural Language Prompts')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 5 ── -->
+      <div class="paper-card is-arxiv" data-id="typedschematics-a-block-based-pcb-design-tool-with-real-time-detection-of-common-connection-errors_2025" data-url="https://arxiv.org/abs/2509.14576" data-pdf-url="https://arxiv.org/pdf/2509.14576" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://arxiv.org/abs/2509.14576" target="_blank">TypedSchematics: A Block-based PCB Design Tool with Real-time Detection of Common Connection Errors</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-authors">Jorge Garza et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge arxiv">arXiv 2025</span>
+          <span class="card-tag tag-cyan">pcb</span>
+          <span class="card-tag tag-purple">reuse</span>
+          <span class="card-tag tag-pink">typed-blocks</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">TypedSchematics argues that PCB design reuse should look more like software reuse, with typed blocks that can be safely composed and checked in real time. Its contribution is not only automated composition, but a type-like language that catches invalid merges between circuit blocks before they become board-level failures. For the IoT use case, this is highly relevant because many boards are assembled from recurring sensing, power, and communication motifs by non-experts or mixed-skill teams. The paper suggests that requirement-driven PCB automation may become practical sooner if the system works over reusable typed blocks instead of synthesizing every design from zero.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">TypedSchematics 的核心观点是，PCB 复用应该更像软件复用：设计者不只是复制粘贴原理图片段，而是使用带类型约束的功能块进行安全组合。它不仅支持自动拼接，还通过类似类型系统的机制在实时阶段捕获连接错误，避免错误一路传到板级实现。对于 IoT 场景，这非常契合，因为很多传感板其实都是由供电、传感、通信和 MCU 这些重复模块构成。它提示了一条更现实的路线：需求驱动的 PCB 自动化，可能先建立在“有约束的模块组合”上，而不是对每块板子都从零综合。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://arxiv.org/abs/2509.14576" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('typedschematics-a-block-based-pcb-design-tool-with-real-time-detection-of-common-connection-errors_2025','https://arxiv.org/abs/2509.14576','TypedSchematics: A Block-based PCB Design Tool with Real-time Detection of Common Connection Errors')">📖 Read Paper</button>
+        </div>
+      </div>
+
+      <!-- ── Paper 6 ── -->
+      <div class="paper-card is-arxiv" data-id="hwe-bench-can-language-models-perform-board-level-schematic-designs_2026" data-url="https://arxiv.org/abs/2603.18102" data-pdf-url="https://arxiv.org/pdf/2603.18102" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://arxiv.org/abs/2603.18102" target="_blank">HWE-Bench: Can Language Models Perform Board-level Schematic Designs?</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-authors">Weibo Qiu et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge arxiv">arXiv 2026</span>
+          <span class="card-tag tag-cyan">pcb</span>
+          <span class="card-tag tag-purple">benchmark</span>
+          <span class="card-tag tag-pink">llm-evaluation</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">HWE-Bench is less a synthesis method than a reality check for autonomous electronics design. It builds a benchmark of 300 board-level design tasks with real datasheets and shows that current models still fail badly when physical intuition and datasheet grounding matter. That makes it one of the most useful papers for your question about fully automatic PCB generation from requirements: it quantifies how far current models are from reliably producing board-ready schematics. The main takeaway is that end-to-end automation is promising, but still bottlenecked by component-level grounding and engineering verification.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">HWE-Bench 更像是对“自动电子设计 agent”现状的一次基准审判，而不是新的综合算法。它构建了 300 个真实板级设计任务，并结合 datasheet 知识库来评估模型到底能不能把需求转成有效原理图；结果显示，当前模型在涉及物理直觉和器件细节时仍然表现很弱。对你最关心的“能否输入需求后直接生成完整 PCB 文件”这个问题，它的意义非常直接：它定量说明了现阶段离稳定可用还有多远。最关键的结论是，端到端自动化已经有苗头，但还被器件约束理解和工程验证能力卡住。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://arxiv.org/abs/2603.18102" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('hwe-bench-can-language-models-perform-board-level-schematic-designs_2026','https://arxiv.org/abs/2603.18102','HWE-Bench: Can Language Models Perform Board-level Schematic Designs?')">📖 Read Paper</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="notes-view" style="display:none">
+    <div class="notes-shell">
+      <section class="notes-pane">
+        <div class="notes-topbar">
+          <div class="notes-title-wrap">
+            <div class="notes-kicker">Paper Reader</div>
+            <div id="notes-title" class="notes-title"></div>
+            <div id="notes-subtitle" class="notes-subtitle"></div>
+          </div>
+          <button class="btn" onclick="navigateTo('papers')">← Back to Papers</button>
+        </div>
+        <div id="notes-content" class="notes-content"></div>
+      </section>
+
+      <aside class="pdf-pane">
+        <div class="pdf-topbar">
+          <div class="pdf-title">Paper PDF</div>
+          <div class="pdf-links">
+            <a id="pdf-open-link" class="btn btn-view" href="#" target="_blank" style="display:none">Open PDF ↗</a>
+            <a id="paper-open-link" class="btn btn-view" href="#" target="_blank" style="display:none">Open Paper ↗</a>
+          </div>
+        </div>
+        <div class="pdf-body">
+          <div class="pdf-viewer">
+            <iframe id="pdf-frame" class="pdf-frame" title="Paper PDF Viewer"></iframe>
+            <div id="pdf-empty" class="pdf-empty">当前没有可直接预览的 PDF。若论文页面可访问，右上角可直接打开原文。</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <div class="toast-title">Paste into Codex</div>
+    <div class="toast-cmd" id="toast-cmd"></div>
+  </div>
+
+  <footer class="kanban-footer">
+    <span>Powered by MyResearchClaw</span>
+    <span>2026-04-21</span>
+  </footer>
+</div>
+
+<aside id="chat-drawer" class="chat-drawer" aria-hidden="true">
+  <div class="chat-header">
+    <div>
+      <div class="chat-title">Project Chat</div>
+      <div class="chat-subtitle">PCB硬件自动化流程(面向 IoT传感器板) · papers</div>
+    </div>
+    <button class="btn" onclick="toggleChatDrawer()">Close</button>
+  </div>
+  <div id="chat-history" class="chat-history">
+    <div class="chat-empty">这里会保留当前项目的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>
+  </div>
+  <div class="chat-compose">
+    <div id="chat-status" class="chat-status"></div>
+    <textarea id="chat-input" class="chat-input" placeholder="直接提问。当前页面上下文和 Codex 网络搜索都会作为可用能力。"></textarea>
+    <div class="chat-actions">
+      <button class="btn" onclick="submitChat()">Send</button>
+    </div>
+  </div>
+</aside>
+
+<script>
+const API = 'http://localhost:5678';
+const PROJECT_TOPIC = 'PCB硬件自动化流程(面向 IoT传感器板)';
+const PROJECT_PAGE_TYPE = 'papers';
+let serverOk = false;
+let activeReadId = null;
+let pollInterval = null;
+let currentPdfUrl = '';
+let currentPaperUrl = '';
+let chatLoaded = false;
+let chatPending = false;
+
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+async function init() {
+  applyTheme();
+  await checkServer();
+  renderRoute();
+  window.addEventListener('hashchange', renderRoute);
+}
+
+async function openEngineeringView() {
+  if (serverOk) {
+    try {
+      await fetch(`${API}/api/generate-engineering`, { method: 'POST' });
+    } catch {}
+  }
+  location.href = '/projects/pcb-iot/engineering.html';
+}
+
+async function checkServer() {
+  try {
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 1500);
+    const r = await fetch(`${API}/api/papers`, { signal: ctrl.signal });
+    serverOk = r.ok;
+  } catch {
+    serverOk = false;
+  }
+  document.getElementById('server-banner').style.display = serverOk ? 'none' : 'flex';
+  if (serverOk) startPolling();
+}
+
+function startPolling() {
+  if (pollInterval) return;
+  pollInterval = setInterval(async () => {
+    try {
+      const r = await fetch(`${API}/api/papers`);
+      if (!r.ok) return;
+      const data = await r.json();
+      data.papers.forEach(updateCard);
+    } catch {}
+  }, 3000);
+}
+
+function updateCard(p) {
+  const card = document.querySelector(`[data-id="${p.id}"]`);
+  if (!card) return;
+  const prog = p.progress || 0;
+  const fill = card.querySelector('.progress-fill');
+  if (fill) {
+    fill.style.width = prog + '%';
+    fill.className = 'progress-fill' + (prog >= 100 ? ' done' : prog > 0 ? ' active' : '');
+  }
+  const lbl = card.querySelector('.progress-label');
+  if (lbl) {
+    if (prog >= 100) { lbl.textContent = '✓ Complete'; lbl.className = 'progress-label done'; }
+    else if (prog > 0) { lbl.textContent = `Reading... ${prog}%`; lbl.className = 'progress-label'; }
+    else { lbl.textContent = ''; lbl.className = 'progress-label'; }
+  }
+
+  const btn = card.querySelector('[data-role="read-btn"]');
+  if (btn) {
+    if (prog >= 100) {
+      btn.disabled = false;
+      btn.textContent = '📄 View Notes';
+      btn.className = 'btn btn-notes';
+      btn.onclick = () => navigateTo('notes', p.id);
+    } else if (prog > 0) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Reading...';
+      btn.className = 'btn btn-read reading';
+    } else {
+      btn.disabled = false;
+      btn.textContent = '📖 Read Paper';
+      btn.className = 'btn btn-read';
+      const url = card.getAttribute('data-url');
+      const title = card.querySelector('.card-title').textContent.trim();
+      btn.onclick = () => triggerRead(p.id, url, title);
+    }
+  }
+
+  if (p.note_path) card.setAttribute('data-note-path', p.note_path);
+  if (p.pdf_local_path) card.setAttribute('data-pdf-url', `${API}/api/pdf/${encodeURIComponent(p.id)}`);
+  else if (p.pdf_url) card.setAttribute('data-pdf-url', p.pdf_url);
+
+  if (prog >= 100 && p.id === activeReadId) {
+    activeReadId = null;
+    setTimeout(() => navigateTo('notes', p.id), 800);
+  }
+}
+
+async function triggerRead(id, url, title) {
+  if (!serverOk) { showToast(url); return; }
+  activeReadId = id;
+  const card = document.querySelector(`[data-id="${id}"]`);
+  const btn = card.querySelector('[data-role="read-btn"]');
+  btn.disabled = true;
+  btn.textContent = '⏳ Starting...';
+  btn.className = 'btn btn-read reading';
+
+  try {
+    const r = await fetch(`${API}/api/read-paper`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, paper_id: id, title })
+    });
+    if (!r.ok) throw new Error('Server returned ' + r.status);
+  } catch (e) {
+    activeReadId = null;
+    btn.disabled = false;
+    btn.textContent = '📖 Read Paper';
+    btn.className = 'btn btn-read';
+    btn.onclick = () => triggerRead(id, url, title);
+    showToast(url);
+  }
+}
+
+function renderRoute() {
+  const hash = location.hash;
+  if (hash.startsWith('#notes/')) showNotes(decodeURIComponent(hash.slice(7)));
+  else showPapers();
+}
+
+function navigateTo(page, id) {
+  if (page === 'notes') location.hash = '#notes/' + encodeURIComponent(id);
+  else {
+    history.pushState('', document.title, window.location.pathname + window.location.search);
+    renderRoute();
+  }
+}
+
+function showPapers() {
+  document.getElementById('papers-view').style.display = '';
+  document.getElementById('notes-view').style.display = 'none';
+}
+
+async function showNotes(paperId) {
+  document.getElementById('papers-view').style.display = 'none';
+  document.getElementById('notes-view').style.display = '';
+  const card = document.querySelector(`[data-id="${paperId}"]`);
+  const title = card ? card.querySelector('.card-title a').textContent.trim() : paperId;
+  const subtitle = card ? `${card.querySelector('.card-authors')?.textContent || ''}` : '';
+  document.getElementById('notes-title').textContent = title;
+  document.getElementById('notes-subtitle').textContent = subtitle;
+
+  const content = document.getElementById('notes-content');
+  content.innerHTML = '<p style="color:var(--text-muted)">Loading notes...</p>';
+
+  try {
+    const r = await fetch(`${API}/api/notes/${paperId}`);
+    if (!r.ok) throw new Error('not-ready');
+    const md = await r.text();
+    content.innerHTML = renderMd(md);
+    const resources = extractPaperResources(md, card?.getAttribute('data-url') || '', card?.getAttribute('data-pdf-url') || '');
+    currentPdfUrl = resources.pdfUrl;
+    currentPaperUrl = resources.paperUrl;
+    await showPdfPanel(resources.pdfUrl, resources.paperUrl);
+  } catch {
+    content.innerHTML = `<p style="color:var(--accent3)">Notes not ready yet. Please wait for reading to complete.</p>`;
+    await showPdfPanel(card?.getAttribute('data-pdf-url') || '', card?.getAttribute('data-url') || '');
+  }
+}
+
+function renderMd(md) {
+  if (typeof marked !== 'undefined') {
+    marked.setOptions({ breaks:true, gfm:true });
+    return marked.parse(md);
+  }
+  return '<pre style="white-space:pre-wrap">' + md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>';
+}
+
+function extractPaperResources(md, fallbackPaperUrl, presetPdfUrl) {
+  let pdfUrl = presetPdfUrl || '';
+  let paperUrl = fallbackPaperUrl || '';
+  const lines = md.split('\n');
+  for (const line of lines) {
+    const match = line.match(/-\s*(Paper|论文)\s*:\s*(https?:\/\/\S+)/i);
+    if (match && !paperUrl) paperUrl = match[2];
+    const pdfMatch = line.match(/-\s*(PDF|PDF mirror)\s*:\s*(https?:\/\/\S+)/i);
+    if (pdfMatch && !pdfUrl) pdfUrl = pdfMatch[2];
+  }
+  if (!pdfUrl && paperUrl.includes('arxiv.org/abs/')) pdfUrl = paperUrl.replace('/abs/', '/pdf/') + '.pdf';
+  if (!pdfUrl && paperUrl.includes('arxiv.org/pdf/')) pdfUrl = paperUrl.endsWith('.pdf') ? paperUrl : `${paperUrl}.pdf`;
+  return { pdfUrl, paperUrl };
+}
+
+async function showPdfPanel(pdfUrl, paperUrl) {
+  const frame = document.getElementById('pdf-frame');
+  const empty = document.getElementById('pdf-empty');
+  const pdfLink = document.getElementById('pdf-open-link');
+  const paperLink = document.getElementById('paper-open-link');
+
+  frame.style.display = 'none';
+  empty.style.display = 'flex';
+
+  if (paperUrl) {
+    paperLink.href = paperUrl;
+    paperLink.style.display = 'inline-flex';
+  } else paperLink.style.display = 'none';
+
+  if (!pdfUrl) {
+    pdfLink.style.display = 'none';
+    empty.textContent = '当前还没有可预览的本地 PDF。服务端会优先尝试下载并缓存 PDF；如果失败，再使用右上角按钮打开论文原页面。';
+    return;
+  }
+
+  pdfLink.href = pdfUrl;
+  pdfLink.style.display = 'inline-flex';
+  empty.textContent = 'PDF 正在加载中...';
+  empty.style.display = 'flex';
+  frame.src = pdfUrl + '#toolbar=1&navpanes=0&view=FitH';
+  frame.style.display = 'block';
+  empty.style.display = 'none';
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function readJsonResponse(r) {
+  const raw = await r.text();
+  if (!raw.trim()) {
+    throw new Error(`Empty response (${r.status})`);
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`Invalid JSON response (${r.status})`);
+  }
+}
+
+function renderChatHistory(messages) {
+  const el = document.getElementById('chat-history');
+  if (!messages.length) {
+    el.innerHTML = '<div class="chat-empty">这里会保留当前项目的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>';
+    return;
+  }
+  el.innerHTML = messages.map(msg => `<div class="chat-msg ${msg.role}">${escapeHtml(msg.content || '')}</div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+async function loadChatHistory() {
+  if (!serverOk) return;
+  const r = await fetch(`${API}/api/chat-history?topic=${encodeURIComponent(PROJECT_TOPIC)}&page_type=${encodeURIComponent(PROJECT_PAGE_TYPE)}`);
+  const data = await readJsonResponse(r);
+  if (!r.ok) throw new Error(data.error || 'history failed');
+  renderChatHistory(data.messages || []);
+  chatLoaded = true;
+}
+
+async function toggleChatDrawer() {
+  const drawer = document.getElementById('chat-drawer');
+  const opening = !drawer.classList.contains('open');
+  drawer.classList.toggle('open', opening);
+  drawer.setAttribute('aria-hidden', opening ? 'false' : 'true');
+  if (opening && !chatLoaded) {
+    try {
+      document.getElementById('chat-status').textContent = serverOk ? 'Loading history...' : 'Local server is unavailable.';
+      await loadChatHistory();
+      document.getElementById('chat-status').textContent = '';
+    } catch (err) {
+      document.getElementById('chat-status').textContent = 'Failed to load chat history.';
+    }
+  }
+}
+
+async function submitChat() {
+  if (chatPending) return;
+  const input = document.getElementById('chat-input');
+  const message = input.value.trim();
+  if (!message) return;
+  if (!serverOk) {
+    document.getElementById('chat-status').textContent = 'Local server is unavailable.';
+    return;
+  }
+  chatPending = true;
+  document.getElementById('chat-status').textContent = 'Thinking...';
+  try {
+    const r = await fetch(`${API}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic: PROJECT_TOPIC, page_type: PROJECT_PAGE_TYPE, message })
+    });
+    const data = await readJsonResponse(r);
+    if (!r.ok || !data.ok) throw new Error(data.error || 'chat failed');
+    input.value = '';
+    renderChatHistory(data.messages || []);
+    document.getElementById('chat-status').textContent = '';
+    chatLoaded = true;
+  } catch (err) {
+    document.getElementById('chat-status').textContent = err.message || 'Chat failed.';
+  } finally {
+    chatPending = false;
+  }
+}
+
+function showToast(url) {
+  const cmd = `Use paper-reader to read this paper: ${url}`;
+  document.getElementById('toast-cmd').textContent = cmd;
+  document.getElementById('toast').classList.add('show');
+  navigator.clipboard.writeText(cmd).catch(() => {});
+}
+
+function applyTheme() {
+  const light = localStorage.getItem('theme') === 'light';
+  document.body.classList.toggle('light', light);
+  document.querySelector('.theme-toggle').textContent = light ? '☀️' : '🌙';
+}
+
+function toggleTheme() {
+  const light = !document.body.classList.contains('light');
+  localStorage.setItem('theme', light ? 'light' : 'dark');
+  applyTheme();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('toast').classList.remove('show');
+  if (e.key === 'Escape') {
+    const drawer = document.getElementById('chat-drawer');
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+  }
+});
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>

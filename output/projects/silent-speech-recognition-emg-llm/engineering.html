@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Engineering Scout — 芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）</title>
+<title>Engineering Scout — Silent Speech Recognition（骨传导 + EMG + LLM）</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -86,23 +86,23 @@ body.light {
   <button class="chat-toggle" onclick="toggleChatDrawer()" title="Toggle project chat">💬</button>
   <div class="wrap">
     <div class="nav">
-      <a href="/datasheet-pdf-mcu-soc-papers.html">← Back to Papers</a>
+      <a href="/projects/silent-speech-recognition-emg-llm/papers.html">← Back to Papers</a>
     </div>
 
     <section class="hero">
       <div class="eyebrow">Engineering Scout</div>
-      <h1>芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）</h1>
+      <h1>Silent Speech Recognition（骨传导 + EMG + LLM）</h1>
       <p>这一页聚焦“论文之外”的工程落地信息：GitHub 开源实现、现实产品与功能、以及相关新闻与实际部署信号，帮助你判断一个研究主题距离工程可用还有多远。</p>
       <div class="meta">
-        <div class="badge">Range: 2021-2026</div>
-        <div class="badge">Updated: 2026-04-20</div>
+        <div class="badge">Range: 2018-2026</div>
+        <div class="badge">Updated: 2026-04-21</div>
         <div class="badge">Open source: 4</div>
-        <div class="badge">Products: 3</div>
+        <div class="badge">Products: 4</div>
         <div class="badge">News: 3</div>
       </div>
     </section>
 
-    
+    <div id="status-card" class="status-card" style="display:none"></div>
 
     <div class="grid">
       <section class="section">
@@ -111,7 +111,7 @@ body.light {
           <span>High-level engineering readout</span>
         </div>
         <div class="takeaways">
-          <div class="takeaway">芯片 datasheet PDF 的难点不是单纯 OCR，而是要把长文档中的版面、表格、寄存器描述、时序图、性能曲线和结构示意图分流到不同处理模块。工程上最有效的方案是“layout routing + specialized parsers”，而不是一把梭地把整份 PDF 喂给一个模型。</div><div class="takeaway">对 MCU/SoC/传感器 datasheet 来说，最有价值的产物通常不是一份摘要，而是带页码和框坐标的结构化 JSON：寄存器表、引脚表、时序参数、图片/图表描述、曲线数字化结果，以及与代码或配置参数的可追踪链接。</div><div class="takeaway">时序图和物理/性能曲线图需要单独建模。前者更接近 diagram understanding / visual QA，后者更接近 chart digitization。现实里往往要把 Docling/MinerU 这类文档解析器，与 WebPlotDigitizer、VLM 图像描述、甚至专门的 diagram models 组合起来。</div>
+          <div class="takeaway">对你关心的路线来说，最现实的系统形态不是“骨传导耳机本身完成识别”，而是 EMG 负责静默输入、语言模型负责纠错/重排、骨传导负责私密回传。骨传导在今天更成熟的角色是输出通道，而不是主输入模态。</div><div class="takeaway">从工程落地角度看，around-ear / headphone / neckband 这三种形态最值得盯。它们比贴片式面部电极更接近产品，但真正难点是电极耦合变化、跨日重戴、个体差异和校准成本。</div><div class="takeaway">大模型在 silent speech 里最适合做后端语言约束，而不是直接替代前端信号解码。更稳的架构是“biosignal encoder -&gt; token/command lattice -&gt; LM or LLM rescoring -&gt; private audio / agent action”。</div>
         </div>
       </section>
 
@@ -121,17 +121,17 @@ body.light {
           <span>4 repos / projects</span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://data.modm.io/" target="_blank">modm-data + pdf-data-extraction-jsys-artifact</a></h3><span class="tag">open_source</span></div><div class="org">modm-io · 2023-2026</div><div class="summary">目前最贴近 MCU datasheet 结构化抽取的开源工程路线之一，直接面向技术文档中的引脚、封装、寄存器、中断表等硬件描述数据。</div><div class="how">它的核心做法不是让模型自由阅读整份 PDF，而是建立可重复的数据管线，把 PDF 技术文档中的表格和结构化片段稳定抽取成知识图谱或中间表示。这非常适合 STM32 这类超长 datasheet。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/docling-project/docling" target="_blank">Docling</a></h3><span class="tag">open_source</span></div><div class="org">Docling Project · 2024-2026</div><div class="summary">一个面向高级 PDF understanding 的通用开源栈，支持 layout、reading order、table structure、OCR、formulas、图像理解以及结构化导出。</div><div class="how">在芯片 datasheet 场景里，Docling 更像底座：先把长 PDF 转成带结构的 Markdown/JSON，再把图片、图表、公式、表格送入专门处理模块。它本身已经开始支持图表理解，这是很关键的方向。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/opendatalab/PDF-Extract-Kit" target="_blank">PDF-Extract-Kit</a></h3><span class="tag">open_source</span></div><div class="org">OpenDataLab · 2024-2026</div><div class="summary">更偏模型工具箱，覆盖 layout detection、formula detection/recognition、OCR、table recognition 等文档解析底层能力。</div><div class="how">如果你的目标是做芯片 datasheet 专用 pipeline，它适合作为模块仓库来拼接：一层做版面，一层做公式，一层做表格，再把图表/时序图交给更细的专用模型。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/automeris-io/WebPlotDigitizer" target="_blank">WebPlotDigitizer</a></h3><span class="tag">open_source</span></div><div class="org">automeris-io · 2010-2026</div><div class="summary">图表数值数字化的经典开源工具，适合把 datasheet 中的性能曲线、功耗曲线、温漂曲线重新提成可计算数据。</div><div class="how">它不是整份 PDF parser，但对于传感器和模拟芯片 datasheet 中大量“图上有关键数值、表里没有”的情况非常实用。很多工程系统会把它作为 chart extraction 子模块接到主流程后面。</div></div>
+          <div class="item"><div class="item-top"><h3><a href="https://github.com/dgaddy/silent_speech" target="_blank">dgaddy/silent_speech</a></h3><span class="tag">open_source</span></div><div class="org">Danny Gaddy / GitHub · EMNLP 2020 / ACL 2021 lineage</div><div class="summary">当前最有代表性的 EMG silent speech 开源栈之一，既支持 EMG 到语音合成，也包含 EMG 到文本的静默识别代码。</div><div class="how">它的工程价值在于给出了完整训练与评测链路：EMG 数据、HiFi-GAN、CTC 识别、KenLM，以及开放词表 WER 评测。想做“EMG 前端 + 语言模型后端”的系统，这个 repo 是最好的起点之一。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/MateusAquino/subvocalization-emg" target="_blank">MateusAquino/subvocalization-emg</a></h3><span class="tag">open_source</span></div><div class="org">Mateus de Aquino Batista / GitHub · 研究型原型</div><div class="summary">一个偏硬件原型与数据采集的开源项目，围绕 OpenBCI Cyton 做表面肌电采集、词级分类和实验工作流。</div><div class="how">它很适合拿来理解“怎么把一套真的 EMG 采集原型搭起来”：电极布置、记录界面、训练页面、评估页面都给出来了。虽然词表较小，但它对做实验平台非常实用。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/brainflow-dev/brainflow" target="_blank">brainflow-dev/brainflow</a></h3><span class="tag">open_source</span></div><div class="org">BrainFlow Project · biosignal SDK</div><div class="summary">一个跨设备的 biosignal SDK，统一支持 EEG、EMG、ECG 等采集、解析和信号处理。</div><div class="how">如果要做 silent speech 工程系统，BrainFlow 很适合做采集与预处理底座。它把不同硬件抽象成统一 API，并自带滤波、降噪、下采样等工具，可以大幅减少你在设备接入层的重复工作。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/OpenBCI/OpenBCI_GUI" target="_blank">OpenBCI/OpenBCI_GUI</a></h3><span class="tag">open_source</span></div><div class="org">OpenBCI · acquisition GUI</div><div class="summary">OpenBCI 的官方 GUI 和实验框架，可实时可视化、过滤、记录和外发脑电/肌电数据。</div><div class="how">对于 silent speech 原型来说，它的价值不是“直接给你识别器”，而是提供一个稳定的实验采集与可视化前端。很多 EMG/EEG 研究原型都会先用 OpenBCI + GUI 把数据流跑顺，再接自己的识别模型。</div></div>
         </div>
       </section>
 
       <section class="section">
         <div class="section-title">
           <h2>Products</h2>
-          <span>3 products / features</span>
+          <span>4 products / features</span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://github.com/opendatalab/MinerU" target="_blank">MinerU</a></h3><span class="tag">product</span></div><div class="org">OpenDataLab · 2024-2026</div><div class="summary">一个更接近生产使用的文档解析引擎，强调把复杂 PDF 直接转换成 LLM-ready Markdown/JSON，并支持 VLM+OCR 双引擎。</div><div class="how">它对芯片 datasheet 的价值在于工程完整性：支持复杂布局、跨页表格、图像/图表解析、公式以及多语言 OCR，更适合在大批量 PDF ingestion 场景里作为入口解析器。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/opendataloader-project/opendataloader-pdf" target="_blank">OpenDataLoader PDF</a></h3><span class="tag">product</span></div><div class="org">OpenDataLoader Project · 2026</div><div class="summary">一个很强调结构与坐标输出的 PDF parser，能输出 Markdown/JSON/HTML，并保留 element-level bounding boxes。</div><div class="how">对 datasheet 场景特别重要的是它把“reading order + bounding boxes + charts/formulas descriptions”放在一起；这意味着后续问答和代码生成可以准确回指 PDF 中的具体页码和区域。</div></div><div class="item"><div class="item-top"><h3><a href="https://research.ibm.com/projects/diagram-understanding" target="_blank">IBM Diagram Understanding</a></h3><span class="tag">product</span></div><div class="org">IBM Research · ongoing</div><div class="summary">专门针对技术图和图表理解的研究项目，关注如何从图中恢复数据和语义，而不是只做文本 OCR。</div><div class="how">这类系统对 datasheet 非常关键，因为芯片物理结构图、框图和某些复杂 timing 图都属于“图像里有关系和语义”，而不是纯表格或段落文字。</div></div>
+          <div class="item"><div class="item-top"><h3><a href="https://www.media.mit.edu/projects/alterego/overview/" target="_blank">AlterEgo</a></h3><span class="tag">product</span></div><div class="org">MIT Media Lab / AlterEgo · 2018-2025</div><div class="summary">最经典的 silent speech 产品化方向之一：利用面部和颈部的细微神经肌肉信号做无声输入，并通过骨传导返回私密音频。</div><div class="how">它的实现路径非常接近你关心的组合：输入侧不是脑机接口，而是外围神经肌肉信号；输出侧则通过骨传导把 AI 或系统反馈悄悄送回用户。它证明了“EMG / neuromuscular sensing + bone conduction closed loop”在设备形态上是成立的。</div></div><div class="item"><div class="item-top"><h3><a href="https://silentspeak.io/" target="_blank">SilentSpeak</a></h3><span class="tag">product</span></div><div class="org">SilentSpeak · 2026</div><div class="summary">一个非常贴近你目标形态的原型产品：三路 sEMG 电极采脸部肌肉，ESP32-S3 做 DSP + MFCC，再通过 BLE 把特征发到手机端做识别，并用骨传导回传结果。</div><div class="how">它把工程栈写得很清楚：Ag/AgCl 电极、1 kHz 采样、ESP32-S3、BLE、手机端推理、Whisper/Parakeet/SeamlessM4T 这类模型做语音侧处理。也就是说，它本质上是在把 EMG 静默输入和现代语音/翻译模型结合成一套消费级交互链路。</div></div><div class="item"><div class="item-top"><h3><a href="https://engramlabs.co/" target="_blank">Engram</a></h3><span class="tag">product</span></div><div class="org">Engram Labs · 2026 prototype</div><div class="summary">一个新近面向“和 AI 静默对话”的 around-ear EMG 原型，强调本地处理、私密输入和 AI agent 控制。</div><div class="how">它的路线很明确：耳周/下颌表面肌电采集 silent intent，模型把信号映射成短语或意图，再把结果接给 AI agent。它没有强调骨传导硬件细节，但在“EMG 输入 + AI agent 控制”这条产品路线上非常直接。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.wisear.io/wisearphones" target="_blank">WisEarphones</a></h3><span class="tag">product</span></div><div class="org">Wisear · neural-interface earphones</div><div class="summary">Wisear 走的是“耳内神经接口”路线，用 2 路 ExG、低功耗前端、Cortex-M4 和设备端 AI 做无手、无声控制。</div><div class="how">它当前更像神经接口控制平台，而不是完整自然语言 silent speech 产品，但 form factor 很重要：真正可穿戴、蓝牙兼容、AI 在设备端运行。对后续把 EMG 静默语音命令收进耳机形态很有参考价值。</div></div>
         </div>
       </section>
 
@@ -141,7 +141,7 @@ body.light {
           <span>3 recent signals</span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://github.com/docling-project/docling" target="_blank">Docling adds chart understanding</a></h3><span class="tag">news</span></div><div class="org">Docling Project · 2026</div><div class="summary">Docling 在近期能力说明中把 chart understanding 单列出来，说明开源 PDF 栈已经把图表理解视为核心增量，而不是附属特性。</div><div class="how">这对芯片 datasheet 很有现实意义，因为时序图和性能曲线恰恰是传统 parser 最弱的部分。开源主流栈开始正面补这块，意味着这个方向正在从研究走向可用工程能力。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/opendatalab/MinerU" target="_blank">MinerU 3.1.0 release emphasizes image/chart parsing</a></h3><span class="tag">news</span></div><div class="org">OpenDataLab · 2026</div><div class="summary">MinerU 最近版本明确强调 image and chart parsing、cross-page table merging 和复杂布局处理。</div><div class="how">这说明现实工程需求已经不是“把 PDF 转成纯文本”这么简单，而是要求 parser 直接交付对图表、图片和长文档结构都更友好的语义输出。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/opendataloader-project/opendataloader-pdf" target="_blank">OpenDataLoader PDF exposes hybrid chart/image description and bbox JSON</a></h3><span class="tag">news</span></div><div class="org">OpenDataLoader Project · 2026</div><div class="summary">OpenDataLoader 把 chart/image description、formula extraction 和 element bbox 输出一起纳入主 README，说明“图文混合理解 + 可追踪坐标”已经是 parser 产品化的卖点。</div><div class="how">对于芯片 datasheet 自动读取，这一点尤其重要：如果回答不能回到具体页码和区域，就很难信任；如果图表不能先描述或定位，就很难做高质量二次提取。</div></div>
+          <div class="item"><div class="item-top"><h3><a href="https://www.media.mit.edu/articles/exclusive-startup-lets-you-query-ai-with-silent-speech/" target="_blank">MIT/Decrypt: AlterEgo moves toward commercialization</a></h3><span class="tag">news</span></div><div class="org">MIT Media Lab / Decrypt · 2025-09-08</div><div class="summary">MIT 转述的报道显示 AlterEgo 已在 2025 年朝公司化推进，并继续强调“读取面部与喉部的微弱神经肌肉信号，再通过骨传导回传结果”的产品逻辑。</div><div class="how">这说明 silent speech 不再只是实验室演示，而是在往真实创业产品过渡。尤其是骨传导回传这点，表明私密双向交互被视为核心卖点。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.wisear.io/posts/press-release-wisear-unveils-the-wisear-pod-at-ces-2024" target="_blank">Wisear CES 2024 WiseAR Pod</a></h3><span class="tag">news</span></div><div class="org">Wisear · 2024-01-02</div><div class="summary">Wisear 在 CES 2024 公开展示了利用面部、眼部和脑活动做无手无声控制的演示，重点面向音频和 AR/XR 设备。</div><div class="how">这类发布的意义在于，它把“neural / EMG-like silent control”明确推向了耳机、眼镜和 XR 的消费设备入口，而不是停留在论文系统。</div></div><div class="item"><div class="item-top"><h3><a href="https://techcrunch.com/2024/01/10/augmental-head-tracking/" target="_blank">TechCrunch: Augmental adds silent speech and bone-conduction feedback</a></h3><span class="tag">news</span></div><div class="org">TechCrunch / Augmental · 2024-01-10</div><div class="summary">Augmental 对外谈到其口腔设备正在研发 silent speech，并计划加入骨传导反馈，让用户在不发声情况下形成词语并获得私密回传。</div><div class="how">虽然它不是 EMG 路线，而是舌部/口腔动作路线，但它再次验证了“silent input + bone conduction feedback”这套交互闭环正在成为一个真实的产品方向。</div></div>
         </div>
       </section>
     </div>
@@ -150,7 +150,7 @@ body.light {
   <div class="chat-header">
     <div>
       <div class="chat-title">Project Chat</div>
-      <div class="chat-subtitle">芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图） · engineering</div>
+      <div class="chat-subtitle">Silent Speech Recognition（骨传导 + EMG + LLM） · engineering</div>
     </div>
     <button class="nav-btn" onclick="toggleChatDrawer()">Close</button>
   </div>
@@ -167,13 +167,17 @@ body.light {
 </aside>
 <script>
 const API = 'http://localhost:5678';
-const PROJECT_TOPIC = '芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）';
+const PROJECT_TOPIC = 'Silent Speech Recognition（骨传导 + EMG + LLM）';
 const PROJECT_PAGE_TYPE = 'engineering';
+const AUTO_GENERATE_ENGINEERING = false;
 let chatLoaded = false;
 let chatPending = false;
 
 async function init() {
   applyTheme();
+  if (AUTO_GENERATE_ENGINEERING) {
+    await ensureEngineeringReady();
+  }
 }
 
 async function ensureEngineeringReady() {
@@ -233,16 +237,6 @@ function escapeHtml(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-async function readJsonResponse(r) {
-  const raw = await r.text();
-  if (!raw.trim()) throw new Error(`Empty response (${r.status})`);
-  try {
-    return JSON.parse(raw);
-  } catch (err) {
-    throw new Error(`Invalid JSON response (${r.status})`);
-  }
-}
-
 function renderChatHistory(messages) {
   const el = document.getElementById('chat-history');
   if (!messages.length) {
@@ -251,6 +245,18 @@ function renderChatHistory(messages) {
   }
   el.innerHTML = messages.map(msg => `<div class="chat-msg ${msg.role}">${escapeHtml(msg.content || '')}</div>`).join('');
   el.scrollTop = el.scrollHeight;
+}
+
+async function readJsonResponse(r) {
+  const raw = await r.text();
+  if (!raw.trim()) {
+    throw new Error(`Empty response (${r.status})`);
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`Invalid JSON response (${r.status})`);
+  }
 }
 
 async function loadChatHistory() {

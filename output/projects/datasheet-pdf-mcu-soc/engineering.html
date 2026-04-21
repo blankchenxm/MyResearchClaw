@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Engineering Scout — MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)</title>
+<title>Engineering Scout — 芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -86,17 +86,17 @@ body.light {
   <button class="chat-toggle" onclick="toggleChatDrawer()" title="Toggle project chat">💬</button>
   <div class="wrap">
     <div class="nav">
-      <a href="/mcu-esp32-stm32-nrf-papers.html">← Back to Papers</a>
+      <a href="/projects/datasheet-pdf-mcu-soc/papers.html">← Back to Papers</a>
     </div>
 
     <section class="hero">
       <div class="eyebrow">Engineering Scout</div>
-      <h1>MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)</h1>
+      <h1>芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）</h1>
       <p>这一页聚焦“论文之外”的工程落地信息：GitHub 开源实现、现实产品与功能、以及相关新闻与实际部署信号，帮助你判断一个研究主题距离工程可用还有多远。</p>
       <div class="meta">
-        <div class="badge">Range: 2008-2026</div>
-        <div class="badge">Updated: 2026-04-19</div>
-        <div class="badge">Open source: 3</div>
+        <div class="badge">Range: 2021-2026</div>
+        <div class="badge">Updated: 2026-04-20</div>
+        <div class="badge">Open source: 4</div>
         <div class="badge">Products: 3</div>
         <div class="badge">News: 3</div>
       </div>
@@ -111,17 +111,17 @@ body.light {
           <span>High-level engineering readout</span>
         </div>
         <div class="takeaways">
-          <div class="takeaway">“根据需求自动生成代码并完成烧录”已经比 PCB 自动化成熟得多。代码生成、构建、刷写各环节都有现成工具链，难点主要在芯片族差异与硬件抽象。</div><div class="takeaway">跨 ESP32 / STM32 / nRF 的现实路径不是让模型直接裸写三套代码，而是先建立统一设备能力模型，再映射到 ESP-IDF、STM32CubeMX、Zephyr/nRF 工具链。</div><div class="takeaway">真正能落地的系统通常长这样：需求 -&gt; 板级/外设抽象 -&gt; 代码模板或 agent 生成 -&gt; 官方构建系统 -&gt; 官方刷写/OTA 工具。这比单一聊天模型可靠得多。</div>
+          <div class="takeaway">芯片 datasheet PDF 的难点不是单纯 OCR，而是要把长文档中的版面、表格、寄存器描述、时序图、性能曲线和结构示意图分流到不同处理模块。工程上最有效的方案是“layout routing + specialized parsers”，而不是一把梭地把整份 PDF 喂给一个模型。</div><div class="takeaway">对 MCU/SoC/传感器 datasheet 来说，最有价值的产物通常不是一份摘要，而是带页码和框坐标的结构化 JSON：寄存器表、引脚表、时序参数、图片/图表描述、曲线数字化结果，以及与代码或配置参数的可追踪链接。</div><div class="takeaway">时序图和物理/性能曲线图需要单独建模。前者更接近 diagram understanding / visual QA，后者更接近 chart digitization。现实里往往要把 Docling/MinerU 这类文档解析器，与 WebPlotDigitizer、VLM 图像描述、甚至专门的 diagram models 组合起来。</div>
         </div>
       </section>
 
       <section class="section">
         <div class="section-title">
           <h2>Open Source</h2>
-          <span>3 repos / projects</span>
+          <span>4 repos / projects</span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://github.com/platformio/platformio-core" target="_blank">PlatformIO Core</a></h3><span class="tag">open_source</span></div><div class="org">PlatformIO · active</div><div class="summary">PlatformIO 是最现实的跨芯片族自动构建入口之一，支持多平台、多 board、多环境配置。</div><div class="how">它的关键价值在于把 ESP32、STM32、Nordic 等平台放到统一配置文件和统一 CLI 下，从而让 agent 只需决定目标环境与依赖，而不必重写整个构建链。</div></div><div class="item"><div class="item-top"><h3><a href="https://docs.zephyrproject.org/latest/develop/west/build-flash-debug.html" target="_blank">Zephyr</a></h3><span class="tag">open_source</span></div><div class="org">Zephyr Project · active</div><div class="summary">Zephyr 提供跨板卡的 `west build` / `west flash` 统一工作流，是自动化固件生成后接上部署的典型后端。</div><div class="how">如果需求层先被编译成 Zephyr 抽象，后续只要替换 board 与 device tree，就能复用大部分应用逻辑；这非常适合跨 ESP32 / nRF / STM32 的自动适配。</div></div><div class="item"><div class="item-top"><h3><a href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-py.html" target="_blank">ESP-IDF</a></h3><span class="tag">open_source</span></div><div class="org">Espressif · active</div><div class="summary">ESP-IDF 官方工具链已经把创建项目、构建、刷写等操作统一进 `idf.py`，非常适合作为 agent 的执行目标。</div><div class="how">自动系统并不需要自己实现刷写协议，只要生成正确工程并调用官方 `idf.py build` / `flash`，就能把“代码生成”和“烧录执行”稳妥接起来。</div></div>
+          <div class="item"><div class="item-top"><h3><a href="https://data.modm.io/" target="_blank">modm-data + pdf-data-extraction-jsys-artifact</a></h3><span class="tag">open_source</span></div><div class="org">modm-io · 2023-2026</div><div class="summary">目前最贴近 MCU datasheet 结构化抽取的开源工程路线之一，直接面向技术文档中的引脚、封装、寄存器、中断表等硬件描述数据。</div><div class="how">它的核心做法不是让模型自由阅读整份 PDF，而是建立可重复的数据管线，把 PDF 技术文档中的表格和结构化片段稳定抽取成知识图谱或中间表示。这非常适合 STM32 这类超长 datasheet。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/docling-project/docling" target="_blank">Docling</a></h3><span class="tag">open_source</span></div><div class="org">Docling Project · 2024-2026</div><div class="summary">一个面向高级 PDF understanding 的通用开源栈，支持 layout、reading order、table structure、OCR、formulas、图像理解以及结构化导出。</div><div class="how">在芯片 datasheet 场景里，Docling 更像底座：先把长 PDF 转成带结构的 Markdown/JSON，再把图片、图表、公式、表格送入专门处理模块。它本身已经开始支持图表理解，这是很关键的方向。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/opendatalab/PDF-Extract-Kit" target="_blank">PDF-Extract-Kit</a></h3><span class="tag">open_source</span></div><div class="org">OpenDataLab · 2024-2026</div><div class="summary">更偏模型工具箱，覆盖 layout detection、formula detection/recognition、OCR、table recognition 等文档解析底层能力。</div><div class="how">如果你的目标是做芯片 datasheet 专用 pipeline，它适合作为模块仓库来拼接：一层做版面，一层做公式，一层做表格，再把图表/时序图交给更细的专用模型。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/automeris-io/WebPlotDigitizer" target="_blank">WebPlotDigitizer</a></h3><span class="tag">open_source</span></div><div class="org">automeris-io · 2010-2026</div><div class="summary">图表数值数字化的经典开源工具，适合把 datasheet 中的性能曲线、功耗曲线、温漂曲线重新提成可计算数据。</div><div class="how">它不是整份 PDF parser，但对于传感器和模拟芯片 datasheet 中大量“图上有关键数值、表里没有”的情况非常实用。很多工程系统会把它作为 chart extraction 子模块接到主流程后面。</div></div>
         </div>
       </section>
 
@@ -131,7 +131,7 @@ body.light {
           <span>3 products / features</span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://embedder.com/" target="_blank">Embedder</a></h3><span class="tag">product</span></div><div class="org">Embedder · 2026</div><div class="summary">Embedder 已经把“AI firmware engineer”产品化，明确支持 STM32、ESP32、nRF52 等 MCU，并强调基于 datasheet 的引用式代码生成。</div><div class="how">它的实现思路非常接近你想要的路线：先 ingest datasheet / schematic / reference manual，再建立硬件知识图谱，最后生成带出处的驱动与初始化代码。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.st.com/STM32CubeMX" target="_blank">STM32CubeMX</a></h3><span class="tag">product</span></div><div class="org">STMicroelectronics · active</div><div class="summary">STM32CubeMX 本身就是配置到初始化代码生成的成熟产品，已经把大量板级初始化劳动自动化。</div><div class="how">现实中的自动化系统完全可以把需求映射到 CubeMX 配置，再调用其代码生成能力，把芯片特定启动、时钟、外设初始化从 agent 中外包出去。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.nordicsemi.com/Products/Development-tools/nRF-Util" target="_blank">nRF Util</a></h3><span class="tag">product</span></div><div class="org">Nordic Semiconductor · active</div><div class="summary">Nordic 的统一 CLI 已经覆盖设备发现、DFU、烧录包等功能，是自动部署到 nRF 平台的官方执行端。</div><div class="how">这说明跨芯片自动化时，agent 不必直接理解每个厂家的底层烧录协议，而可以把最后一跳委托给厂商维护的工具。</div></div>
+          <div class="item"><div class="item-top"><h3><a href="https://github.com/opendatalab/MinerU" target="_blank">MinerU</a></h3><span class="tag">product</span></div><div class="org">OpenDataLab · 2024-2026</div><div class="summary">一个更接近生产使用的文档解析引擎，强调把复杂 PDF 直接转换成 LLM-ready Markdown/JSON，并支持 VLM+OCR 双引擎。</div><div class="how">它对芯片 datasheet 的价值在于工程完整性：支持复杂布局、跨页表格、图像/图表解析、公式以及多语言 OCR，更适合在大批量 PDF ingestion 场景里作为入口解析器。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/opendataloader-project/opendataloader-pdf" target="_blank">OpenDataLoader PDF</a></h3><span class="tag">product</span></div><div class="org">OpenDataLoader Project · 2026</div><div class="summary">一个很强调结构与坐标输出的 PDF parser，能输出 Markdown/JSON/HTML，并保留 element-level bounding boxes。</div><div class="how">对 datasheet 场景特别重要的是它把“reading order + bounding boxes + charts/formulas descriptions”放在一起；这意味着后续问答和代码生成可以准确回指 PDF 中的具体页码和区域。</div></div><div class="item"><div class="item-top"><h3><a href="https://research.ibm.com/projects/diagram-understanding" target="_blank">IBM Diagram Understanding</a></h3><span class="tag">product</span></div><div class="org">IBM Research · ongoing</div><div class="summary">专门针对技术图和图表理解的研究项目，关注如何从图中恢复数据和语义，而不是只做文本 OCR。</div><div class="how">这类系统对 datasheet 非常关键，因为芯片物理结构图、框图和某些复杂 timing 图都属于“图像里有关系和语义”，而不是纯表格或段落文字。</div></div>
         </div>
       </section>
 
@@ -141,7 +141,7 @@ body.light {
           <span>3 recent signals</span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://www.prnewswire.com/news-releases/embedder-v0-3-1-nominated-for-embedded-award-2026-as-ai-firmware-platform-moves-into-production-302708498.html" target="_blank">Embedder production push at Embedded World 2026</a></h3><span class="tag">news</span></div><div class="org">PR Newswire / Embedder · 2026-03-10</div><div class="summary">Embedder 在 2026 年 Embedded World 的公开动作说明，“AI 固件工程平台”已经不只是概念验证，而是在向生产部署靠近。</div><div class="how">这类信号意味着市场开始接受“需求+文档 -&gt; 自动生成驱动/初始化/工程骨架”的产品形态，也证明工程落地正在从内部工具走向商业平台。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.eejournal.com/article/meet-the-embedder-ai-firmware-engineer/" target="_blank">EEJournal profile of Embedder</a></h3><span class="tag">news</span></div><div class="org">EEJournal · 2026</div><div class="summary">行业媒体开始把 AI firmware engineer 当成一个独立赛道来看待，而不是普通代码助手的延伸。</div><div class="how">这对你的问题有现实意义：自动生成并烧录 MCU 固件的能力，已经开始形成专门产品，而不再只是拼装通用 LLM。</div></div><div class="item"><div class="item-top"><h3><a href="https://docs.platformio.org/en/latest/projectconf/sections/env/index.html" target="_blank">PlatformIO multi-environment workflow</a></h3><span class="tag">news</span></div><div class="org">PlatformIO Docs · active</div><div class="summary">PlatformIO 官方文档长期把多环境项目作为一等能力，这本身就是跨芯片自动适配的重要部署信号。</div><div class="how">对自动化系统来说，这意味着“同一份需求映射多个芯片后端”是可以落到标准工程结构上的，而不是每次都要发明新的 build orchestration。</div></div>
+          <div class="item"><div class="item-top"><h3><a href="https://github.com/docling-project/docling" target="_blank">Docling adds chart understanding</a></h3><span class="tag">news</span></div><div class="org">Docling Project · 2026</div><div class="summary">Docling 在近期能力说明中把 chart understanding 单列出来，说明开源 PDF 栈已经把图表理解视为核心增量，而不是附属特性。</div><div class="how">这对芯片 datasheet 很有现实意义，因为时序图和性能曲线恰恰是传统 parser 最弱的部分。开源主流栈开始正面补这块，意味着这个方向正在从研究走向可用工程能力。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/opendatalab/MinerU" target="_blank">MinerU 3.1.0 release emphasizes image/chart parsing</a></h3><span class="tag">news</span></div><div class="org">OpenDataLab · 2026</div><div class="summary">MinerU 最近版本明确强调 image and chart parsing、cross-page table merging 和复杂布局处理。</div><div class="how">这说明现实工程需求已经不是“把 PDF 转成纯文本”这么简单，而是要求 parser 直接交付对图表、图片和长文档结构都更友好的语义输出。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/opendataloader-project/opendataloader-pdf" target="_blank">OpenDataLoader PDF exposes hybrid chart/image description and bbox JSON</a></h3><span class="tag">news</span></div><div class="org">OpenDataLoader Project · 2026</div><div class="summary">OpenDataLoader 把 chart/image description、formula extraction 和 element bbox 输出一起纳入主 README，说明“图文混合理解 + 可追踪坐标”已经是 parser 产品化的卖点。</div><div class="how">对于芯片 datasheet 自动读取，这一点尤其重要：如果回答不能回到具体页码和区域，就很难信任；如果图表不能先描述或定位，就很难做高质量二次提取。</div></div>
         </div>
       </section>
     </div>
@@ -150,7 +150,7 @@ body.light {
   <div class="chat-header">
     <div>
       <div class="chat-title">Project Chat</div>
-      <div class="chat-subtitle">MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF) · engineering</div>
+      <div class="chat-subtitle">芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图） · engineering</div>
     </div>
     <button class="nav-btn" onclick="toggleChatDrawer()">Close</button>
   </div>
@@ -167,7 +167,7 @@ body.light {
 </aside>
 <script>
 const API = 'http://localhost:5678';
-const PROJECT_TOPIC = 'MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)';
+const PROJECT_TOPIC = '芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）';
 const PROJECT_PAGE_TYPE = 'engineering';
 let chatLoaded = false;
 let chatPending = false;
@@ -176,7 +176,22 @@ async function init() {
   applyTheme();
 }
 
-async function ensureEngineeringReady() { return; }
+async function ensureEngineeringReady() {
+  try {
+    const status = await fetchStatus();
+    const shouldStart = !status.page_ready || status.status === 'idle' || status.status === 'error' || status.topic !== status.expected_topic;
+    if (shouldStart) {
+      showStatus('正在生成 Engineering View：自动收集 GitHub 开源实现、产品与新闻信号。');
+      await fetch(`${API}/api/generate-engineering`, { method:'POST' });
+      pollStatus();
+    } else if (status.status === 'running') {
+      showStatus(status.message || 'Engineering scout 正在运行中。');
+      pollStatus();
+    }
+  } catch {
+    showStatus('无法连接本地服务。启动 `python serve.py` 后刷新页面即可自动生成。', true);
+  }
+}
 
 async function fetchStatus() {
   const r = await fetch(`${API}/api/engineering-status`);

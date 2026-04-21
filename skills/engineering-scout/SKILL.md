@@ -73,7 +73,7 @@ assets/engineering.html
 
 If the user explicitly asks for standalone topic-specific output that must not overwrite existing results:
 
-- generate a dedicated engineering page such as `output/{topic_slug}-engineering.html`
+- generate a dedicated engineering page such as `output/projects/{topic_slug}/engineering.html`
 - keep the shared `output/engineering.html` unchanged unless the task explicitly requests updating it
 
 Fill:
