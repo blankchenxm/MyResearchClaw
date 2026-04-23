@@ -64,7 +64,49 @@ body.light {
 }
 .hero-btn:hover, .btn:hover { border-color:var(--border-hover); transform:translateY(-1px); }
 .hero-btn.engineering { background:rgba(56,217,199,0.08); color:var(--accent2); border-color:rgba(56,217,199,0.18); }
-.papers-grid { display:grid; grid-template-columns:1fr; gap:18px; }
+.workflow-panel, .timeline-panel {
+  background:var(--bg-card); border:1px solid var(--border); border-radius:22px; padding:20px 22px; margin-bottom:18px;
+}
+.panel-top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:14px; }
+.panel-title { font-size:18px; font-weight:800; }
+.panel-subtitle { color:var(--text-muted); font:500 12px 'JetBrains Mono', monospace; }
+.workflow-steps { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.workflow-step {
+  display:inline-flex; align-items:center; gap:8px; border:1px solid var(--border); border-radius:999px;
+  padding:9px 12px; font-size:12px; background:rgba(255,255,255,0.03);
+}
+.workflow-step strong { font:700 11px 'JetBrains Mono', monospace; color:var(--accent4); }
+.workflow-arrow { color:var(--text-muted); font:700 14px 'JetBrains Mono', monospace; }
+.workflow-note { margin-top:12px; color:var(--text-dim); line-height:1.8; font-size:14px; }
+.timeline-rail { display:grid; gap:18px; position:relative; }
+.timeline-entry {
+  display:grid; grid-template-columns:28px 180px minmax(0,1fr); gap:18px; align-items:start;
+}
+.timeline-spine { position:relative; min-height:100%; }
+.timeline-spine::before {
+  content:""; position:absolute; left:13px; top:0; bottom:-18px; width:2px; background:var(--border);
+}
+.timeline-entry:last-child .timeline-spine::before { bottom:0; }
+.timeline-dot {
+  width:14px; height:14px; border-radius:50%; background:var(--accent); border:3px solid var(--bg-card);
+  position:relative; top:8px; left:6px; box-shadow:0 0 0 2px rgba(105,166,255,0.18);
+}
+.timeline-marker {
+  position:sticky; top:18px; padding:14px 14px 14px 0;
+}
+.timeline-year { font:800 24px 'JetBrains Mono', monospace; color:var(--accent); line-height:1; padding-top:2px; }
+.timeline-top { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+.timeline-role {
+  display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; border:1px solid var(--border);
+  font:700 11px 'JetBrains Mono', monospace; letter-spacing:.02em;
+}
+.role-survey { color:var(--accent4); border-color:rgba(255,214,110,0.22); background:rgba(255,214,110,0.09); }
+.role-breakthrough { color:var(--accent3); border-color:rgba(255,141,107,0.22); background:rgba(255,141,107,0.09); }
+.role-consolidation { color:#c0b6ff; border-color:rgba(162,155,254,0.22); background:rgba(162,155,254,0.09); }
+.role-frontier { color:var(--accent2); border-color:rgba(56,217,199,0.22); background:rgba(56,217,199,0.09); }
+.role-timeline { color:var(--text-dim); border-color:var(--border); background:rgba(255,255,255,0.03); }
+.timeline-note { color:var(--text-dim); line-height:1.8; font-size:14px; }
+.timeline-card-wrap { min-width:0; }
 .paper-card {
   background:var(--bg-card); border:1px solid var(--border); border-radius:22px; padding:22px 24px;
   transition:border-color .15s, transform .15s; display:flex; flex-direction:column;
@@ -78,6 +120,8 @@ body.light {
 .card-title { font-size:20px; font-weight:800; line-height:1.42; flex:1; }
 .card-title a { color:inherit; text-decoration:none; }
 .card-title a:hover { color:var(--accent); }
+.card-role-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+.card-role-reason { color:var(--text-muted); font-size:12px; line-height:1.7; }
 .citations { font:700 12px 'JetBrains Mono', monospace; padding:5px 10px; border-radius:999px; white-space:nowrap; }
 .cite-high { color:var(--accent2); background:rgba(56,217,199,0.1); border:1px solid rgba(56,217,199,0.18); }
 .cite-mid { color:#c0b6ff; background:rgba(162,155,254,0.12); border:1px solid rgba(162,155,254,0.2); }
@@ -189,6 +233,10 @@ body.light {
   .hero { padding:22px 20px; }
   .hero-top { flex-direction:column; }
   .hero-title { font-size:30px; }
+  .timeline-entry { grid-template-columns:1fr; gap:10px; }
+  .timeline-spine { display:none; }
+  .timeline-marker { position:static; padding:0; }
+  .timeline-year { font-size:18px; }
   .notes-shell { height:auto; }
   .notes-pane, .pdf-pane { height:auto; min-height:50vh; }
   .chat-drawer { width:100vw; max-width:100vw; }
@@ -216,10 +264,35 @@ body.light {
     </div>
   </section>
 
-  <div id="papers-view">
-    <div class="papers-grid">
-      {{ALL_PAPERS}}
+  <section class="workflow-panel">
+    <div class="panel-top">
+      <div class="panel-title">Agentic Search Workflow</div>
+      <div class="panel-subtitle">{{ACTIVE_YEAR_RANGE}} · {{ACTIVE_VENUES}}</div>
     </div>
+    <div class="workflow-steps">
+      <div class="workflow-step"><strong>R1</strong> Discovery</div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step"><strong>R2</strong> Anchor Extraction</div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step"><strong>R3</strong> Precision Search</div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step"><strong>R4</strong> Citation Expansion</div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step"><strong>R5</strong> Timeline Assembly</div>
+    </div>
+    <div class="workflow-note">这套页面默认按“先找 survey / recent entry，再抽 anchors，再做 author / phrase / venue 精确搜索，最后按领域角色组装时间线”的方式来组织结果，而不是单轮 batch 排名。</div>
+  </section>
+
+  <div id="papers-view">
+    <section class="timeline-panel">
+      <div class="panel-top">
+        <div class="panel-title">Continuous Timeline</div>
+        <div class="panel-subtitle">Left = timeline, right = key papers</div>
+      </div>
+      <div class="timeline-rail">
+        {{TIMELINE_ITEMS}}
+      </div>
+    </section>
   </div>
 
   <div id="notes-view" style="display:none">

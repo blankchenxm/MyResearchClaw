@@ -331,6 +331,79 @@ def render_tags(tags):
     return "\n          ".join(rendered)
 
 
+def infer_timeline_role(paper):
+    explicit = (paper.get("timeline_role") or "").strip().lower()
+    if explicit:
+        return explicit
+    tags = {str(tag).strip().lower() for tag in (paper.get("tags") or [])}
+    if {"survey", "review", "tutorial"} & tags:
+        return "survey"
+    if {"breakthrough", "foundation", "foundational", "seminal", "classic"} & tags:
+        return "breakthrough"
+    if {"frontier", "latest", "recent", "sota"} & tags:
+        return "frontier"
+    year = int(paper.get("year") or 0)
+    if year >= datetime.now().year - 1:
+        return "frontier"
+    return "timeline"
+
+
+def timeline_role_meta(paper):
+    role = infer_timeline_role(paper)
+    mapping = {
+        "survey": ("Survey", "role-survey"),
+        "breakthrough": ("Breakthrough", "role-breakthrough"),
+        "foundation": ("Foundation", "role-breakthrough"),
+        "foundational": ("Foundation", "role-breakthrough"),
+        "seminal": ("Seminal", "role-breakthrough"),
+        "consolidation": ("Consolidation", "role-consolidation"),
+        "frontier": ("Frontier", "role-frontier"),
+        "timeline": ("Timeline Node", "role-timeline"),
+    }
+    return role, *mapping.get(role, ("Timeline Node", "role-timeline"))
+
+
+def timeline_reason_text(paper):
+    return (
+        (paper.get("timeline_reason_zh") or "").strip()
+        or (paper.get("timeline_reason_en") or "").strip()
+        or (paper.get("summary_zh") or "").strip()
+        or (paper.get("summary_en") or "").strip()
+    )
+
+
+def render_timeline_items(papers):
+    ordered = sorted(
+        papers,
+        key=lambda paper: (int(paper.get("year") or 0), int(paper.get("rank") or 9999), paper.get("title") or ""),
+    )
+    rendered = []
+    for idx, paper in enumerate(ordered, start=1):
+        _, label, css = timeline_role_meta(paper)
+        reason = escape(timeline_reason_text(paper)[:220])
+        year = escape(str(paper.get("year") or "Unknown"))
+        card_html = render_paper_card(idx, paper)
+        rendered.append(
+            f"""
+            <article class="timeline-entry">
+              <div class="timeline-spine">
+                <div class="timeline-dot"></div>
+              </div>
+              <div class="timeline-marker">
+                <div class="timeline-year">{year}</div>
+                <div class="timeline-top">
+                  <span class="timeline-role {css}">{escape(label)}</span>
+                </div>
+                <div class="timeline-note">{reason}</div>
+              </div>
+              <div class="timeline-card-wrap">
+                {card_html}
+              </div>
+            </article>"""
+        )
+    return "\n".join(rendered)
+
+
 def render_progress_state(paper):
     progress = int(paper.get("progress") or 0)
     status = (paper.get("status") or "").strip()
@@ -612,6 +685,8 @@ def render_paper_card(idx, paper):
     pdf_url = escape(infer_pdf_url(paper))
     title = escape(paper.get("title") or "Untitled")
     authors = escape(paper.get("authors") or "Unknown authors")
+    _, role_label, role_css = timeline_role_meta(paper)
+    role_reason = escape(timeline_reason_text(paper)[:180])
 
     tags_block = f"\n          {tags_html}" if tags_html else ""
 
@@ -621,6 +696,10 @@ def render_paper_card(idx, paper):
         <div class="card-header">
           <div class="card-title"><a href="{paper_url}" target="_blank">{title}</a></div>
           <span class="citations {citations_class}">{citations_text}</span>
+        </div>
+        <div class="card-role-row">
+          <span class="timeline-role {role_css}">{escape(role_label)}</span>
+          <span class="card-role-reason">{role_reason}</span>
         </div>
         <div class="card-authors">{authors}</div>
         <div class="card-meta">
@@ -645,6 +724,7 @@ def render_paper_card(idx, paper):
 
 def render_dashboard_html(active_topic, active_year_range, active_venues, engineering_link, papers):
     template = load_kanban_template()
+    timeline_items = render_timeline_items(papers)
     all_papers = "\n".join(
         render_paper_card(idx, paper) for idx, paper in enumerate(papers, start=1)
     )
@@ -654,6 +734,7 @@ def render_dashboard_html(active_topic, active_year_range, active_venues, engine
         .replace("{{ACTIVE_YEAR_RANGE}}", escape(active_year_range))
         .replace("{{ACTIVE_VENUES}}", escape(active_venues))
         .replace("{{ENGINEERING_LINK}}", engineering_link)
+        .replace("{{TIMELINE_ITEMS}}", timeline_items)
         .replace("{{ALL_PAPERS}}", all_papers)
     )
 

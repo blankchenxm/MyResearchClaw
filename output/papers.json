@@ -604,7 +604,7 @@
       "summary_en": "AlterEgo is still the clearest reference for a silent-speech system that combines non-invasive neuromuscular sensing with private bone-conduction feedback. The IUI 2018 paper describes a wearable that captures subtle facial and neck signals during internal articulation, without requiring the user to visibly mouth words, and reports a 92% median accuracy on a digit-recognition task. What makes it important for your topic is the closed-loop architecture: silent input on the sensing side, and bone-conduction audio on the output side. Even though the language modeling stack is much older than today's LLM pipelines, AlterEgo established the product shape that many later EMG+AI systems are converging toward.",
       "summary_zh": "AlterEgo 仍然是“静默输入 + 私密反馈”这条路线最经典的系统论文之一，因为它把非侵入式神经肌肉信号采集和骨传导回传真正组合成了一个闭环设备。IUI 2018 这篇论文展示了一个可穿戴系统，能够在用户不张嘴、没有明显嘴唇动作的情况下，捕捉面部与颈部的细微神经肌肉信号，并在数字识别任务上报告 92% 的中位准确率。它对你这个题目最重要的意义在于，骨传导在这里不是输入，而是私密输出通道；输入侧则是对内在发音意图的解码。虽然当时还没有今天的大模型重打分或 agent 框架，但 AlterEgo 基本定义了后续很多 EMG silent speech 产品想要逼近的设备形态。",
       "status": "reading",
-      "progress": 28,
+      "progress": 100,
       "topic": "Silent Speech Recognition（骨传导 + EMG + LLM）",
       "date_added": "2026-04-21",
       "tags": [
@@ -616,7 +616,9 @@
       "note_path": "output/notes/silent-speech-recognition-emg-llm/alterego-a-personalized-wearable-silent-speech-interface_2018.md",
       "last_updated": "2026-04-21",
       "pdf_local_path": "output/pdfs/silent-speech-recognition-emg-llm/alterego-a-personalized-wearable-silent-speech-interface_2018.pdf",
-      "pdf_source_url": "https://dam-prod.media.mit.edu/x/2018/03/23/p43-kapur_BRjFwE6.pdf"
+      "pdf_source_url": "https://dam-prod.media.mit.edu/x/2018/03/23/p43-kapur_BRjFwE6.pdf",
+      "timeline_role": "breakthrough",
+      "timeline_reason_zh": "骨传导私密回传 + 神经肌肉静默输入的经典闭环原型，定义了后续产品形态。"
     },
     {
       "id": "a-cross-modal-approach-to-silent-speech-with-llm-enhanced-recognition_2024",
@@ -642,7 +644,9 @@
         "llm",
         "cross-modal"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "breakthrough",
+      "timeline_reason_zh": "首次把 EMG 跨模态表征和 LLM 重打分明确结合起来，是“EMG + 大模型”路线的关键节点。"
     },
     {
       "id": "wireless-silent-speech-interface-using-multi-channel-textile-emg-sensors-integrated-into-headphones_2025",
@@ -668,7 +672,9 @@
         "headphones",
         "esp32-s3"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "frontier",
+      "timeline_reason_zh": "把静默语音 EMG 推向耳机式产品形态，是 around-ear 可穿戴化的重要最新方向。"
     },
     {
       "id": "sentence-level-silent-speech-recognition-using-a-wearable-emg-eeg-sensor-system-with-ai-driven-sensor-fusion-and-language-model_2025",
@@ -694,7 +700,9 @@
         "eeg",
         "language model"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "consolidation",
+      "timeline_reason_zh": "把词级识别推进到句级，并明确引入 language model 纠错，承上启下。"
     },
     {
       "id": "a-silent-speech-decoding-system-from-eeg-and-emg-with-heterogenous-electrode-configurations_2025",
@@ -720,7 +728,9 @@
         "emg",
         "interspeech"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "frontier",
+      "timeline_reason_zh": "面向真实部署中的异构电极配置和跨语言校准，代表鲁棒性导向的最新工作。"
     },
     {
       "id": "a-parallel-ultra-low-power-silent-speech-interface-based-on-a-wearable-fully-dry-emg-neckband_2025",
@@ -746,7 +756,9 @@
         "low power",
         "emg"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "frontier",
+      "timeline_reason_zh": "把 fully-dry 纺织颈带和超低功耗做到可用水平，是产品化约束最强的一支前沿路线。"
     },
     {
       "id": "silentwear-an-ultra-low-power-wearable-system-for-emg-based-silent-speech-recognition_2026",
@@ -772,7 +784,9 @@
         "edge ai",
         "textile emg"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "frontier",
+      "timeline_reason_zh": "把 textile EMG、MCU 端推理、长续航和重戴微调闭环起来，是当前最完整的边缘设备路线。"
     }
   ]
 }

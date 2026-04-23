@@ -132,98 +132,181 @@ Use DBLP as the fallback when Semantic Scholar is rate-limited or too sparse.
 
 ## Search Workflow
 
-### 1. Semantic Scholar
+Conference-scout is not a one-shot batch pipeline anymore. It must behave like an iterative research agent:
+
+- search once
+- read what came back
+- extract anchors
+- decide the next query shape
+- expand citations only after strong anchors exist
+- assemble a timeline instead of returning a flat ranked list
+
+You must explicitly log which round you are in.
+
+### Round 1. Discovery
+
+Purpose:
+
+- find entry points, not final answers
+- prioritize recent surveys, reviews, tutorials, and recent tier-1 papers with rich related-work sections
+- discover the vocabulary the field actually uses
+
+Queries:
+
+- `{topic} survey`
+- `{topic} review`
+- `{topic} tutorial`
+- `a survey of {topic}`
+- if survey coverage is weak: recent tier-1 venue + topic + year
+
+Tools:
+
+- Semantic Scholar search
+- DBLP search
+- arXiv supplement only when venue coverage is sparse
+
+Rules:
+
+- do not stop after the first few hits
+- if the topic is broad, use 1 to 2 wide discovery queries first
+- when the user asked for top conferences, discovery still starts broad, but later rounds must tighten to tier-1 venue sweeps
+
+### Round 2. Anchor Extraction
+
+This is a required LLM reasoning step. Do not skip it.
+
+After reading Round 1 results, produce an explicit JSON object:
+
+```json
+{
+  "system_names": [],
+  "author_names": [],
+  "key_phrases": [],
+  "datasets": [],
+  "venue_year_pairs": [],
+  "breakthrough_candidates": [],
+  "survey_candidates": [],
+  "constraint_terms": [],
+  "negative_patterns": []
+}
+```
+
+What to extract:
+
+- system names, framework names, dataset names, benchmark names
+- author names and `X et al.` patterns
+- quoted or highly specific technical noun phrases
+- explicit conference-year combinations such as `CVPR 2021`
+- false-positive patterns from discovery results
+- constraint terms that better describe the intended subproblem
+
+Rules:
+
+- system names should be used as quoted anchors in later rounds
+- author names should trigger author-based search in Round 3
+- key phrases should be quoted exactly when precise enough
+- venue-year pairs should bypass fuzzy venue alias matching when possible
+
+### Round 3. Precision Search
+
+Purpose:
+
+- convert Round 2 anchors into high-precision queries
+- sweep top venues systematically instead of hoping a generic query surfaces the right paper
+
+Query construction rules:
+
+- system name: `"SystemName"`
+- author-based: `"Author Name" {topic}`
+- phrase-based: `"exact technical phrase"`
+- venue-year-based: `{topic} {venue} {year}`
+- context-constrained: `{topic} {constraint_term_1} {constraint_term_2}`
+
+Top-venue rule:
+
+- if the user wants top conferences, maintain explicit `tier_1` and optional `tier_2` venue lists
+- tier 1 is the main sweep
+- tier 2 is cross-check only unless the user asks for broader coverage
+
+Venue execution rule:
+
+- for recent work, do `venue × year` enumeration for the latest 2 years in range
+- prefer DBLP venue listings when possible because venue membership is more reliable than Semantic Scholar aliases
+- keep a per-venue completeness note so the user can see which venues were explicitly checked
+
+### Round 4. Relevance Gate
+
+This is another required LLM reasoning step.
+
+Every candidate paper must pass a relevance rubric before entering the final pool.
+
+Rubric:
+
+1. Is the paper actually about the requested topic rather than a nearby but different subfield?
+2. Does it match the intended context, device, population, or application scenario?
+3. Does it meaningfully contribute to the field timeline rather than only sharing keywords?
+
+Rules:
+
+- reject candidates that only match broad keywords
+- explicitly use `constraint_terms` and `negative_patterns` from Round 2
+- venue membership alone is not enough; top venues still contain many off-topic papers
+
+### Round 5. Citation Expansion
+
+Only do this after Round 3 has found strong anchor papers.
 
 Use:
 
-```text
-GET https://api.semanticscholar.org/graph/v1/paper/search
-  ?query={TOPIC_KEYWORDS}
-  &fields=title,authors,year,venue,abstract,citationCount,externalIds,url
-  &limit=50
-  &year={YEAR_START}-{YEAR_END}
-```
+- backward citations to find likely foundations and consolidation papers
+- forward citations to find newer frontier follow-ups
+- overlap across multiple frontier papers to detect shared milestone references
 
-Rules:
+Heuristics:
 
-- Run at most 2 queries.
-- Venue filtering happens locally by alias matching on `paper.venue`.
-- On `429`, skip directly to DBLP.
-- On TLS or connection failure, retry once, then fall back to DBLP.
-- On empty results, try one simplified query before falling back.
+- papers repeatedly cited by recent top papers are stronger foundation candidates
+- papers described in related-work language as `first`, `seminal`, `foundational`, or `breakthrough` should be elevated
+- papers between early foundational work and the newest frontier papers are consolidation candidates
 
-### 2. DBLP fallback
+### Round 6. Timeline Assembly
 
-Use:
+Do not use fixed year buckets such as `>5 years`.
 
-```text
-GET https://dblp.org/search/publ/api?q={QUERY_TERMS}&format=json&h=30&f=0
-```
+Instead, classify by field role:
 
-Rules:
+- `survey`
+- `breakthrough`
+- `foundation`
+- `consolidation`
+- `frontier`
 
-- Build 2 to 3 keyword-subset queries from the topic.
-- Filter locally by venue aliases.
-- DBLP records may lack abstract and citations; fill what is missing from Semantic Scholar only when easy and reliable.
+Definitions:
 
-### 2.5 Venue completeness check
+- `breakthrough` / `foundation`: repeatedly cited anchors or papers described as seminal / first / foundational
+- `consolidation`: papers that connect early foundations to current frontier threads
+- `frontier`: recent top-venue papers representing the latest strong direction
+- `survey`: papers that help explain the field map directly
 
-After the initial Semantic Scholar / DBLP pass, run a targeted completeness check before final ranking.
+Output should still appear on a continuous chronological timeline. Year is shown as metadata, but role is decided by the citation / related-work structure, not by rigid date thresholds.
 
-Rules:
+### Round 7. Final Ranking
 
-- For each venue in the chosen venue set, run one venue-aware verification query for the topic
-- For recent years, explicitly verify the latest 2 years in range
-- If a likely relevant paper is found in a target venue but was absent from the initial pool, add it
-- Do not stop after one strong venue hit; completeness matters more than convenience for top-venue scouting
+Ranking happens only after:
 
-Examples:
+- anchor extraction
+- relevance gating
+- citation expansion
+- timeline role assignment
 
-- `AutoEmbed`-style failure to avoid:
-  if the topic is MCU firmware automation and the venue profile includes `SenSys`, then recent `SenSys` papers must be checked explicitly instead of relying on a generic embedded query to surface them
-- if the topic is PCB automation and the profile includes `DAC` and `ICCAD`, run explicit venue checks for both even if arXiv already has strong matches
+Ranking priorities:
 
-### 3. arXiv supplement
+1. relevance to the exact topic and user constraints
+2. timeline role usefulness
+3. top-venue confirmation
+4. recency for frontier papers
+5. citations as a supporting signal only
 
-Use only `export.arxiv.org` for the API:
-
-```text
-GET http://export.arxiv.org/api/query
-  ?search_query=all:{TOPIC_KEYWORDS}
-  &sortBy=submittedDate
-  &sortOrder=descending
-  &max_results=20
-  &start=0
-```
-
-Keep up to 5 supplementary papers when:
-
-- published year is within range
-- title or abstract matches at least 2 topic keywords
-- they are genuinely relevant, even if venue confirmation is missing
-
-## Ranking
-
-Use a simple additive score:
-
-| Signal | Score |
-|---|---|
-| citationCount >= 100 | +3 |
-| citationCount 50-99 | +2 |
-| citationCount 10-49 | +1 |
-| venue confirmed in target group | +2 |
-| title contains exact topic phrase | +1.5 |
-| abstract contains at least 3 topic keywords | +1 |
-| year is the most recent year in range | +0.5 |
-| arXiv-only result | -1 |
-
-Return the best 8 venue-confirmed papers plus up to 3 arXiv supplements.
-
-Important:
-
-- ranking happens after completeness checking, not before
-- never let high citations from older but looser matches crowd out clearly on-topic recent top-venue papers
-- when the user asked for latest or recent work, bias toward the most recent venue-confirmed papers after relevance filtering
+Never let older high-citation loose matches crowd out clearly on-topic frontier papers.
 
 ## Latest-Paper Safeguard
 
@@ -283,6 +366,8 @@ Suggested schema:
   "arxiv_id": "2401.XXXXX",
   "is_arxiv": false,
   "rank": 1,
+  "timeline_role": "frontier",
+  "timeline_reason_zh": "为什么它属于当前时间线节点",
   "summary_en": "...",
   "summary_zh": "...",
   "status": "unread",
@@ -293,6 +378,13 @@ Suggested schema:
   "note_path": null
 }
 ```
+
+Additional rules:
+
+- `timeline_role` must be one of `survey`, `breakthrough`, `foundation`, `consolidation`, `frontier`
+- `timeline_reason_zh` should explain why the paper occupies that role in one concrete sentence
+- if role confidence is weak, prefer `frontier` or `consolidation` over inventing certainty
+- keep role assignment explainable from Round 4 and Round 5 evidence
 
 Append each search to `searches` with topic, date, year range, venues, and `papers_added`.
 
@@ -306,10 +398,15 @@ Fill:
 - `{{ACTIVE_TOPIC}}`
 - `{{ACTIVE_YEAR_RANGE}}`
 - `{{ACTIVE_VENUES}}`
+- `{{TIMELINE_ITEMS}}`
 - `{{ALL_PAPERS}}`
 - `{{ENGINEERING_LINK}}`
 
-Render cards for every paper. Use the paper's existing progress and note link when present.
+Render:
+
+- a continuous timeline view ordered chronologically
+- detailed paper cards that include each paper's `timeline_role`
+- existing reading progress and note links when present
 
 If the user explicitly asks for topic-specific standalone HTML that must not overwrite existing results:
 
@@ -326,10 +423,15 @@ Conference Scout — {TOPIC}
 {YEAR_START}-{YEAR_END} | {VENUES}
 {N} new papers added | {TOTAL} total tracked
 
-Top confirmed papers:
-1. {Title} — {Venue} {Year} — {citations}
-   {summary_en}
-   {summary_zh}
+Timeline:
+- Survey: {N}
+- Breakthrough / Foundation: {N}
+- Consolidation: {N}
+- Frontier: {N}
+
+Key papers:
+1. {Title} — {timeline_role} — {Venue} {Year}
+   {timeline_reason_zh}
 
 Supplements:
 - {Title} — arXiv {Year}

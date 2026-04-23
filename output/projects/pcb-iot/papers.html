@@ -64,7 +64,49 @@ body.light {
 }
 .hero-btn:hover, .btn:hover { border-color:var(--border-hover); transform:translateY(-1px); }
 .hero-btn.engineering { background:rgba(56,217,199,0.08); color:var(--accent2); border-color:rgba(56,217,199,0.18); }
-.papers-grid { display:grid; grid-template-columns:1fr; gap:18px; }
+.workflow-panel, .timeline-panel {
+  background:var(--bg-card); border:1px solid var(--border); border-radius:22px; padding:20px 22px; margin-bottom:18px;
+}
+.panel-top { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:14px; }
+.panel-title { font-size:18px; font-weight:800; }
+.panel-subtitle { color:var(--text-muted); font:500 12px 'JetBrains Mono', monospace; }
+.workflow-steps { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.workflow-step {
+  display:inline-flex; align-items:center; gap:8px; border:1px solid var(--border); border-radius:999px;
+  padding:9px 12px; font-size:12px; background:rgba(255,255,255,0.03);
+}
+.workflow-step strong { font:700 11px 'JetBrains Mono', monospace; color:var(--accent4); }
+.workflow-arrow { color:var(--text-muted); font:700 14px 'JetBrains Mono', monospace; }
+.workflow-note { margin-top:12px; color:var(--text-dim); line-height:1.8; font-size:14px; }
+.timeline-rail { display:grid; gap:18px; position:relative; }
+.timeline-entry {
+  display:grid; grid-template-columns:28px 180px minmax(0,1fr); gap:18px; align-items:start;
+}
+.timeline-spine { position:relative; min-height:100%; }
+.timeline-spine::before {
+  content:""; position:absolute; left:13px; top:0; bottom:-18px; width:2px; background:var(--border);
+}
+.timeline-entry:last-child .timeline-spine::before { bottom:0; }
+.timeline-dot {
+  width:14px; height:14px; border-radius:50%; background:var(--accent); border:3px solid var(--bg-card);
+  position:relative; top:8px; left:6px; box-shadow:0 0 0 2px rgba(105,166,255,0.18);
+}
+.timeline-marker {
+  position:sticky; top:18px; padding:14px 14px 14px 0;
+}
+.timeline-year { font:800 24px 'JetBrains Mono', monospace; color:var(--accent); line-height:1; padding-top:2px; }
+.timeline-top { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+.timeline-role {
+  display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; border:1px solid var(--border);
+  font:700 11px 'JetBrains Mono', monospace; letter-spacing:.02em;
+}
+.role-survey { color:var(--accent4); border-color:rgba(255,214,110,0.22); background:rgba(255,214,110,0.09); }
+.role-breakthrough { color:var(--accent3); border-color:rgba(255,141,107,0.22); background:rgba(255,141,107,0.09); }
+.role-consolidation { color:#c0b6ff; border-color:rgba(162,155,254,0.22); background:rgba(162,155,254,0.09); }
+.role-frontier { color:var(--accent2); border-color:rgba(56,217,199,0.22); background:rgba(56,217,199,0.09); }
+.role-timeline { color:var(--text-dim); border-color:var(--border); background:rgba(255,255,255,0.03); }
+.timeline-note { color:var(--text-dim); line-height:1.8; font-size:14px; }
+.timeline-card-wrap { min-width:0; }
 .paper-card {
   background:var(--bg-card); border:1px solid var(--border); border-radius:22px; padding:22px 24px;
   transition:border-color .15s, transform .15s; display:flex; flex-direction:column;
@@ -78,6 +120,8 @@ body.light {
 .card-title { font-size:20px; font-weight:800; line-height:1.42; flex:1; }
 .card-title a { color:inherit; text-decoration:none; }
 .card-title a:hover { color:var(--accent); }
+.card-role-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+.card-role-reason { color:var(--text-muted); font-size:12px; line-height:1.7; }
 .citations { font:700 12px 'JetBrains Mono', monospace; padding:5px 10px; border-radius:999px; white-space:nowrap; }
 .cite-high { color:var(--accent2); background:rgba(56,217,199,0.1); border:1px solid rgba(56,217,199,0.18); }
 .cite-mid { color:#c0b6ff; background:rgba(162,155,254,0.12); border:1px solid rgba(162,155,254,0.2); }
@@ -189,6 +233,10 @@ body.light {
   .hero { padding:22px 20px; }
   .hero-top { flex-direction:column; }
   .hero-title { font-size:30px; }
+  .timeline-entry { grid-template-columns:1fr; gap:10px; }
+  .timeline-spine { display:none; }
+  .timeline-marker { position:static; padding:0; }
+  .timeline-year { font-size:18px; }
   .notes-shell { height:auto; }
   .notes-pane, .pdf-pane { height:auto; min-height:50vh; }
   .chat-drawer { width:100vw; max-width:100vw; }
@@ -208,7 +256,7 @@ body.light {
       <div>
         <div class="hero-eyebrow">Research Theme</div>
         <h1 class="hero-title">PCB硬件自动化流程(面向 IoT传感器板)</h1>
-        <div class="hero-subtitle">Updated 2026-04-21</div>
+        <div class="hero-subtitle">Updated 2026-04-23</div>
       </div>
       <div class="hero-actions">
         <button class="hero-btn engineering" onclick="openEngineeringView()">Engineering View →</button>
@@ -216,14 +264,55 @@ body.light {
     </div>
   </section>
 
+  <section class="workflow-panel">
+    <div class="panel-top">
+      <div class="panel-title">Agentic Search Workflow</div>
+      <div class="panel-subtitle">2020-2026 · UIST, arXiv, board-level EDA / schematic automation</div>
+    </div>
+    <div class="workflow-steps">
+      <div class="workflow-step"><strong>R1</strong> Discovery</div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step"><strong>R2</strong> Anchor Extraction</div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step"><strong>R3</strong> Precision Search</div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step"><strong>R4</strong> Citation Expansion</div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step"><strong>R5</strong> Timeline Assembly</div>
+    </div>
+    <div class="workflow-note">这套页面默认按“先找 survey / recent entry，再抽 anchors，再做 author / phrase / venue 精确搜索，最后按领域角色组装时间线”的方式来组织结果，而不是单轮 batch 排名。</div>
+  </section>
+
   <div id="papers-view">
-    <div class="papers-grid">
-      
+    <section class="timeline-panel">
+      <div class="panel-top">
+        <div class="panel-title">Continuous Timeline</div>
+        <div class="panel-subtitle">Left = timeline, right = key papers</div>
+      </div>
+      <div class="timeline-rail">
+        
+            <article class="timeline-entry">
+              <div class="timeline-spine">
+                <div class="timeline-dot"></div>
+              </div>
+              <div class="timeline-marker">
+                <div class="timeline-year">2020</div>
+                <div class="timeline-top">
+                  <span class="timeline-role role-timeline">Timeline Node</span>
+                </div>
+                <div class="timeline-note">这篇 UIST 论文提出了一种面向电路板设计的模块化工作流，让设计者可以在高层功能块和低层电气编辑之间来回切换，同时保持连接关系一致。它的核心思想是把常见的传感器、电源、计算与接口模块封装成可组合的设计单元，而不是每次都从头画原理图。对 IoT 传感器板来说，这一点很关键，因为大量项目本质上只是 MCU、无线、供电和若干传感器的不同组合。它虽然还没有做到“输入需求后自动输出可投产 PCB”，但清楚展示了从设计意图到板级实现之间可以被自动</div>
+              </div>
+              <div class="timeline-card-wrap">
+                
       <!-- ── Paper 1 ── -->
       <div class="paper-card is-confirmed" data-id="polymorphic-blocks-unifying-high-level-specification-and-low-level-control-for-circuit-board-design_2020" data-url="https://dblp.org/rec/conf/uist/LinRCJNDH20" data-pdf-url="" data-progress="0">
         <div class="card-header">
           <div class="card-title"><a href="https://dblp.org/rec/conf/uist/LinRCJNDH20" target="_blank">Polymorphic Blocks: Unifying High-level Specification and Low-level Control for Circuit Board Design</a></div>
           <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-role-row">
+          <span class="timeline-role role-timeline">Timeline Node</span>
+          <span class="card-role-reason">这篇 UIST 论文提出了一种面向电路板设计的模块化工作流，让设计者可以在高层功能块和低层电气编辑之间来回切换，同时保持连接关系一致。它的核心思想是把常见的传感器、电源、计算与接口模块封装成可组合的设计单元，而不是每次都从头画原理图。对 IoT 传感器板来说，这一点很关键，因为大量项目本质上只是 MCU、无线、供电和若干传感器的不同组合。它虽然还没有做到“输</span>
         </div>
         <div class="card-authors">Richard Lin et al.</div>
         <div class="card-meta">
@@ -247,12 +336,31 @@ body.light {
           <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('polymorphic-blocks-unifying-high-level-specification-and-low-level-control-for-circuit-board-design_2020','https://dblp.org/rec/conf/uist/LinRCJNDH20','Polymorphic Blocks: Unifying High-level Specification and Low-level Control for Circuit Board Design')">📖 Read Paper</button>
         </div>
       </div>
+              </div>
+            </article>
 
+            <article class="timeline-entry">
+              <div class="timeline-spine">
+                <div class="timeline-dot"></div>
+              </div>
+              <div class="timeline-marker">
+                <div class="timeline-year">2022</div>
+                <div class="timeline-top">
+                  <span class="timeline-role role-timeline">Timeline Node</span>
+                </div>
+                <div class="timeline-note">这项工作聚焦于 PCB 自动化里非常关键、也最难完全自动处理的子问题之一：在电气和几何约束下自动生成 power plane。作者把遗传优化与多层感知机结合起来，目标是减少孤岛、提升供电平面的可制造性与质量。对 IoT 板卡来说，它解决的不是整板自动生成，而是完整流程中的关键瓶颈，因为供电完整性往往决定自动化布局能否真正落地。它也说明一个现实判断：PCB 自动化更可能先由多个专用求解器串起来，而不是一步到位的单模型文本到 PCB。</div>
+              </div>
+              <div class="timeline-card-wrap">
+                
       <!-- ── Paper 2 ── -->
       <div class="paper-card is-arxiv" data-id="hierarchical-automatic-power-plane-generation-with-genetic-optimization-and-multilayer-perceptron_2022" data-url="https://arxiv.org/abs/2210.16314" data-pdf-url="https://arxiv.org/pdf/2210.16314" data-progress="0">
         <div class="card-header">
           <div class="card-title"><a href="https://arxiv.org/abs/2210.16314" target="_blank">Hierarchical Automatic Power Plane Generation with Genetic Optimization and Multilayer Perceptron</a></div>
           <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-role-row">
+          <span class="timeline-role role-timeline">Timeline Node</span>
+          <span class="card-role-reason">这项工作聚焦于 PCB 自动化里非常关键、也最难完全自动处理的子问题之一：在电气和几何约束下自动生成 power plane。作者把遗传优化与多层感知机结合起来，目标是减少孤岛、提升供电平面的可制造性与质量。对 IoT 板卡来说，它解决的不是整板自动生成，而是完整流程中的关键瓶颈，因为供电完整性往往决定自动化布局能否真正落地。它也说明一个现实判断：PCB 自</span>
         </div>
         <div class="card-authors">Haiguang Liao et al.</div>
         <div class="card-meta">
@@ -276,70 +384,31 @@ body.light {
           <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('hierarchical-automatic-power-plane-generation-with-genetic-optimization-and-multilayer-perceptron_2022','https://arxiv.org/abs/2210.16314','Hierarchical Automatic Power Plane Generation with Genetic Optimization and Multilayer Perceptron')">📖 Read Paper</button>
         </div>
       </div>
+              </div>
+            </article>
 
+            <article class="timeline-entry">
+              <div class="timeline-spine">
+                <div class="timeline-dot"></div>
+              </div>
+              <div class="timeline-marker">
+                <div class="timeline-year">2025</div>
+                <div class="timeline-top">
+                  <span class="timeline-role role-frontier">Frontier</span>
+                </div>
+                <div class="timeline-note">TypedSchematics 的核心观点是，PCB 复用应该更像软件复用：设计者不只是复制粘贴原理图片段，而是使用带类型约束的功能块进行安全组合。它不仅支持自动拼接，还通过类似类型系统的机制在实时阶段捕获连接错误，避免错误一路传到板级实现。对于 IoT 场景，这非常契合，因为很多传感板其实都是由供电、传感、通信和 MCU 这些重复模块构成。它提示了一条更现实的路线：需求驱动的 PCB 自动化，可能先建立在“有约束的模块组合”上，而不是</div>
+              </div>
+              <div class="timeline-card-wrap">
+                
       <!-- ── Paper 3 ── -->
-      <div class="paper-card is-arxiv" data-id="pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026" data-url="https://arxiv.org/abs/2602.00510" data-pdf-url="/api/pdf/pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026" data-progress="0">
-        <div class="card-header">
-          <div class="card-title"><a href="https://arxiv.org/abs/2602.00510" target="_blank">PCBSchemaGen: Constraint-Guided Schematic Design via LLM for Printed Circuit Boards (PCB)</a></div>
-          <span class="citations cite-none">★ 0</span>
-        </div>
-        <div class="card-authors">Huanghaohe Zou et al.</div>
-        <div class="card-meta">
-          <span class="venue-badge arxiv">arXiv 2026</span>
-          <span class="card-tag tag-cyan">pcb</span>
-          <span class="card-tag tag-purple">llm</span>
-          <span class="card-tag tag-pink">schematic</span>
-        </div>
-        <div class="summary-block">
-          <div class="summary-label">EN</div>
-          <div class="summary-en">PCBSchemaGen is one of the clearest recent attempts to go from requirements to board-level schematic structure with an LLM in the loop. The system does not trust raw text generation alone; it adds datasheet-grounded constraints, pin-role semantics, and verification against a knowledge graph extracted from real components. That architecture matters because requirement-to-PCB automation fails mostly on pin correctness, supply rails, and package-level details rather than on high-level reasoning. The paper strongly supports the view that a realistic autonomous PCB flow must be retrieval-augmented, constraint-checked, and component-aware from the beginning.</div>
-          <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">PCBSchemaGen 是近两年里最接近“从需求走向板级原理图”的工作之一。它并不是简单让 LLM 直接生成电路，而是在生成过程中引入 datasheet 约束、pin role 语义以及基于器件知识图谱的验证机制。这个系统设计很关键，因为真实的需求到 PCB 自动化，最容易失败的不是高层推理，而是引脚映射、电源轨、封装和器件约束这些细节。它很有力地说明，真正可用的自动化 PCB 流程必须从一开始就是检索增强、约束驱动、并且对元器件细节敏感的。</div>
-        </div>
-        <div class="progress-row">
-          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
-          <span class="progress-label"></span>
-        </div>
-        <div class="card-actions">
-          <a href="https://arxiv.org/abs/2602.00510" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026','https://arxiv.org/abs/2602.00510','PCBSchemaGen: Constraint-Guided Schematic Design via LLM for Printed Circuit Boards (PCB)')">📖 Read Paper</button>
-        </div>
-      </div>
-
-      <!-- ── Paper 4 ── -->
-      <div class="paper-card is-arxiv" data-id="circuitlm-a-multi-agent-llm-aided-design-framework-for-generating-circuit-schematics-from-natural-language-prompts_2026" data-url="https://arxiv.org/abs/2601.04505" data-pdf-url="https://arxiv.org/pdf/2601.04505" data-progress="0">
-        <div class="card-header">
-          <div class="card-title"><a href="https://arxiv.org/abs/2601.04505" target="_blank">CircuitLM: A Multi-Agent LLM-Aided Design Framework for Generating Circuit Schematics from Natural Language Prompts</a></div>
-          <span class="citations cite-none">★ 0</span>
-        </div>
-        <div class="card-authors">Khandakar Shakib Al Hasan et al.</div>
-        <div class="card-meta">
-          <span class="venue-badge arxiv">arXiv 2026</span>
-          <span class="card-tag tag-cyan">pcb</span>
-          <span class="card-tag tag-purple">schematic</span>
-          <span class="card-tag tag-pink">multi-agent</span>
-        </div>
-        <div class="summary-block">
-          <div class="summary-label">EN</div>
-          <div class="summary-en">CircuitLM frames natural-language-to-schematic generation as a multi-agent workflow rather than a single-pass LLM completion. It splits the problem into component identification, pin retrieval, reasoning, structured JSON synthesis, and final rendering, which is much closer to how a robust EDA agent would need to operate. For IoT sensor boards, that staged design is especially relevant because requirements often mix analog, digital, power, and interface concerns in the same prompt. The paper is useful not because it proves full PCB autonomy is solved, but because it outlines a plausible architecture for turning user requirements into machine-checkable circuit artifacts.</div>
-          <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">CircuitLM 把“自然语言到原理图”的问题建模成多智能体流水线，而不是单次 LLM 补全。它把任务拆成器件识别、引脚检索、专家推理、结构化 JSON 合成以及最终可视化渲染，这比单纯文本生成更接近真实可用的 EDA agent。对 IoT 传感器板来说，这种分阶段结构尤其重要，因为用户需求往往同时包含模拟、数字、电源和接口约束。它的价值不在于已经解决完整 PCB 自主设计，而在于给出了把用户需求稳定转成可验证电路工件的一条合理架构。</div>
-        </div>
-        <div class="progress-row">
-          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
-          <span class="progress-label"></span>
-        </div>
-        <div class="card-actions">
-          <a href="https://arxiv.org/abs/2601.04505" target="_blank" class="btn btn-view">🔗 View Paper</a>
-          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('circuitlm-a-multi-agent-llm-aided-design-framework-for-generating-circuit-schematics-from-natural-language-prompts_2026','https://arxiv.org/abs/2601.04505','CircuitLM: A Multi-Agent LLM-Aided Design Framework for Generating Circuit Schematics from Natural Language Prompts')">📖 Read Paper</button>
-        </div>
-      </div>
-
-      <!-- ── Paper 5 ── -->
       <div class="paper-card is-arxiv" data-id="typedschematics-a-block-based-pcb-design-tool-with-real-time-detection-of-common-connection-errors_2025" data-url="https://arxiv.org/abs/2509.14576" data-pdf-url="https://arxiv.org/pdf/2509.14576" data-progress="0">
         <div class="card-header">
           <div class="card-title"><a href="https://arxiv.org/abs/2509.14576" target="_blank">TypedSchematics: A Block-based PCB Design Tool with Real-time Detection of Common Connection Errors</a></div>
           <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-role-row">
+          <span class="timeline-role role-frontier">Frontier</span>
+          <span class="card-role-reason">TypedSchematics 的核心观点是，PCB 复用应该更像软件复用：设计者不只是复制粘贴原理图片段，而是使用带类型约束的功能块进行安全组合。它不仅支持自动拼接，还通过类似类型系统的机制在实时阶段捕获连接错误，避免错误一路传到板级实现。对于 IoT 场景，这非常契合，因为很多传感板其实都是由供电、传感、通信和 MCU 这些重复模块构成。它提示了一条更现</span>
         </div>
         <div class="card-authors">Jorge Garza et al.</div>
         <div class="card-meta">
@@ -363,12 +432,127 @@ body.light {
           <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('typedschematics-a-block-based-pcb-design-tool-with-real-time-detection-of-common-connection-errors_2025','https://arxiv.org/abs/2509.14576','TypedSchematics: A Block-based PCB Design Tool with Real-time Detection of Common Connection Errors')">📖 Read Paper</button>
         </div>
       </div>
+              </div>
+            </article>
 
+            <article class="timeline-entry">
+              <div class="timeline-spine">
+                <div class="timeline-dot"></div>
+              </div>
+              <div class="timeline-marker">
+                <div class="timeline-year">2026</div>
+                <div class="timeline-top">
+                  <span class="timeline-role role-frontier">Frontier</span>
+                </div>
+                <div class="timeline-note">PCBSchemaGen 是近两年里最接近“从需求走向板级原理图”的工作之一。它并不是简单让 LLM 直接生成电路，而是在生成过程中引入 datasheet 约束、pin role 语义以及基于器件知识图谱的验证机制。这个系统设计很关键，因为真实的需求到 PCB 自动化，最容易失败的不是高层推理，而是引脚映射、电源轨、封装和器件约束这些细节。它很有力地说明，真正可用的自动化 PCB 流程必须从一开始就是检索增强、约束驱动、并且对元器件细</div>
+              </div>
+              <div class="timeline-card-wrap">
+                
+      <!-- ── Paper 4 ── -->
+      <div class="paper-card is-arxiv" data-id="pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026" data-url="https://arxiv.org/abs/2602.00510" data-pdf-url="/api/pdf/pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://arxiv.org/abs/2602.00510" target="_blank">PCBSchemaGen: Constraint-Guided Schematic Design via LLM for Printed Circuit Boards (PCB)</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-role-row">
+          <span class="timeline-role role-frontier">Frontier</span>
+          <span class="card-role-reason">PCBSchemaGen 是近两年里最接近“从需求走向板级原理图”的工作之一。它并不是简单让 LLM 直接生成电路，而是在生成过程中引入 datasheet 约束、pin role 语义以及基于器件知识图谱的验证机制。这个系统设计很关键，因为真实的需求到 PCB 自动化，最容易失败的不是高层推理，而是引脚映射、电源轨、封装和器件约束这些细节。它很有力地说明，</span>
+        </div>
+        <div class="card-authors">Huanghaohe Zou et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge arxiv">arXiv 2026</span>
+          <span class="card-tag tag-cyan">pcb</span>
+          <span class="card-tag tag-purple">llm</span>
+          <span class="card-tag tag-pink">schematic</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">PCBSchemaGen is one of the clearest recent attempts to go from requirements to board-level schematic structure with an LLM in the loop. The system does not trust raw text generation alone; it adds datasheet-grounded constraints, pin-role semantics, and verification against a knowledge graph extracted from real components. That architecture matters because requirement-to-PCB automation fails mostly on pin correctness, supply rails, and package-level details rather than on high-level reasoning. The paper strongly supports the view that a realistic autonomous PCB flow must be retrieval-augmented, constraint-checked, and component-aware from the beginning.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">PCBSchemaGen 是近两年里最接近“从需求走向板级原理图”的工作之一。它并不是简单让 LLM 直接生成电路，而是在生成过程中引入 datasheet 约束、pin role 语义以及基于器件知识图谱的验证机制。这个系统设计很关键，因为真实的需求到 PCB 自动化，最容易失败的不是高层推理，而是引脚映射、电源轨、封装和器件约束这些细节。它很有力地说明，真正可用的自动化 PCB 流程必须从一开始就是检索增强、约束驱动、并且对元器件细节敏感的。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://arxiv.org/abs/2602.00510" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026','https://arxiv.org/abs/2602.00510','PCBSchemaGen: Constraint-Guided Schematic Design via LLM for Printed Circuit Boards (PCB)')">📖 Read Paper</button>
+        </div>
+      </div>
+              </div>
+            </article>
+
+            <article class="timeline-entry">
+              <div class="timeline-spine">
+                <div class="timeline-dot"></div>
+              </div>
+              <div class="timeline-marker">
+                <div class="timeline-year">2026</div>
+                <div class="timeline-top">
+                  <span class="timeline-role role-frontier">Frontier</span>
+                </div>
+                <div class="timeline-note">CircuitLM 把“自然语言到原理图”的问题建模成多智能体流水线，而不是单次 LLM 补全。它把任务拆成器件识别、引脚检索、专家推理、结构化 JSON 合成以及最终可视化渲染，这比单纯文本生成更接近真实可用的 EDA agent。对 IoT 传感器板来说，这种分阶段结构尤其重要，因为用户需求往往同时包含模拟、数字、电源和接口约束。它的价值不在于已经解决完整 PCB 自主设计，而在于给出了把用户需求稳定转成可验证电路工件的一条合理架构</div>
+              </div>
+              <div class="timeline-card-wrap">
+                
+      <!-- ── Paper 5 ── -->
+      <div class="paper-card is-arxiv" data-id="circuitlm-a-multi-agent-llm-aided-design-framework-for-generating-circuit-schematics-from-natural-language-prompts_2026" data-url="https://arxiv.org/abs/2601.04505" data-pdf-url="https://arxiv.org/pdf/2601.04505" data-progress="0">
+        <div class="card-header">
+          <div class="card-title"><a href="https://arxiv.org/abs/2601.04505" target="_blank">CircuitLM: A Multi-Agent LLM-Aided Design Framework for Generating Circuit Schematics from Natural Language Prompts</a></div>
+          <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-role-row">
+          <span class="timeline-role role-frontier">Frontier</span>
+          <span class="card-role-reason">CircuitLM 把“自然语言到原理图”的问题建模成多智能体流水线，而不是单次 LLM 补全。它把任务拆成器件识别、引脚检索、专家推理、结构化 JSON 合成以及最终可视化渲染，这比单纯文本生成更接近真实可用的 EDA agent。对 IoT 传感器板来说，这种分阶段结构尤其重要，因为用户需求往往同时包含模拟、数字、电源和接口约束。它的价值不在于已经解决完</span>
+        </div>
+        <div class="card-authors">Khandakar Shakib Al Hasan et al.</div>
+        <div class="card-meta">
+          <span class="venue-badge arxiv">arXiv 2026</span>
+          <span class="card-tag tag-cyan">pcb</span>
+          <span class="card-tag tag-purple">schematic</span>
+          <span class="card-tag tag-pink">multi-agent</span>
+        </div>
+        <div class="summary-block">
+          <div class="summary-label">EN</div>
+          <div class="summary-en">CircuitLM frames natural-language-to-schematic generation as a multi-agent workflow rather than a single-pass LLM completion. It splits the problem into component identification, pin retrieval, reasoning, structured JSON synthesis, and final rendering, which is much closer to how a robust EDA agent would need to operate. For IoT sensor boards, that staged design is especially relevant because requirements often mix analog, digital, power, and interface concerns in the same prompt. The paper is useful not because it proves full PCB autonomy is solved, but because it outlines a plausible architecture for turning user requirements into machine-checkable circuit artifacts.</div>
+          <div class="summary-label" style="margin-top:6px;">中文</div>
+          <div class="summary-zh">CircuitLM 把“自然语言到原理图”的问题建模成多智能体流水线，而不是单次 LLM 补全。它把任务拆成器件识别、引脚检索、专家推理、结构化 JSON 合成以及最终可视化渲染，这比单纯文本生成更接近真实可用的 EDA agent。对 IoT 传感器板来说，这种分阶段结构尤其重要，因为用户需求往往同时包含模拟、数字、电源和接口约束。它的价值不在于已经解决完整 PCB 自主设计，而在于给出了把用户需求稳定转成可验证电路工件的一条合理架构。</div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
+          <span class="progress-label"></span>
+        </div>
+        <div class="card-actions">
+          <a href="https://arxiv.org/abs/2601.04505" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('circuitlm-a-multi-agent-llm-aided-design-framework-for-generating-circuit-schematics-from-natural-language-prompts_2026','https://arxiv.org/abs/2601.04505','CircuitLM: A Multi-Agent LLM-Aided Design Framework for Generating Circuit Schematics from Natural Language Prompts')">📖 Read Paper</button>
+        </div>
+      </div>
+              </div>
+            </article>
+
+            <article class="timeline-entry">
+              <div class="timeline-spine">
+                <div class="timeline-dot"></div>
+              </div>
+              <div class="timeline-marker">
+                <div class="timeline-year">2026</div>
+                <div class="timeline-top">
+                  <span class="timeline-role role-frontier">Frontier</span>
+                </div>
+                <div class="timeline-note">HWE-Bench 更像是对“自动电子设计 agent”现状的一次基准审判，而不是新的综合算法。它构建了 300 个真实板级设计任务，并结合 datasheet 知识库来评估模型到底能不能把需求转成有效原理图；结果显示，当前模型在涉及物理直觉和器件细节时仍然表现很弱。对你最关心的“能否输入需求后直接生成完整 PCB 文件”这个问题，它的意义非常直接：它定量说明了现阶段离稳定可用还有多远。最关键的结论是，端到端自动化已经有苗头，但还被器件</div>
+              </div>
+              <div class="timeline-card-wrap">
+                
       <!-- ── Paper 6 ── -->
       <div class="paper-card is-arxiv" data-id="hwe-bench-can-language-models-perform-board-level-schematic-designs_2026" data-url="https://arxiv.org/abs/2603.18102" data-pdf-url="https://arxiv.org/pdf/2603.18102" data-progress="0">
         <div class="card-header">
           <div class="card-title"><a href="https://arxiv.org/abs/2603.18102" target="_blank">HWE-Bench: Can Language Models Perform Board-level Schematic Designs?</a></div>
           <span class="citations cite-none">★ 0</span>
+        </div>
+        <div class="card-role-row">
+          <span class="timeline-role role-frontier">Frontier</span>
+          <span class="card-role-reason">HWE-Bench 更像是对“自动电子设计 agent”现状的一次基准审判，而不是新的综合算法。它构建了 300 个真实板级设计任务，并结合 datasheet 知识库来评估模型到底能不能把需求转成有效原理图；结果显示，当前模型在涉及物理直觉和器件细节时仍然表现很弱。对你最关心的“能否输入需求后直接生成完整 PCB 文件”这个问题，它的意义非常直接：它定量说</span>
         </div>
         <div class="card-authors">Weibo Qiu et al.</div>
         <div class="card-meta">
@@ -392,7 +576,10 @@ body.light {
           <button data-role="read-btn" class="btn btn-read" onclick="triggerRead('hwe-bench-can-language-models-perform-board-level-schematic-designs_2026','https://arxiv.org/abs/2603.18102','HWE-Bench: Can Language Models Perform Board-level Schematic Designs?')">📖 Read Paper</button>
         </div>
       </div>
-    </div>
+              </div>
+            </article>
+      </div>
+    </section>
   </div>
 
   <div id="notes-view" style="display:none">
@@ -434,7 +621,7 @@ body.light {
 
   <footer class="kanban-footer">
     <span>Powered by MyResearchClaw</span>
-    <span>2026-04-21</span>
+    <span>2026-04-23</span>
   </footer>
 </div>
 
