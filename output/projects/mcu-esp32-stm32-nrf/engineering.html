@@ -9,13 +9,22 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --bg:#0d1117; --panel:#151b24; --panel-2:#101620; --text:#e8eef8; --dim:#91a0b8;
-  --muted:#66748a; --line:rgba(255,255,255,0.08); --blue:#67a4ff; --cyan:#38d9c7; --amber:#ffd66e;
+  --muted:#66748a; --line:rgba(255,255,255,0.08); --blue:#67a4ff; --cyan:#38d9c7; --amber:#ffd66e; --rose:#ff8d6b;
 }
 body { font-family:'Noto Sans SC',sans-serif; background:radial-gradient(circle at top right, rgba(103,164,255,0.12), transparent 28%), var(--bg); color:var(--text); min-height:100vh; }
 body.light {
   --bg:#f4f7fb; --panel:#ffffff; --panel-2:#eef3f8; --text:#18202c; --dim:#516277;
-  --muted:#66768c; --line:rgba(15,23,42,0.10); --blue:#2364d2; --cyan:#0f9f90; --amber:#b98911;
+  --muted:#66768c; --line:rgba(15,23,42,0.10); --blue:#2364d2; --cyan:#0f9f90; --amber:#b98911; --rose:#d66033;
 }
+.lang-block { display:block; }
+.lang-inline { display:inline; }
+.lang-en { display:none; }
+body.lang-en .lang-zh { display:none !important; }
+body.lang-en .lang-en.lang-block { display:block; }
+body.lang-en .lang-en.lang-inline { display:inline; }
+body:not(.lang-en) .lang-zh.lang-block { display:block; }
+body:not(.lang-en) .lang-zh.lang-inline { display:inline; }
+body:not(.lang-en) .lang-en { display:none !important; }
 .wrap { max-width: 1320px; margin: 0 auto; padding: 28px 28px 80px; }
 .theme-toggle {
   position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
@@ -25,6 +34,10 @@ body.light {
   position:fixed; top:64px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font-size:16px;
 }
+.lang-toggle {
+  position:fixed; top:112px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font:700 11px 'JetBrains Mono', monospace;
+}
 .hero { background:linear-gradient(145deg, rgba(103,164,255,0.14), rgba(56,217,199,0.06)); border:1px solid var(--line); border-radius:24px; padding:28px 30px; margin-bottom:24px; }
 .eyebrow { font:600 12px 'JetBrains Mono',monospace; color:var(--amber); letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
 .hero h1 { font-size:42px; line-height:1.08; font-weight:900; max-width:980px; }
@@ -32,25 +45,27 @@ body.light {
 .meta { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
 .badge { border:1px solid var(--line); background:rgba(255,255,255,0.04); border-radius:999px; padding:8px 14px; font:500 12px 'JetBrains Mono',monospace; color:var(--dim); }
 .nav { display:flex; gap:10px; margin-bottom:22px; }
-.nav a { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; }
-.nav-btn { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; cursor:pointer; }
+.nav a, .nav-btn { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; cursor:pointer; }
 .grid { display:grid; grid-template-columns:1fr; gap:18px; }
 .section { background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:22px; }
 .section-title { display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:16px; }
 .section-title h2 { font-size:24px; font-weight:800; }
 .section-title span { color:var(--dim); font:500 12px 'JetBrains Mono',monospace; }
-.items { display:grid; gap:14px; }
-.item { background:var(--panel-2); border:1px solid var(--line); border-radius:16px; padding:18px; }
+.items, .takeaways, .evidence-stack { display:grid; gap:14px; }
+.item, .takeaway, .evidence-card {
+  background:var(--panel-2); border:1px solid var(--line); border-radius:16px; padding:18px;
+}
 .item-top { display:flex; justify-content:space-between; gap:12px; align-items:start; margin-bottom:10px; }
 .item h3 { font-size:18px; line-height:1.35; }
 .item h3 a { color:inherit; text-decoration:none; }
 .item h3 a:hover { color:var(--blue); }
 .tag { white-space:nowrap; border:1px solid var(--line); border-radius:999px; padding:5px 10px; font:600 11px 'JetBrains Mono',monospace; color:var(--blue); }
 .org { color:var(--dim); font-size:13px; margin-bottom:10px; }
-.summary { color:var(--text); font-size:14px; line-height:1.85; margin-bottom:10px; }
-.how { color:#b7c5da; font-size:14px; line-height:1.85; border-left:3px solid rgba(103,164,255,0.35); padding-left:12px; }
-.takeaways { display:grid; gap:12px; }
-.takeaway { background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:16px 18px; color:var(--text); line-height:1.8; }
+.summary, .how, .evidence-card, .takeaway { font-size:14px; line-height:1.85; }
+.summary { color:var(--text); margin-bottom:10px; }
+.how { color:#b7c5da; border-left:3px solid rgba(103,164,255,0.35); padding-left:12px; }
+.readiness-chip { display:inline-flex; align-items:center; border-radius:999px; padding:6px 12px; font:700 11px 'JetBrains Mono', monospace; border:1px solid rgba(56,217,199,0.24); color:var(--cyan); background:rgba(56,217,199,0.08); }
+.gap-card { border-left:3px solid rgba(255,141,107,0.32); }
 .status-card { margin-bottom:18px; background:rgba(56,217,199,0.07); border:1px solid rgba(56,217,199,0.16); border-radius:16px; padding:14px 16px; color:var(--dim); }
 .status-card.error { background:rgba(255,141,107,0.08); border-color:rgba(255,141,107,0.18); }
 .chat-drawer {
@@ -84,64 +99,140 @@ body.light {
 <body>
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
   <button class="chat-toggle" onclick="toggleChatDrawer()" title="Toggle project chat">💬</button>
+  <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle language">中/EN</button>
   <div class="wrap">
     <div class="nav">
-      <a href="/projects/mcu-esp32-stm32-nrf/papers.html">← Back to Papers</a>
+      <a href="/projects/mcu-esp32-stm32-nrf/papers.html">
+        <span class="lang-zh lang-inline">← 返回论文页</span>
+        <span class="lang-en lang-inline">← Back to Papers</span>
+      </a>
     </div>
 
     <section class="hero">
-      <div class="eyebrow">Engineering Scout</div>
+      <div class="eyebrow">
+        <span class="lang-zh lang-inline">工程实现调研</span>
+        <span class="lang-en lang-inline">Engineering Scout</span>
+      </div>
       <h1>MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)</h1>
-      <p>这一页聚焦“论文之外”的工程落地信息：GitHub 开源实现、现实产品与功能、以及相关新闻与实际部署信号，帮助你判断一个研究主题距离工程可用还有多远。</p>
+      <p>
+        <span class="lang-zh lang-block">这一页聚焦“论文之外”的工程落地信息：直接由论文衍生的实现、独立工程方案，以及产业/生态信号。它对应 engineering-scout 的三层 ring 模型，而不是简单的开源列表。</span>
+        <span class="lang-en lang-block">This page focuses on engineering evidence beyond papers: paper-linked implementations, independent engineering solutions, and ecosystem signals. It follows the three-ring engineering-scout model instead of a flat project list.</span>
+      </p>
       <div class="meta">
         <div class="badge">Range: 2008-2026</div>
-        <div class="badge">Updated: 2026-04-19</div>
-        <div class="badge">Open source: 3</div>
-        <div class="badge">Products: 3</div>
-        <div class="badge">News: 3</div>
+        <div class="badge">Updated: 2026-04-24</div>
+        <div class="badge">Readiness: commercial_traction</div>
       </div>
     </section>
 
-    
+    <div id="status-card" class="status-card" style="display:none"></div>
 
     <div class="grid">
       <section class="section">
         <div class="section-title">
-          <h2>Key Takeaways</h2>
-          <span>High-level engineering readout</span>
+          <h2>
+            <span class="lang-zh lang-inline">Readiness Assessment</span>
+            <span class="lang-en lang-inline">Readiness Assessment</span>
+          </h2>
+          <span>commercial_traction</span>
         </div>
-        <div class="takeaways">
-          <div class="takeaway">“根据需求自动生成代码并完成烧录”已经比 PCB 自动化成熟得多。代码生成、构建、刷写各环节都有现成工具链，难点主要在芯片族差异与硬件抽象。</div><div class="takeaway">跨 ESP32 / STM32 / nRF 的现实路径不是让模型直接裸写三套代码，而是先建立统一设备能力模型，再映射到 ESP-IDF、STM32CubeMX、Zephyr/nRF 工具链。</div><div class="takeaway">真正能落地的系统通常长这样：需求 -&gt; 板级/外设抽象 -&gt; 代码模板或 agent 生成 -&gt; 官方构建系统 -&gt; 官方刷写/OTA 工具。这比单一聊天模型可靠得多。</div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-title">
-          <h2>Open Source</h2>
-          <span>3 repos / projects</span>
-        </div>
-        <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://github.com/platformio/platformio-core" target="_blank">PlatformIO Core</a></h3><span class="tag">open_source</span></div><div class="org">PlatformIO · active</div><div class="summary">PlatformIO 是最现实的跨芯片族自动构建入口之一，支持多平台、多 board、多环境配置。</div><div class="how">它的关键价值在于把 ESP32、STM32、Nordic 等平台放到统一配置文件和统一 CLI 下，从而让 agent 只需决定目标环境与依赖，而不必重写整个构建链。</div></div><div class="item"><div class="item-top"><h3><a href="https://docs.zephyrproject.org/latest/develop/west/build-flash-debug.html" target="_blank">Zephyr</a></h3><span class="tag">open_source</span></div><div class="org">Zephyr Project · active</div><div class="summary">Zephyr 提供跨板卡的 `west build` / `west flash` 统一工作流，是自动化固件生成后接上部署的典型后端。</div><div class="how">如果需求层先被编译成 Zephyr 抽象，后续只要替换 board 与 device tree，就能复用大部分应用逻辑；这非常适合跨 ESP32 / nRF / STM32 的自动适配。</div></div><div class="item"><div class="item-top"><h3><a href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-py.html" target="_blank">ESP-IDF</a></h3><span class="tag">open_source</span></div><div class="org">Espressif · active</div><div class="summary">ESP-IDF 官方工具链已经把创建项目、构建、刷写等操作统一进 `idf.py`，非常适合作为 agent 的执行目标。</div><div class="how">自动系统并不需要自己实现刷写协议，只要生成正确工程并调用官方 `idf.py build` / `flash`，就能把“代码生成”和“烧录执行”稳妥接起来。</div></div>
+        <div class="evidence-stack">
+          <div class="evidence-card">
+            <div class="readiness-chip">commercial_traction</div>
+            <div style="margin-top:12px;"><div class="lang-zh lang-block">这一方向已经明显超过“研究原型”阶段：Ring 1 有 AutoEmbed 这种从需求到代码与部署闭环的 paper-linked 系统；Ring 2 有 Embedder、PlatformIO、Zephyr 这样的成熟工程底座；跨 ESP32 / STM32 / nRF 的 build/flash 抽象已经非常现实。真正还难的是，把需求可靠地映射到不同 MCU 生态下的驱动、外设配置和验证流程。</div><div class="lang-en lang-block">This direction is clearly beyond the research-prototype stage: Ring 1 includes AutoEmbed-style paper-linked systems that close the loop from requirements to code and deployment, while Ring 2 has mature engineering substrates such as Embedder, PlatformIO, and Zephyr. Cross-chip build/flash abstraction across ESP32, STM32, and nRF is already very real; the harder part is reliably mapping requirements into drivers, peripheral configuration, and validation flows across different MCU ecosystems.</div></div>
+          </div>
+          <div class="takeaway"><div class="lang-zh lang-block">如果你的目标是“输入需求后自动适配不同芯片并完成烧录”，最现实的路线不是让模型裸写所有平台代码，而是建立统一应用层 + 芯片族 backend + 统一 build/flash runner。</div><div class="lang-en lang-block">If your goal is “feed in requirements and automatically adapt across chips all the way to flashing,” the most realistic route is not free-form code generation for every platform, but a unified application layer plus chip-family backends and a common build/flash runner.</div></div>
+          <div class="takeaway gap-card"><div class="lang-zh lang-block">最大的缺口在于自动验证与外设建模：编译和烧录已经有成熟 CLI，但不同芯片的 pinmux、时钟树、驱动 API 和 board bring-up 约束仍然需要更强的中间表示与测试闭环。</div><div class="lang-en lang-block">The main gap is automatic validation and peripheral modeling: build and flash already have mature CLIs, but pinmux, clock trees, driver APIs, and board bring-up constraints still need a stronger intermediate representation and testing loop.</div></div>
         </div>
       </section>
 
       <section class="section">
         <div class="section-title">
-          <h2>Products</h2>
-          <span>3 products / features</span>
+          <h2>Ring 1</h2>
+          <span>
+            <span class="lang-zh lang-inline">Paper-linked implementations</span>
+            <span class="lang-en lang-inline">Paper-linked implementations</span>
+          </span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://embedder.com/" target="_blank">Embedder</a></h3><span class="tag">product</span></div><div class="org">Embedder · 2026</div><div class="summary">Embedder 已经把“AI firmware engineer”产品化，明确支持 STM32、ESP32、nRF52 等 MCU，并强调基于 datasheet 的引用式代码生成。</div><div class="how">它的实现思路非常接近你想要的路线：先 ingest datasheet / schematic / reference manual，再建立硬件知识图谱，最后生成带出处的驱动与初始化代码。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.st.com/STM32CubeMX" target="_blank">STM32CubeMX</a></h3><span class="tag">product</span></div><div class="org">STMicroelectronics · active</div><div class="summary">STM32CubeMX 本身就是配置到初始化代码生成的成熟产品，已经把大量板级初始化劳动自动化。</div><div class="how">现实中的自动化系统完全可以把需求映射到 CubeMX 配置，再调用其代码生成能力，把芯片特定启动、时钟、外设初始化从 agent 中外包出去。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.nordicsemi.com/Products/Development-tools/nRF-Util" target="_blank">nRF Util</a></h3><span class="tag">product</span></div><div class="org">Nordic Semiconductor · active</div><div class="summary">Nordic 的统一 CLI 已经覆盖设备发现、DFU、烧录包等功能，是自动部署到 nRF 平台的官方执行端。</div><div class="how">这说明跨芯片自动化时，agent 不必直接理解每个厂家的底层烧录协议，而可以把最后一跳委托给厂商维护的工具。</div></div>
+          <div class="item">
+  <div class="item-top">
+    <h3><a href="https://autoembed.github.io/" target="_blank">AutoEmbed</a></h3>
+    <div class="tag">paper-linked</div>
+  </div>
+  <div class="org">SenSys 2026 project page</div>
+  <div class="summary"><div class="lang-zh lang-block">AutoEmbed 是目前最接近“需求 -&gt; 代码 -&gt; 烧录/部署”的论文级原型之一，而且已经给出公开项目页和安装入口。</div><div class="lang-en lang-block">AutoEmbed is one of the clearest paper-linked prototypes for closing the loop from requirements to code to flashing/deployment, and it already ships a public project page and installers.</div></div>
+  <div class="how"><div class="lang-zh lang-block">它的关键实现是 component-aware library resolution、硬件在环测试和自动程序修正，把“写得出来”推进到“真能部署”。</div><div class="lang-en lang-block">Its key implementation pieces are component-aware library resolution, hardware-in-the-loop testing, and automatic program repair, which push the workflow from “generates code” to “actually deploys.”</div></div>
+</div>
         </div>
       </section>
 
       <section class="section">
         <div class="section-title">
-          <h2>News & Deployment Signals</h2>
-          <span>3 recent signals</span>
+          <h2>Ring 2</h2>
+          <span>
+            <span class="lang-zh lang-inline">Independent engineering solutions</span>
+            <span class="lang-en lang-inline">Independent engineering solutions</span>
+          </span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://www.prnewswire.com/news-releases/embedder-v0-3-1-nominated-for-embedded-award-2026-as-ai-firmware-platform-moves-into-production-302708498.html" target="_blank">Embedder production push at Embedded World 2026</a></h3><span class="tag">news</span></div><div class="org">PR Newswire / Embedder · 2026-03-10</div><div class="summary">Embedder 在 2026 年 Embedded World 的公开动作说明，“AI 固件工程平台”已经不只是概念验证，而是在向生产部署靠近。</div><div class="how">这类信号意味着市场开始接受“需求+文档 -&gt; 自动生成驱动/初始化/工程骨架”的产品形态，也证明工程落地正在从内部工具走向商业平台。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.eejournal.com/article/meet-the-embedder-ai-firmware-engineer/" target="_blank">EEJournal profile of Embedder</a></h3><span class="tag">news</span></div><div class="org">EEJournal · 2026</div><div class="summary">行业媒体开始把 AI firmware engineer 当成一个独立赛道来看待，而不是普通代码助手的延伸。</div><div class="how">这对你的问题有现实意义：自动生成并烧录 MCU 固件的能力，已经开始形成专门产品，而不再只是拼装通用 LLM。</div></div><div class="item"><div class="item-top"><h3><a href="https://docs.platformio.org/en/latest/projectconf/sections/env/index.html" target="_blank">PlatformIO multi-environment workflow</a></h3><span class="tag">news</span></div><div class="org">PlatformIO Docs · active</div><div class="summary">PlatformIO 官方文档长期把多环境项目作为一等能力，这本身就是跨芯片自动适配的重要部署信号。</div><div class="how">对自动化系统来说，这意味着“同一份需求映射多个芯片后端”是可以落到标准工程结构上的，而不是每次都要发明新的 build orchestration。</div></div>
+          <div class="item">
+  <div class="item-top">
+    <h3><a href="https://embedder.com/" target="_blank">Embedder</a></h3>
+    <div class="tag">product</div>
+  </div>
+  <div class="org">AI firmware engineer</div>
+  <div class="summary"><div class="lang-zh lang-block">Embedder 明确把 build、flash、test、debug 放进同一 AI 工作流里，并且宣称覆盖 ESP32、STM32、nRF 等主流 MCU。</div><div class="lang-en lang-block">Embedder explicitly packages build, flash, test, and debug into one AI-driven workflow and claims support for mainstream MCU families such as ESP32, STM32, and nRF.</div></div>
+  <div class="how"><div class="lang-zh lang-block">它说明“自动生成固件并最终烧录”这件事在产品层已经有清晰实现路径，只是质量高度依赖底层 toolchain 适配。</div><div class="lang-en lang-block">It demonstrates that automatic firmware generation plus final flashing already has a clear product implementation path, although quality still depends heavily on low-level toolchain integration.</div></div>
+</div>
+<div class="item">
+  <div class="item-top">
+    <h3><a href="https://docs.platformio.org/en/latest/projectconf/sections/env/index.html" target="_blank">PlatformIO</a></h3>
+    <div class="tag">toolchain</div>
+  </div>
+  <div class="org">Multi-environment firmware build system</div>
+  <div class="summary"><div class="lang-zh lang-block">PlatformIO 的强项是把多板卡、多平台配置统一到 `platformio.ini` 的多个 env 里，非常适合作为跨 ESP32 / STM32 / nRF 的统一 build 层。</div><div class="lang-en lang-block">PlatformIO’s strength is its multi-environment `platformio.ini`, which makes it a practical common build layer across ESP32, STM32, and nRF families.</div></div>
+  <div class="how"><div class="lang-zh lang-block">从工程实现角度看，它解决的是“同一逻辑如何映射到不同 board environment”的问题，而不是直接做需求理解。</div><div class="lang-en lang-block">From an engineering point of view, it solves how the same application logic maps onto multiple board environments rather than the requirement-understanding step itself.</div></div>
+</div>
+<div class="item">
+  <div class="item-top">
+    <h3><a href="https://docs.zephyrproject.org/latest/develop/west/build-flash-debug.html" target="_blank">Zephyr west build/flash</a></h3>
+    <div class="tag">toolchain</div>
+  </div>
+  <div class="org">Unified build and flash runner</div>
+  <div class="summary"><div class="lang-zh lang-block">Zephyr 的 `west build` / `west flash` 提供了非常稳定的统一入口，适合在自动化系统里做“后端执行器”。</div><div class="lang-en lang-block">Zephyr’s `west build` / `west flash` commands provide a stable unified entry point, making them a strong backend executor for automated systems.</div></div>
+  <div class="how"><div class="lang-zh lang-block">如果你要做跨芯片自动适配，Zephyr 的 board / runner 抽象非常值得借鉴，因为它把差异收敛到了可声明的板级配置里。</div><div class="lang-en lang-block">If you want cross-chip automation, Zephyr’s board and runner abstraction is worth copying because it compresses much of the heterogeneity into declarative board-level configuration.</div></div>
+</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <h2>Ring 3</h2>
+          <span>
+            <span class="lang-zh lang-inline">Ecosystem and deployment signals</span>
+            <span class="lang-en lang-inline">Ecosystem and deployment signals</span>
+          </span>
+        </div>
+        <div class="items">
+          <div class="item">
+  <div class="item-top">
+    <h3><a href="https://autoembed.github.io/" target="_blank">AutoEmbed public release signal</a></h3>
+    <div class="tag">signal</div>
+  </div>
+  <div class="org">Project distribution page</div>
+  <div class="summary"><div class="lang-zh lang-block">AutoEmbed 已经不是“只给论文 PDF”，而是提供安装包和源码入口，这本身就是研究向工程迁移的强信号。</div><div class="lang-en lang-block">AutoEmbed is no longer just a paper PDF; it exposes installers and source access, which is itself a strong signal of research-to-engineering transition.</div></div>
+  <div class="how"><div class="lang-zh lang-block">这说明这条路线已经开始考虑实际开发者工作流，而不只是 benchmark 上的代码生成分数。</div><div class="lang-en lang-block">This suggests the line of work is already thinking about real developer workflows rather than only benchmark generation scores.</div></div>
+</div>
+<div class="item">
+  <div class="item-top">
+    <h3><a href="https://docs.zephyrproject.org/latest/hardware/porting/board_porting.html" target="_blank">Zephyr board porting ecosystem</a></h3>
+    <div class="tag">ecosystem</div>
+  </div>
+  <div class="org">Board abstraction and runners</div>
+  <div class="summary"><div class="lang-zh lang-block">Zephyr 的 board porting 与 flash runner 文档说明，跨板卡 build/flash 自动化已经有成熟生态，不是临时脚本拼凑。</div><div class="lang-en lang-block">Zephyr’s board-porting and flash-runner documentation shows that cross-board build/flash automation already lives in a mature ecosystem rather than ad-hoc scripts.</div></div>
+  <div class="how"><div class="lang-zh lang-block">对“自动适配不同芯片”这个目标来说，这种生态成熟度比单篇论文更重要，因为它决定了系统能否长期维护。</div><div class="lang-en lang-block">For the goal of auto-adapting across different chips, this ecosystem maturity matters more than any single paper because it determines whether the system can be maintained over time.</div></div>
+</div>
         </div>
       </section>
     </div>
@@ -149,19 +240,31 @@ body.light {
 <aside id="chat-drawer" class="chat-drawer" aria-hidden="true">
   <div class="chat-header">
     <div>
-      <div class="chat-title">Project Chat</div>
+      <div class="chat-title">
+        <span class="lang-zh lang-inline">项目对话</span>
+        <span class="lang-en lang-inline">Project Chat</span>
+      </div>
       <div class="chat-subtitle">MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF) · engineering</div>
     </div>
-    <button class="nav-btn" onclick="toggleChatDrawer()">Close</button>
+    <button class="nav-btn" onclick="toggleChatDrawer()">
+      <span class="lang-zh lang-inline">关闭</span>
+      <span class="lang-en lang-inline">Close</span>
+    </button>
   </div>
   <div id="chat-history" class="chat-history">
-    <div class="chat-empty">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>
+    <div class="chat-empty">
+      <div class="lang-zh lang-block">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>
+      <div class="lang-en lang-block">This drawer keeps an engineering-page-specific chat history. It starts empty and persists for the same project.</div>
+    </div>
   </div>
   <div class="chat-compose">
     <div id="chat-status" class="chat-status"></div>
     <textarea id="chat-input" class="chat-input" placeholder="直接提问。当前工程页内容和 Codex 网络搜索都会作为可用能力。"></textarea>
     <div class="chat-actions">
-      <button class="nav-btn" onclick="submitChat()">Send</button>
+      <button class="nav-btn" onclick="submitChat()">
+        <span class="lang-zh lang-inline">发送</span>
+        <span class="lang-en lang-inline">Send</span>
+      </button>
     </div>
   </div>
 </aside>
@@ -169,14 +272,34 @@ body.light {
 const API = 'http://localhost:5678';
 const PROJECT_TOPIC = 'MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)';
 const PROJECT_PAGE_TYPE = 'engineering';
+const AUTO_GENERATE_ENGINEERING = false;
 let chatLoaded = false;
 let chatPending = false;
 
 async function init() {
   applyTheme();
+  applyLanguage();
+  if (AUTO_GENERATE_ENGINEERING) {
+    await ensureEngineeringReady();
+  }
 }
 
-async function ensureEngineeringReady() { return; }
+async function ensureEngineeringReady() {
+  try {
+    const status = await fetchStatus();
+    const shouldStart = !status.page_ready || status.status === 'idle' || status.status === 'error' || status.topic !== status.expected_topic;
+    if (shouldStart) {
+      showStatus('正在生成 Engineering View：自动收集实现、产品与部署信号。');
+      await fetch(`${API}/api/generate-engineering`, { method:'POST' });
+      pollStatus();
+    } else if (status.status === 'running') {
+      showStatus(status.message || 'Engineering scout 正在运行中。');
+      pollStatus();
+    }
+  } catch {
+    showStatus('无法连接本地服务。启动 `python serve.py` 后刷新页面即可自动生成。', true);
+  }
+}
 
 async function fetchStatus() {
   const r = await fetch(`${API}/api/engineering-status`);
@@ -218,24 +341,26 @@ function escapeHtml(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+function renderChatHistory(messages) {
+  const el = document.getElementById('chat-history');
+  if (!messages.length) {
+    el.innerHTML = '<div class="chat-empty"><div class="lang-zh lang-block">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div><div class="lang-en lang-block">This drawer keeps an engineering-page-specific chat history. It starts empty and persists for the same project.</div></div>';
+    return;
+  }
+  el.innerHTML = messages.map(msg => `<div class="chat-msg ${msg.role}">${escapeHtml(msg.content || '')}</div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
 async function readJsonResponse(r) {
   const raw = await r.text();
-  if (!raw.trim()) throw new Error(`Empty response (${r.status})`);
+  if (!raw.trim()) {
+    throw new Error(`Empty response (${r.status})`);
+  }
   try {
     return JSON.parse(raw);
   } catch (err) {
     throw new Error(`Invalid JSON response (${r.status})`);
   }
-}
-
-function renderChatHistory(messages) {
-  const el = document.getElementById('chat-history');
-  if (!messages.length) {
-    el.innerHTML = '<div class="chat-empty">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>';
-    return;
-  }
-  el.innerHTML = messages.map(msg => `<div class="chat-msg ${msg.role}">${escapeHtml(msg.content || '')}</div>`).join('');
-  el.scrollTop = el.scrollHeight;
 }
 
 async function loadChatHistory() {
@@ -292,6 +417,18 @@ function applyTheme() {
   const light = localStorage.getItem('theme') === 'light';
   document.body.classList.toggle('light', light);
   document.querySelector('.theme-toggle').textContent = light ? '☀️' : '🌙';
+}
+
+function applyLanguage() {
+  const isEn = localStorage.getItem('ui-lang') === 'en';
+  document.body.classList.toggle('lang-en', isEn);
+  document.querySelector('.lang-toggle').textContent = isEn ? 'EN' : '中';
+}
+
+function toggleLanguage() {
+  const isEn = !(localStorage.getItem('ui-lang') === 'en');
+  localStorage.setItem('ui-lang', isEn ? 'en' : 'zh');
+  applyLanguage();
 }
 
 function toggleTheme() {

@@ -1,158 +1,206 @@
-# DNL 精读笔记 — AlterEgo 静默语音接口
+# 精读笔记 — AlterEgo 静默语音接口
 
 ## 0) Metadata
 - **Title:** AlterEgo: A Personalized Wearable Silent Speech Interface
 - **Alias:** AlterEgo 静默语音接口
 - **Authors / Org:** Arnav Kapur, Shreyas Kapur, Pattie Maes | MIT Media Lab
-- **Venue / Status:** IUI 2018
+- **Venue / Year:** IUI 2018
 - **Links:**
-  - **Paper:** https://dam-prod.media.mit.edu/x/2018/03/23/p43-kapur_BRjFwE6.pdf
-  - **PDF:** https://dam-prod.media.mit.edu/x/2018/03/23/p43-kapur_BRjFwE6.pdf
-  - **Local PDF:** `output/pdfs/silent-speech-recognition-emg-llm/alterego-a-personalized-wearable-silent-speech-interface_2018.pdf`
+  - Abstract / Paper: https://dam-prod.media.mit.edu/x/2018/03/23/p43-kapur_BRjFwE6.pdf
+  - PDF: https://dam-prod.media.mit.edu/x/2018/03/23/p43-kapur_BRjFwE6.pdf
+  - Local PDF: `output/pdfs/silent-speech-recognition-emg-llm/alterego-a-personalized-wearable-silent-speech-interface_2018.pdf`
 - **Tags:** silent speech, wearable, EMG, neuromuscular, bone conduction, HCI
 - **My rating:** 4/5
+- **Paper type:** systems
 
-## 1) 一句话 Why-read
-这篇论文几乎是“无声语音接口”路线的经典系统原型：它不是做纯粹的离线识别，而是把非侵入式神经肌肉信号采集、个性化识别、以及骨传导私密反馈连成一个闭环可穿戴设备，因此非常适合作为后续 EMG + LLM silent speech 系统的历史基线和工程参照。
+---
 
-## 2) CRGP: Context, Related work, Gap, Proposal
+## 1) 科研图景与 Vision
 
-### Context
-作者想解决的问题很明确：让用户在不出声、几乎不做可见口型的情况下，仍然能用自然语言和计算设备、AI 助手或其他人交流。这个目标同时触及三个关键词：隐私、可穿戴、以及“像对自己说话一样”的自然交互。
+> 这篇论文描绘的研究图景是什么？如果系统真的 work，它改变了什么？
 
-### Related work
-论文先把相关路线拆成两类：
-- **侵入式**：如脑植入、口腔内传感器、磁珠定位、超声加视频等。这些方法要么侵入性强，要么硬件笨重，不容易走向日常使用。
-- **非侵入式**：如 EEG、视频唇读、非可听低语、surface EMG 等。问题通常在于信噪比、对显性口型的依赖、或对特定发音动作的强约束。
+AlterEgo 想做的不是“另一个 EMG 分类器”，而是把静默语音做成一个真正可穿戴、可闭环的人机接口。用户不需要大声说话，也不需要明显张嘴，只要进行接近内在发音的 speech articulation，系统就能通过面部和下颌附近的神经肌肉信号恢复意图，再通过骨传导把结果私密地反馈回来。
 
-作者特别强调，已有 EMG 方案常常仍需要用户明显地“做嘴型”或刻意发音，而 AlterEgo 试图捕捉的是更接近内在发音的神经肌肉活动。
+如果这个系统真的稳定 work，它改变的是人机交互的隐私边界。人与 AI、设备、应用甚至他人之间的语言交互，不再需要暴露给周围环境。这对嘈杂公共空间、隐私敏感场景，以及失语或运动受限用户都非常关键。
 
-### Gap
-缺口不是“能不能识别少量词”，而是更工程化的三个缺口：
-- 能否做到**非侵入**、**可穿戴**、且用户不必明显动嘴。
-- 能否把识别结果变成一个**闭环接口**，而不是单纯分类器。
-- 能否在可接受的准确率和延迟下，支撑真正的应用场景，而不是只在实验室里做演示。
+作者为什么认为这个问题“现在”值得解决？
+一方面，非侵入式 sensing、轻量 CNN、可穿戴结构和骨传导输出已经开始具备工程可行性；另一方面，传统语音交互在公开空间天然有隐私泄露和社会摩擦，silent speech 正好提供了一个新的交互通道。
 
-### Proposal
-作者的方案是一个完整系统，而不是单点模型：
-- 用头带/面罩式可穿戴结构，在面部和颈部选定 7 个皮肤区域采集 neuromuscular 信号。
-- 用 250 Hz 采样、24x 增益、带通 + 陷波 + ICA 等流程清洗信号。
-- 将信号转成类似 speech 特征的表示，再用 1D CNN 做词级分类。
-- 用骨传导耳机把结果反馈给用户，构成“silent input + private output”的双向接口。
+核心 claim：
+- 可以用非侵入式 neuromuscular sensing 做到接近自然 internal speech 的静默输入。
+- 可以把识别和骨传导反馈接成完整闭环，而不是只做离线识别演示。
+- 在有限词表下，系统已经达到可用的词级识别准确率和交互延迟。
 
-从设计哲学看，这篇论文的核心不是“把 EMG 当作另类麦克风”，而是把它当作一种私密的人机通道，并试图把 AI、提醒、计算、通讯这些功能都叠在这个通道上。
+---
 
-## 3) Figures
+## 2) 问题定义与 Challenge 分析
 
-### Figure 1
-系统愿景图：AlterEgo 把机器交互塑造成“像和自己对话”。这张图定义了论文的叙事中心，不是替代语音，而是把语音变成内隐、私密、无外显动作的交互。
+**问题的正式定义：**
+给定用户在不发声、几乎不产生可见口型情况下的 neuromuscular signals，系统需要恢复其 intended speech token，并在可接受延迟内形成私密、可闭环的可穿戴交互系统。
 
-### Figure 2
-电极位置筛选结果图。作者先在 30 个点位上做探索，再筛到 7 个 target area，说明这不是拍脑袋选位置，而是有特征筛选支撑的。
+**作者列举的 Challenges：**
 
-### Figure 3
-可穿戴设备渲染图。设备本体是一个环绕后脑的头带，前向延伸到脸部和下颌区域，强调稳定贴合和可调节性。
+| # | Challenge | 根因 | 对应的系统模块 |
+|---|-----------|------|----------------|
+| C1 | 静默语音信号极弱且易受噪声污染 | 面部/颈部肌电幅度低，运动伪影明显 | 采集链路、滤波、ICA、特征提取 |
+| C2 | 不同面部区域的信息量差异很大 | 有效 articulatory muscles 分布不均 | 电极位置筛选与 wearable 结构设计 |
+| C3 | 词级识别容易受用户个体差异影响 | 发音习惯、肌肉形态和佩戴位置差异大 | 个性化训练与 session 数据采集 |
+| C4 | 只有识别不够，必须形成真实交互 | 需要私密输出与低延迟闭环 | 骨传导反馈与应用层命令接口 |
 
-### Figure 4
-识别模型架构图。图中能看到从采集、预处理、特征变换到 1D CNN 分类的整条链路，说明作者把“信号工程”与“识别模型”放在同等重要的位置。
+根因分类：
+- [x] 物理约束（信号、硬件、能量）
+- [x] 系统约束（延迟、可穿戴贴合）
+- [x] 数据约束（个体化、词表规模）
+- [x] 场景约束（真实日常佩戴与隐私交互）
 
-### Figure 5
-activation maximization 的可视化。作者用它来展示不同类别在输入空间中对应的“原型信号”，这在当时是很典型的可解释性辅助证据。
+---
 
-### Figure 6
-骨传导输出示意。它把系统闭环讲清楚了：输入是静默的，输出也是私密的，用户不需要把结果再暴露给周围环境。
+## 3) 系统设计与架构
 
-### Figure 7
-应用场景图。作者把系统拆成计算器、IoT 控制、媒体控制、日历、时钟、回复电话等任务，说明它被设计成一个通用个人接口，而不是单一 demo。
+**Overview（用文字重现 Figure 1 / Figure 4）：**
+系统由四层组成：
+1. **Wearable sensing layer**：在面部与颈部 7 个目标区域放置电极，持续采集 neuromuscular signals。
+2. **Signal processing layer**：进行带通滤波、60Hz notch、ICA、整流与归一化，抑制噪声和运动伪影。
+3. **Recognition layer**：把 EMG 信号转成类似语音处理中的谱特征，再送入 1D CNN 做词级分类。
+4. **Interaction layer**：将识别结果映射到计算器、IoT 控制、日历、回复、棋类等应用，并通过 bone conduction 提供私密反馈。
 
-### Figure 8
-10 个用户的 word accuracy boxplot。这里是论文最关键的定量结果证据，展示了准确率的分布、稳定性和用户间波动。
+**各模块拆解：**
 
-## 4) Experiments
+### Wearable electrode placement
+- 功能：选择最有判别力的面部/下颌肌电采样点并保证可佩戴性。
+- 解决的 Challenge：C1、C2
+- 关键设计决策：先在 30 个点位探索，再收缩到 7 个 target area。
+- 为什么这样而不是凭经验直接贴：因为 silent speech 的有效信号并不均匀，先做位置筛选能显著提升后续识别稳定性。
 
-### 数据与参与者
-论文里其实有两层数据：
-- **pilot study**：3 名参与者（1 female，平均年龄 29.33），先做 yes/no 二分类，主要用于找电极位置和验证可行性。
-- **主数据集**：仍然是同样 3 名参与者，累计约 **31 小时**的 silently spoken text，用于训练更一般的分类器和减少 session 偏差。
+### Signal conditioning
+- 功能：把原始 neuromuscular signals 变成可学习特征。
+- 解决的 Challenge：C1
+- 关键设计决策：250 Hz 采样、24x 增益、Butterworth 带通、60Hz notch、ICA。
+- 为什么这样而不是端到端原始波形：论文年代较早，而且 EMG 噪声结构复杂，先做传统信号处理可以降低模型负担。
 
-作者逐步扩展词表，从 yes/no 到 reply/call/you，再到数字和运算符等多种语料集合。这个过程很重要，因为它说明系统不是一次性上开放词表，而是从可控子任务逐步堆出来的。
+### Recognition model
+- 功能：将静默语音映射为词级输出。
+- 解决的 Challenge：C3
+- 关键设计决策：把 EMG 表示做成 MFCC 风格频谱特征，再用 1D CNN 分类。
+- 为什么这样而不是完全新型 EMG 架构：作者借用了成熟语音识别特征工程思路，在小数据条件下更稳健。
 
-### 硬件与信号处理
-论文给出了比较具体的硬件链路：
-- 7 路信号来自 mental、inner/outer laryngeal、hyoid、inner/outer infra-orbital、buccal 等区域。
-- 电极可用 gold plated silver 或 Ag/AgCl dry electrodes，论文主结果采用前者，因为数据质量更好。
-- 参考电极放在 wrist 或 earlobe。
-- 采样率 250 Hz，24x 增益，使用 4th order IIR Butterworth 1.3 Hz 到 50 Hz 过滤，并加 60 Hz notch。
-- 还使用 ICA、整流、归一化和串接来进一步减少运动伪影。
+### Bone conduction feedback loop
+- 功能：提供私密输出，形成完整交互闭环。
+- 解决的 Challenge：C4
+- 关键设计决策：不用扬声器，而是用骨传导把结果反馈给用户。
+- 为什么这样而不是只输出文本：因为论文的目标是“silent input + private output”的完整个人接口，不是单向识别器。
 
-这部分的关键信息是：作者没有把 EMG 当作“只要能采到就行”，而是很认真地在做一个面向真实佩戴的信号链。
+**关键 Trade-off 记录：**
 
-### 特征与模型
-识别模型大致是：
-- 先做 running window average 去掉尖峰。
-- 用 MFCC 风格的表征思路，把信号切成 0.025 s 窗、0.01 s 步长。
-- 对功率谱做 mel filterbank，再用 DCT。
-- 分类器是 1D CNN：每层 400 个 kernel size 3 的卷积，配合 max pooling，之后接全连接层和 sigmoid。
-- 训练用 Adam，hidden layers 里用了 50% dropout。
+| 决策点 | 选择了 | 放弃了 | 原因 |
+|--------|--------|--------|------|
+| 采集方式 | 非侵入式 EMG/neuromuscular sensing | 植入式、口腔内、超声+视频 | 更适合日常佩戴和 HCI 场景 |
+| 词表策略 | 有限任务词表 + 分层应用组织 | 一步到位开放词表 | 先保证准确率和实时性 |
+| 输出方式 | Bone conduction | 公开扬声器/纯屏幕反馈 | 突出私密交互闭环 |
 
-这套做法说明作者实际上在用“语音识别的表示思想”迁移到 silent speech，而不是完全重新发明一个 EMG 解析框架。
+---
 
-### 任务设计
-论文把应用组织成分层词表：
-- Arithmetic：0-9 与四则运算、percent
-- IoT：light on/off, fan on/off
-- World clock：城市名
-- Calendar：previous/next
-- Chess：棋盘坐标和棋子符号
-- Reply：一些常见会话短语
+## 4) 实现细节
 
-这里的关键不是词表本身，而是它们用 n-gram / Markov 风格的分层组织降低了瞬时分类空间。换句话说，作者通过“先识别应用，再识别词表”的层级结构，把问题从开放域识别变成了多个更小的封闭域任务。
+**硬件平台：**
+- 头带/环绕后脑式 wearable 结构
+- 面部与下颌 7 路电极
+- 骨传导耳机做私密输出
 
-### 结果
-主结果是：
-- **10 名参与者**
-- 每人 **750 个 digits**，每个 digit 恰好出现 75 次
-- **80/20** 随机训练/测试切分
-- **10 次**训练测试重复
-- 平均 word accuracy = **92.01%**
-- 实时测试平均 latency = **0.427 s**
+**软件栈：**
+- 滤波、ICA、整流、归一化等信号处理
+- MFCC 风格谱特征构造
+- 1D CNN 分类器
 
-这个结果的意义在于，它并不是一个“离线高分但不可用”的模型。虽然延迟还不算极低，但已经接近可交互门槛，足以支撑闭环 demo。
+**工程约束：**
+- 延迟 budget：平均实时测试约 `0.427 s`
+- 功耗限制：论文没有详细给系统级功耗，但整体设计明显面向可穿戴闭环
+- 采样率 / 精度：`250 Hz` 采样
 
-### 局限
-论文自己也写得比较清楚：
-- 词表仍然很小，远不是开放词表 silent speech。
-- 训练和评估仍然高度个性化，user-independent 能力没有解决。
-- 实验是在相对静止场景下完成的，真正 ambulatory 场景没有验证。
-- 设备虽然非侵入，但佩戴体验和长期舒适度仍然是工程问题。
+**值得记录的 engineering tricks：**
+- 先做电极位置探索，再做主实验，而不是固定佩戴点直接训练。
+- 通过应用级词表分层，把开放问题拆成多个受控封闭域任务。
 
-## 5) Why it matters
-这篇论文在今天仍然重要，原因不是它的语言模型先进，而是它定义了 silent speech 的系统形态：
-- 输入侧：非侵入式 neuromuscular sensing
-- 中间层：个性化识别与任务化词表
-- 输出侧：骨传导私密反馈
+---
 
-这正好和现在的 EMG + LLM 思路形成了前后接力关系。今天的大模型更适合放在后端做重打分、语言约束、纠错和开放词表扩展；但 AlterEgo 证明的是，前端信号采集和闭环佩戴形态必须先成立。
+## 5) 实验与评估
 
-换句话说，它不是“LLM 时代的答案”，但它是“LLM 时代之前，系统长什么样”的高质量模板。
+**Baselines：**
 
-## 6) Next steps
-如果把这篇工作接到今天的研究线上，我会优先做这些方向：
-1. 做 **user-independent + personalization** 的双阶段训练，而不是只做单用户模型。
-2. 把输出从 closed vocabulary 扩展到 **open vocabulary**，并用 LLM 做后验重排。
-3. 重新审视硬件舒适度，降低 conductive paste 和贴合调试成本。
-4. 做真正的日常场景 longitudinal study，验证说话、走动、转头、咬合变化下的鲁棒性。
-5. 把 silence 输入和 contextual output 结合起来，做更强的“语言意图 -> 任务执行”链路。
+| Baseline | 是否公平 | 备注 |
+|----------|----------|------|
+| 既有侵入式/非侵入式 silent speech 方案 | 部分公平 | 论文主要做系统可行性比较，不是严格统一 benchmark |
+| 不同电极点位与不同词表任务 | 是 | 更像系统内部对照，用于说明设计选择有效 |
 
-## 7) Scoring
-- **Base:** 1
-- **Quality bonus:** 2
-- **Observation bonus:** 1
-- **Final score:** **4/5**
+**核心 Metrics 及选择理由：**
+作者主要用 `word accuracy` 和 `latency`。这两个指标对 silent speech wearable 系统是合理的，因为一个衡量识别是否够准，另一个衡量它能不能形成真实交互闭环。
 
-### 为什么是 4/5
-质量分给满 2 分，因为这篇论文同时给了系统架构、硬件实现、数据集、模型和应用演示，属于非常完整的系统论文。
+**实验场景覆盖：**
+- [x] lab/controlled setting
+- [ ] in-the-wild / real users
+- [ ] edge cases / failure modes tested
 
-观察分给 1 分，因为它的价值不只是“又一个 EMG 分类器”，而是把 silent speech 的产品形态、闭环方式和应用边界讲清楚了，对后续工作有直接参照意义。
+**最强结果：**
+10 名参与者、digits 词表条件下平均 `92.01% word accuracy`，实时测试平均延迟 `0.427 s`。这说明系统不是纯离线分析，而是已经接近可用交互门槛。
 
-但没有给到 5/5，是因为它的词表和评测仍然偏小，且用户独立性和真实场景验证都还没解决。
+**最弱结果 / 明显局限：**
+- 仍然是有限词表
+- 高度依赖个体化训练
+- 没有验证长期佩戴、走动、转头、咬合变化等真实场景
+
+**如果让我设计实验，我会额外测试：**
+- 同一用户跨天佩戴、重戴后的性能漂移
+- user-independent 与 few-shot personalization
+- 长句、开放词表、语言模型后验纠错
+- 走动/说话环境干扰下的鲁棒性
+
+---
+
+## 6) Related Work 定位
+
+> 利用已有的 papers.json，将这篇与已知 silent speech 论文对比。
+
+**与已知工作的对比：**
+
+| 已读论文 | 与本文关系 | 本文的 novelty 边界 |
+|----------|------------|---------------------|
+| A Cross-Modal Approach to Silent Speech with LLM-Enhanced Recognition (2024) | 后续路线 | AlterEgo 定义前端 wearable + private feedback；后者把大模型引入后端重打分 |
+| Sentence-Level Silent Speech Recognition Using a Wearable EMG/EEG Sensor System... (2025) | 扩展路线 | AlterEgo 偏词级与系统形态，后者把句级识别和 sensor fusion 做得更完整 |
+| SilentWear (2026) | 工程继承 | AlterEgo 奠定 wearable 闭环原型，SilentWear 强化了 ultra-low-power edge deployment |
+
+**本文在领域时间线中的位置：**
+这篇论文明显是 `breakthrough`。原因不是它最强，而是它第一次把“静默输入 + 骨传导输出 + 可穿戴闭环”做成了完整系统原型。后续 EMG、EEG/EMG、textile headphones、neckband、LLM re-ranking 这些路线，本质上都在沿着它定义的系统边界往前推进。
+
+**有没有作者未引用但应该讨论的工作：**
+从今天回看，值得补充的是更现代的 language model 约束和 user-independent personalization 路线。但这不算论文当年的缺陷，而是时代背景所限。
+
+---
+
+## 7) 个人 Synthesis
+
+**最值得借鉴的一个 idea：**
+“silent speech 不是单模型任务，而是闭环系统任务。” 这篇论文最强的地方，是它把 sensing、recognition、feedback 和 application layer 一起考虑了。
+
+**最让我存疑的一个假设：**
+它默认有限词表和个体化训练足以支撑早期产品体验，但一旦走向开放词表和长期佩戴，这个假设会迅速失效。
+
+**如果我来做下一步，我会：**
+把 AlterEgo 的前端 wearable 与今天的 EMG + LLM 解码结合起来：前端继续走 around-ear / jawline / neckband 低功耗采集，后端用 language model 做开放词表约束和纠错。
+
+**与我自己研究的连接点：**
+如果后面继续做“骨传导 + EMG + 大模型”，AlterEgo 依然是最应该先读透的系统模板，因为它告诉我真正要做的是一个 wearable interaction loop，而不是单纯追某个分类指标。
+
+---
+
+## 8) 评分
+
+评分维度：
+- **论文质量（0–2）**：问题重要性、方法严谨性、实验充分性
+- **个人收获（0–2）**：对我的研究方向有多大启发
+- **Base**：1
+
+Total = 1 + 质量分 + 收获分，满分 5。
+
+质量分：2/2 — 系统定义完整，硬件、信号链、模型和应用闭环都交代清楚，是很典型的高质量 systems/HCI paper。
+收获分：1/2 — 对今天的 silent speech research 仍然非常有启发，但词表规模、个体化训练和真实场景验证还不够。
+**Total: 4/5**

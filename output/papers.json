@@ -1,33 +1,45 @@
 {
-  "last_updated": "2026-04-21",
+  "last_updated": "2026-04-24",
   "searches": [
     {
       "date": "2026-04-19",
       "topic": "MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)",
       "year_range": "2008-2026",
       "venues": "RTSS, ASP-DAC, USENIX Security, NDSS, MILCOM, SECON, ISLPED, SenSys, arXiv",
-      "papers_added": 10
+      "papers_added": 10,
+      "topic_slug": "mcu-esp32-stm32-nrf",
+      "paper_count": 10,
+      "last_updated": "2026-04-24"
     },
     {
       "date": "2026-04-19",
       "topic": "PCB硬件自动化流程(面向 IoT传感器板)",
       "year_range": "2020-2026",
       "venues": "UIST, arXiv, board-level EDA / schematic automation",
-      "papers_added": 6
+      "papers_added": 6,
+      "topic_slug": "pcb-iot",
+      "paper_count": 6,
+      "last_updated": "2026-04-24"
     },
     {
       "date": "2026-04-20",
       "topic": "芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）",
       "year_range": "2018-2026",
       "venues": "arXiv, JSys, WACV, JCDL, document understanding / systems engineering",
-      "papers_added": 6
+      "papers_added": 6,
+      "topic_slug": "datasheet-pdf-mcu-soc",
+      "paper_count": 6,
+      "last_updated": "2026-04-24"
     },
     {
       "topic": "Silent Speech Recognition（骨传导 + EMG + LLM）",
       "date": "2026-04-21",
       "year_range": "2018-2026",
       "venues": "IUI, Interspeech, Sensors, arXiv, wearable SSI / HCI / speech interfaces",
-      "papers_added": 7
+      "papers_added": 7,
+      "topic_slug": "silent-speech-recognition-emg-llm",
+      "paper_count": 7,
+      "last_updated": "2026-04-24"
     }
   ],
   "papers": [
@@ -54,7 +66,10 @@
         "blocks",
         "iot"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "breakthrough",
+      "timeline_reason_zh": "把高层功能块和底层电气约束接起来，是后续“需求到原理图”思路的重要起点。",
+      "timeline_reason_en": "It connected high-level functional blocks to low-level electrical editing, making it an early foundation for requirement-to-schematic workflows."
     },
     {
       "id": "hierarchical-automatic-power-plane-generation-with-genetic-optimization-and-multilayer-perceptron_2022",
@@ -79,7 +94,10 @@
         "optimization"
       ],
       "note_path": null,
-      "pdf_url": "https://arxiv.org/pdf/2210.16314"
+      "pdf_url": "https://arxiv.org/pdf/2210.16314",
+      "timeline_role": "consolidation",
+      "timeline_reason_zh": "把供电平面自动化拆成可优化子问题，说明整板自动化需要由多个专用求解器拼起来。",
+      "timeline_reason_en": "It treated power-plane synthesis as a constrained subproblem, showing that full-board automation will likely emerge from specialized solvers rather than one monolithic model."
     },
     {
       "id": "pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026",
@@ -107,7 +125,10 @@
       "note_path": null,
       "pdf_url": "https://arxiv.org/pdf/2602.00510",
       "pdf_local_path": "output/pdfs/pcb-iot/pcbschemagen-constraint-guided-schematic-design-via-llm-for-printed-circuit-boards-pcb_2026.pdf",
-      "pdf_source_url": "https://arxiv.org/pdf/2602.00510"
+      "pdf_source_url": "https://arxiv.org/pdf/2602.00510",
+      "timeline_role": "frontier",
+      "timeline_reason_zh": "把 datasheet 约束、pin 语义和知识图谱校验接入生成流程，是当前最接近真实器件约束的板级原理图自动化路线。",
+      "timeline_reason_en": "It injects datasheet constraints, pin semantics, and component knowledge-graph checks into generation, making it one of the most realistic frontier routes toward board-level schematic automation."
     },
     {
       "id": "circuitlm-a-multi-agent-llm-aided-design-framework-for-generating-circuit-schematics-from-natural-language-prompts_2026",
@@ -133,7 +154,10 @@
         "llm"
       ],
       "note_path": null,
-      "pdf_url": "https://arxiv.org/pdf/2601.04505"
+      "pdf_url": "https://arxiv.org/pdf/2601.04505",
+      "timeline_role": "breakthrough",
+      "timeline_reason_zh": "明确提出多 agent 的自然语言到电路 JSON 流程，是 LLM 驱动电路设计的关键突破点。",
+      "timeline_reason_en": "It explicitly framed natural-language-to-schematic generation as a multi-agent pipeline, making it a key breakthrough for LLM-driven circuit design."
     },
     {
       "id": "typedschematics-a-block-based-pcb-design-tool-with-real-time-detection-of-common-connection-errors_2025",
@@ -158,7 +182,10 @@
         "typed-blocks"
       ],
       "note_path": null,
-      "pdf_url": "https://arxiv.org/pdf/2509.14576"
+      "pdf_url": "https://arxiv.org/pdf/2509.14576",
+      "timeline_role": "consolidation",
+      "timeline_reason_zh": "把原理图搭建、类型检查和常见连接错误检测合并到同一交互层，代表自动化工具链的工程化收敛。",
+      "timeline_reason_en": "It merged schematic authoring with typed connection checking, representing an engineering-oriented consolidation step for PCB automation tooling."
     },
     {
       "id": "hwe-bench-can-language-models-perform-board-level-schematic-designs_2026",
@@ -183,7 +210,10 @@
         "llm-evaluation"
       ],
       "note_path": null,
-      "pdf_url": "https://arxiv.org/pdf/2603.18102"
+      "pdf_url": "https://arxiv.org/pdf/2603.18102",
+      "timeline_role": "frontier",
+      "timeline_reason_zh": "用专门 benchmark 把 board-level schematic design 这件事从“概念可行”推进到“可测量、可比较”的前沿阶段。",
+      "timeline_reason_en": "It turned board-level schematic design from a vague promise into a measurable benchmark problem, which is a frontier signal for the field."
     },
     {
       "id": "autoembed-towards-automated-software-development-for-generic-embedded-iot-systems-via-llms_2026",
@@ -212,7 +242,11 @@
       "pdf_source_url": "https://www.cs.cityu.edu.hk/~zhenjili/2026-SenSys-AutoEmbed.pdf",
       "pdf_url": "https://www.cs.cityu.edu.hk/~zhenjili/2026-SenSys-AutoEmbed.pdf",
       "pdf_local_path": "output/pdfs/mcu-esp32-stm32-nrf/autoembed-towards-automated-software-development-for-generic-embedded-iot-systems-via-llms_2026.pdf",
-      "last_updated": "2026-04-20"
+      "paper_type": "systems",
+      "last_updated": "2026-04-24",
+      "timeline_role": "frontier",
+      "timeline_reason_zh": "直接把需求、器件库解析、代码生成和成功部署闭环起来，是当前最贴近“给需求就产出可烧录固件”的前沿工作。",
+      "timeline_reason_en": "It closes the loop from requirements to library resolution, code generation, and successful deployment, making it the clearest frontier paper for prompt-to-flash embedded development."
     },
     {
       "id": "platform-specific-code-generation-from-platform-independent-timed-models_2015",
@@ -238,7 +272,10 @@
         "real-time-systems"
       ],
       "note_path": null,
-      "pdf_url": "https://repository.upenn.edu/bitstreams/9c9bd30e-6c44-4003-ba46-1e8663a2d1c2/download"
+      "pdf_url": "https://repository.upenn.edu/bitstreams/9c9bd30e-6c44-4003-ba46-1e8663a2d1c2/download",
+      "timeline_role": "consolidation",
+      "timeline_reason_zh": "代表模型驱动代码生成路线，把平台无关描述和平台相关实现系统化衔接起来。",
+      "timeline_reason_en": "It represents the model-driven generation line, systematically linking platform-independent specifications to platform-specific implementations."
     },
     {
       "id": "automatic-generation-of-hardware-dependent-software-for-mpsocs-from-abstract-system-specifications_2008",
@@ -262,7 +299,10 @@
         "mpsoc",
         "synthesis"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "foundation",
+      "timeline_reason_zh": "很早就把“抽象需求到平台相关代码”的思想引入嵌入式软件生成，是后续自动固件生成的重要远端基础。",
+      "timeline_reason_en": "It is an early foundation for translating abstract specifications into platform-specific embedded software, a distant precursor to today's firmware automation work."
     },
     {
       "id": "rapidpatch-firmware-hotpatching-for-real-time-embedded-devices_2022",
@@ -286,7 +326,10 @@
         "real-time",
         "firmware"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "consolidation",
+      "timeline_reason_zh": "强调跨设备碎片化下的通用补丁传播，是自动化烧录与部署链路中的关键工程问题。",
+      "timeline_reason_en": "It emphasized generic patch propagation across fragmented devices, a core engineering problem for automated firmware deployment pipelines."
     },
     {
       "id": "hera-hotpatching-of-embedded-real-time-applications_2021",
@@ -310,7 +353,10 @@
         "embedded-security",
         "real-time"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "consolidation",
+      "timeline_reason_zh": "把热补丁引入实时嵌入式系统，推动了“生成代码之后如何在线安全替换”的方向。",
+      "timeline_reason_en": "It brought hotpatching into real-time embedded systems, pushing the line from code generation toward safe online deployment and replacement."
     },
     {
       "id": "library-portability-to-para-rehosting-natively-executing-microcontroller-software-on-commodity-hardware_2021",
@@ -334,7 +380,10 @@
         "microcontroller",
         "analysis"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "consolidation",
+      "timeline_reason_zh": "把 MCU 软件迁移到通用硬件执行，为自动测试、自动调试和代码迁移提供了关键中间层。",
+      "timeline_reason_en": "It enabled native execution of MCU software on commodity hardware, providing a critical middle layer for automated testing, debugging, and portability."
     },
     {
       "id": "sota-secure-over-the-air-programming-of-iot-devices_2018",
@@ -358,7 +407,10 @@
         "security",
         "iot"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "survey",
+      "timeline_reason_zh": "对 IoT OTA 更新的安全与部署约束做了系统梳理，是理解这条自动化链路的综述节点。",
+      "timeline_reason_en": "It provides a survey-style synthesis of security and deployment constraints for IoT OTA updates, making it the survey node of this timeline."
     },
     {
       "id": "remote-progressive-firmware-update-for-flash-based-networked-embedded-systems_2009",
@@ -382,7 +434,10 @@
         "flash-update",
         "embedded"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "foundation",
+      "timeline_reason_zh": "奠定了网络化嵌入式设备远程升级的基础问题定义。",
+      "timeline_reason_en": "It established an early problem framing for remote firmware update in networked embedded systems."
     },
     {
       "id": "no-reboot-and-zero-flash-over-the-air-programming-for-wireless-sensor-networks_2012",
@@ -406,7 +461,10 @@
         "wsn",
         "flash"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "breakthrough",
+      "timeline_reason_zh": "把“不中断业务地 OTA 更新”明确做成系统目标，是后续高可用嵌入式更新工作的关键节点。",
+      "timeline_reason_en": "It made no-reboot OTA updates a concrete system goal, which became a breakthrough point for later high-availability embedded update work."
     },
     {
       "id": "autopatch-automated-generation-of-hotpatches-for-real-time-embedded-devices_2024",
@@ -431,7 +489,10 @@
         "embedded"
       ],
       "note_path": null,
-      "pdf_url": "https://arxiv.org/pdf/2408.15372"
+      "pdf_url": "https://arxiv.org/pdf/2408.15372",
+      "timeline_role": "frontier",
+      "timeline_reason_zh": "把补丁生成本身自动化，是“自动发现问题后自动生成并下发固件修补”的前沿路径。",
+      "timeline_reason_en": "It automates the hotpatch generation step itself, making it a frontier route toward closed-loop firmware generation and deployment."
     },
     {
       "id": "specmap-hierarchical-llm-agent-for-datasheet-to-code-traceability-link-recovery-in-systems-engineering_2026",
@@ -456,11 +517,15 @@
         "traceability",
         "llm"
       ],
+      "paper_type": "systems",
       "note_path": "output/notes/datasheet-pdf-mcu-soc/specmap-hierarchical-llm-agent-for-datasheet-to-code-traceability-link-recovery-in-systems-engineering_2026.md",
       "pdf_url": "https://arxiv.org/pdf/2601.11688",
       "pdf_local_path": "output/pdfs/datasheet-pdf-mcu-soc/specmap-hierarchical-llm-agent-for-datasheet-to-code-traceability-link-recovery-in-systems-engineering_2026.pdf",
       "pdf_source_url": "https://arxiv.org/pdf/2601.11688",
-      "last_updated": "2026-04-20"
+      "last_updated": "2026-04-24",
+      "timeline_role": "frontier",
+      "timeline_reason_zh": "把层级 agent 和 traceability 连到 datasheet-to-code 流程，代表从文档抽取走向工程闭环的前沿方向。",
+      "timeline_reason_en": "It connects hierarchical agents and traceability recovery to the datasheet-to-code pipeline, representing a frontier move from extraction to engineering closure."
     },
     {
       "id": "automatically-extracting-hardware-descriptions-from-pdf-technical-documentation_2023",
@@ -486,7 +551,10 @@
         "table-extraction"
       ],
       "note_path": null,
-      "pdf_url": "https://salkinium.com/hp23.pdf"
+      "pdf_url": "https://salkinium.com/hp23.pdf",
+      "timeline_role": "breakthrough",
+      "timeline_reason_zh": "首次把硬件技术文档 PDF 直接连到硬件描述抽取任务，是芯片 datasheet 语义化的关键节点。",
+      "timeline_reason_en": "It directly targets hardware-description extraction from PDF technical documentation, making it a key breakthrough for semantic datasheet understanding."
     },
     {
       "id": "automated-hemt-model-construction-from-datasheets-via-multi-modal-intelligence-and-prior-knowledge-free-optimization_2025",
@@ -512,7 +580,10 @@
         "device-modeling"
       ],
       "note_path": null,
-      "pdf_url": "https://arxiv.org/pdf/2507.21430"
+      "pdf_url": "https://arxiv.org/pdf/2507.21430",
+      "timeline_role": "consolidation",
+      "timeline_reason_zh": "展示了把 datasheet 文本、表格和图形联合转成器件模型的工程路径。",
+      "timeline_reason_en": "It shows a consolidation path where datasheet text, tables, and graphics are jointly converted into downstream device models."
     },
     {
       "id": "td-interpreter-enhancing-the-understanding-of-timing-diagrams-with-visual-language-learning_2025",
@@ -537,7 +608,10 @@
         "diagram-understanding"
       ],
       "note_path": null,
-      "pdf_url": "https://arxiv.org/pdf/2507.16844"
+      "pdf_url": "https://arxiv.org/pdf/2507.16844",
+      "timeline_role": "frontier",
+      "timeline_reason_zh": "专门针对 timing diagram 做视觉语言理解，是芯片 PDF 场景里最贴近实际工程痛点的前沿工作。",
+      "timeline_reason_en": "It specializes visual-language learning for timing diagrams, making it one of the most directly relevant frontier papers for chip-PDF extraction."
     },
     {
       "id": "chartocr-data-extraction-from-charts-images-via-a-deep-hybrid-framework_2021",
@@ -562,7 +636,10 @@
         "cv",
         "datasheet-figures"
       ],
-      "note_path": null
+      "note_path": null,
+      "timeline_role": "breakthrough",
+      "timeline_reason_zh": "把复杂图表转成结构化数据表，是 datasheet 曲线图和性能图抽取的关键突破。",
+      "timeline_reason_en": "It is a breakthrough for converting complex charts into structured tables, which is central to extracting performance curves from datasheets."
     },
     {
       "id": "extracting-scientific-figures-with-distantly-supervised-neural-networks_2018",
@@ -587,7 +664,10 @@
         "document-understanding"
       ],
       "note_path": null,
-      "pdf_url": "https://arxiv.org/pdf/1804.02445"
+      "pdf_url": "https://arxiv.org/pdf/1804.02445",
+      "timeline_role": "foundation",
+      "timeline_reason_zh": "把 PDF 中图像元素的可提取性问题先打通，是后续时序图和结构图理解的基础。",
+      "timeline_reason_en": "It laid the early foundation for extracting figures from technical PDFs, which later work on timing diagrams and structural graphics builds upon."
     },
     {
       "id": "alterego-a-personalized-wearable-silent-speech-interface_2018",
@@ -614,11 +694,13 @@
         "neuromuscular"
       ],
       "note_path": "output/notes/silent-speech-recognition-emg-llm/alterego-a-personalized-wearable-silent-speech-interface_2018.md",
-      "last_updated": "2026-04-21",
+      "paper_type": "systems",
+      "last_updated": "2026-04-24",
       "pdf_local_path": "output/pdfs/silent-speech-recognition-emg-llm/alterego-a-personalized-wearable-silent-speech-interface_2018.pdf",
       "pdf_source_url": "https://dam-prod.media.mit.edu/x/2018/03/23/p43-kapur_BRjFwE6.pdf",
       "timeline_role": "breakthrough",
-      "timeline_reason_zh": "骨传导私密回传 + 神经肌肉静默输入的经典闭环原型，定义了后续产品形态。"
+      "timeline_reason_zh": "把骨传导回传与静默语音输入做成完整可穿戴闭环，是这一方向最经典的突破论文。",
+      "timeline_reason_en": "It combined silent input with bone-conduction feedback in a wearable loop, making it the classic breakthrough paper of the field."
     },
     {
       "id": "a-cross-modal-approach-to-silent-speech-with-llm-enhanced-recognition_2024",
@@ -646,7 +728,8 @@
       ],
       "note_path": null,
       "timeline_role": "breakthrough",
-      "timeline_reason_zh": "首次把 EMG 跨模态表征和 LLM 重打分明确结合起来，是“EMG + 大模型”路线的关键节点。"
+      "timeline_reason_zh": "明确把 EMG 表征与 LLM 重打分结合起来，是“EMG + 大模型”路线的重要拐点。",
+      "timeline_reason_en": "It explicitly combined silent-speech sensing with LLM-enhanced decoding, making it a key breakthrough for the EMG-plus-LLM direction."
     },
     {
       "id": "wireless-silent-speech-interface-using-multi-channel-textile-emg-sensors-integrated-into-headphones_2025",
@@ -674,7 +757,8 @@
       ],
       "note_path": null,
       "timeline_role": "frontier",
-      "timeline_reason_zh": "把静默语音 EMG 推向耳机式产品形态，是 around-ear 可穿戴化的重要最新方向。"
+      "timeline_reason_zh": "把 textile EMG 集成到耳机形态，是最接近消费级佩戴体验的前沿实现之一。",
+      "timeline_reason_en": "It integrates textile EMG into a headphone form factor, making it one of the most product-like frontier implementations."
     },
     {
       "id": "sentence-level-silent-speech-recognition-using-a-wearable-emg-eeg-sensor-system-with-ai-driven-sensor-fusion-and-language-model_2025",
@@ -702,7 +786,8 @@
       ],
       "note_path": null,
       "timeline_role": "consolidation",
-      "timeline_reason_zh": "把词级识别推进到句级，并明确引入 language model 纠错，承上启下。"
+      "timeline_reason_zh": "把句级识别、EMG/EEG 融合和语言模型纠错放到同一系统里，起到承上启下的收敛作用。",
+      "timeline_reason_en": "It unifies sentence-level decoding, EMG/EEG fusion, and language-model correction in one system, making it a consolidation node."
     },
     {
       "id": "a-silent-speech-decoding-system-from-eeg-and-emg-with-heterogenous-electrode-configurations_2025",
@@ -730,7 +815,8 @@
       ],
       "note_path": null,
       "timeline_role": "frontier",
-      "timeline_reason_zh": "面向真实部署中的异构电极配置和跨语言校准，代表鲁棒性导向的最新工作。"
+      "timeline_reason_zh": "聚焦异构电极配置和跨配置鲁棒性，代表静默语音实际部署时的鲁棒性前沿。",
+      "timeline_reason_en": "It focuses on heterogeneous electrode configurations and robustness, representing the frontier of deployable silent-speech decoding."
     },
     {
       "id": "a-parallel-ultra-low-power-silent-speech-interface-based-on-a-wearable-fully-dry-emg-neckband_2025",
@@ -758,7 +844,8 @@
       ],
       "note_path": null,
       "timeline_role": "frontier",
-      "timeline_reason_zh": "把 fully-dry 纺织颈带和超低功耗做到可用水平，是产品化约束最强的一支前沿路线。"
+      "timeline_reason_zh": "把 fully-dry 颈带和超低功耗做到了可部署水平，是可穿戴化约束下的前沿路线。",
+      "timeline_reason_en": "It pushes fully-dry neckband sensing and ultra-low-power operation toward deployable wearables, marking a frontier systems route."
     },
     {
       "id": "silentwear-an-ultra-low-power-wearable-system-for-emg-based-silent-speech-recognition_2026",
@@ -786,7 +873,8 @@
       ],
       "note_path": null,
       "timeline_role": "frontier",
-      "timeline_reason_zh": "把 textile EMG、MCU 端推理、长续航和重戴微调闭环起来，是当前最完整的边缘设备路线。"
+      "timeline_reason_zh": "把 wearable EMG、超低功耗 MCU 推理和多次重戴适配连起来，是当前最完整的边缘部署路线。",
+      "timeline_reason_en": "It combines wearable EMG sensing, ultra-low-power MCU inference, and repeated re-wear adaptation, making it one of the most complete frontier edge-deployment routes."
     }
   ]
 }

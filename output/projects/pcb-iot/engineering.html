@@ -9,13 +9,22 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --bg:#0d1117; --panel:#151b24; --panel-2:#101620; --text:#e8eef8; --dim:#91a0b8;
-  --muted:#66748a; --line:rgba(255,255,255,0.08); --blue:#67a4ff; --cyan:#38d9c7; --amber:#ffd66e;
+  --muted:#66748a; --line:rgba(255,255,255,0.08); --blue:#67a4ff; --cyan:#38d9c7; --amber:#ffd66e; --rose:#ff8d6b;
 }
 body { font-family:'Noto Sans SC',sans-serif; background:radial-gradient(circle at top right, rgba(103,164,255,0.12), transparent 28%), var(--bg); color:var(--text); min-height:100vh; }
 body.light {
   --bg:#f4f7fb; --panel:#ffffff; --panel-2:#eef3f8; --text:#18202c; --dim:#516277;
-  --muted:#66768c; --line:rgba(15,23,42,0.10); --blue:#2364d2; --cyan:#0f9f90; --amber:#b98911;
+  --muted:#66768c; --line:rgba(15,23,42,0.10); --blue:#2364d2; --cyan:#0f9f90; --amber:#b98911; --rose:#d66033;
 }
+.lang-block { display:block; }
+.lang-inline { display:inline; }
+.lang-en { display:none; }
+body.lang-en .lang-zh { display:none !important; }
+body.lang-en .lang-en.lang-block { display:block; }
+body.lang-en .lang-en.lang-inline { display:inline; }
+body:not(.lang-en) .lang-zh.lang-block { display:block; }
+body:not(.lang-en) .lang-zh.lang-inline { display:inline; }
+body:not(.lang-en) .lang-en { display:none !important; }
 .wrap { max-width: 1320px; margin: 0 auto; padding: 28px 28px 80px; }
 .theme-toggle {
   position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
@@ -25,6 +34,10 @@ body.light {
   position:fixed; top:64px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font-size:16px;
 }
+.lang-toggle {
+  position:fixed; top:112px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font:700 11px 'JetBrains Mono', monospace;
+}
 .hero { background:linear-gradient(145deg, rgba(103,164,255,0.14), rgba(56,217,199,0.06)); border:1px solid var(--line); border-radius:24px; padding:28px 30px; margin-bottom:24px; }
 .eyebrow { font:600 12px 'JetBrains Mono',monospace; color:var(--amber); letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
 .hero h1 { font-size:42px; line-height:1.08; font-weight:900; max-width:980px; }
@@ -32,25 +45,27 @@ body.light {
 .meta { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
 .badge { border:1px solid var(--line); background:rgba(255,255,255,0.04); border-radius:999px; padding:8px 14px; font:500 12px 'JetBrains Mono',monospace; color:var(--dim); }
 .nav { display:flex; gap:10px; margin-bottom:22px; }
-.nav a { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; }
-.nav-btn { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; cursor:pointer; }
+.nav a, .nav-btn { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; cursor:pointer; }
 .grid { display:grid; grid-template-columns:1fr; gap:18px; }
 .section { background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:22px; }
 .section-title { display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:16px; }
 .section-title h2 { font-size:24px; font-weight:800; }
 .section-title span { color:var(--dim); font:500 12px 'JetBrains Mono',monospace; }
-.items { display:grid; gap:14px; }
-.item { background:var(--panel-2); border:1px solid var(--line); border-radius:16px; padding:18px; }
+.items, .takeaways, .evidence-stack { display:grid; gap:14px; }
+.item, .takeaway, .evidence-card {
+  background:var(--panel-2); border:1px solid var(--line); border-radius:16px; padding:18px;
+}
 .item-top { display:flex; justify-content:space-between; gap:12px; align-items:start; margin-bottom:10px; }
 .item h3 { font-size:18px; line-height:1.35; }
 .item h3 a { color:inherit; text-decoration:none; }
 .item h3 a:hover { color:var(--blue); }
 .tag { white-space:nowrap; border:1px solid var(--line); border-radius:999px; padding:5px 10px; font:600 11px 'JetBrains Mono',monospace; color:var(--blue); }
 .org { color:var(--dim); font-size:13px; margin-bottom:10px; }
-.summary { color:var(--text); font-size:14px; line-height:1.85; margin-bottom:10px; }
-.how { color:#b7c5da; font-size:14px; line-height:1.85; border-left:3px solid rgba(103,164,255,0.35); padding-left:12px; }
-.takeaways { display:grid; gap:12px; }
-.takeaway { background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:16px 18px; color:var(--text); line-height:1.8; }
+.summary, .how, .evidence-card, .takeaway { font-size:14px; line-height:1.85; }
+.summary { color:var(--text); margin-bottom:10px; }
+.how { color:#b7c5da; border-left:3px solid rgba(103,164,255,0.35); padding-left:12px; }
+.readiness-chip { display:inline-flex; align-items:center; border-radius:999px; padding:6px 12px; font:700 11px 'JetBrains Mono', monospace; border:1px solid rgba(56,217,199,0.24); color:var(--cyan); background:rgba(56,217,199,0.08); }
+.gap-card { border-left:3px solid rgba(255,141,107,0.32); }
 .status-card { margin-bottom:18px; background:rgba(56,217,199,0.07); border:1px solid rgba(56,217,199,0.16); border-radius:16px; padding:14px 16px; color:var(--dim); }
 .status-card.error { background:rgba(255,141,107,0.08); border-color:rgba(255,141,107,0.18); }
 .chat-drawer {
@@ -84,64 +99,149 @@ body.light {
 <body>
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
   <button class="chat-toggle" onclick="toggleChatDrawer()" title="Toggle project chat">💬</button>
+  <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle language">中/EN</button>
   <div class="wrap">
     <div class="nav">
-      <a href="/projects/pcb-iot/papers.html">← Back to Papers</a>
+      <a href="/projects/pcb-iot/papers.html">
+        <span class="lang-zh lang-inline">← 返回论文页</span>
+        <span class="lang-en lang-inline">← Back to Papers</span>
+      </a>
     </div>
 
     <section class="hero">
-      <div class="eyebrow">Engineering Scout</div>
+      <div class="eyebrow">
+        <span class="lang-zh lang-inline">工程实现调研</span>
+        <span class="lang-en lang-inline">Engineering Scout</span>
+      </div>
       <h1>PCB硬件自动化流程(面向 IoT传感器板)</h1>
-      <p>这一页聚焦“论文之外”的工程落地信息：GitHub 开源实现、现实产品与功能、以及相关新闻与实际部署信号，帮助你判断一个研究主题距离工程可用还有多远。</p>
+      <p>
+        <span class="lang-zh lang-block">这一页聚焦“论文之外”的工程落地信息：直接由论文衍生的实现、独立工程方案，以及产业/生态信号。它对应 engineering-scout 的三层 ring 模型，而不是简单的开源列表。</span>
+        <span class="lang-en lang-block">This page focuses on engineering evidence beyond papers: paper-linked implementations, independent engineering solutions, and ecosystem signals. It follows the three-ring engineering-scout model instead of a flat project list.</span>
+      </p>
       <div class="meta">
         <div class="badge">Range: 2020-2026</div>
-        <div class="badge">Updated: 2026-04-19</div>
-        <div class="badge">Open source: 3</div>
-        <div class="badge">Products: 3</div>
-        <div class="badge">News: 3</div>
+        <div class="badge">Updated: 2026-04-24</div>
+        <div class="badge">Readiness: active_development</div>
       </div>
     </section>
 
-    
+    <div id="status-card" class="status-card" style="display:none"></div>
 
     <div class="grid">
       <section class="section">
         <div class="section-title">
-          <h2>Key Takeaways</h2>
-          <span>High-level engineering readout</span>
+          <h2>
+            <span class="lang-zh lang-inline">Readiness Assessment</span>
+            <span class="lang-en lang-inline">Readiness Assessment</span>
+          </h2>
+          <span>active_development</span>
         </div>
-        <div class="takeaways">
-          <div class="takeaway">需求到“完整可投产 PCB 文件”的全自动链路已经出现原型，但当前最稳的落地方式仍然是“需求到原理图/BOM/约束，再由人审完成布局与可制造性收尾”。</div><div class="takeaway">可行实现路径已经比较清晰：自然语言需求 -&gt; 组件/功能块检索 -&gt; datasheet grounding -&gt; 原理图合成 -&gt; ERC/约束验证 -&gt; KiCad/EDA 文件输出。真正的瓶颈在布局、SI/PI、封装与制造规则。</div><div class="takeaway">工程上最成熟的不是一个万能 agent，而是把 SKiDL/KiCad/约束检查器/零件数据库串成流水线。也就是说，IoT PCB 自动化更像“多工具编排”，而不是单模型端到端生成。</div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-title">
-          <h2>Open Source</h2>
-          <span>3 repos / projects</span>
-        </div>
-        <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://github.com/Shaurya-Sethi/circuitron" target="_blank">Circuitron</a></h3><span class="tag">open_source</span></div><div class="org">Shaurya Sethi / GitHub · 2025</div><div class="summary">面向自然语言 PCB 设计的 agent 原型，能够把需求转成 SKiDL、原理图和 `.kicad_pcb` 等工件，已经非常接近“需求到 KiCad 文件”的自动化链路。</div><div class="how">实现路径是“文本需求 -&gt; SKiDL Python 电路描述 -&gt; KiCad 工件生成 -&gt; 迭代修正”。这说明完整 PCB 文件可以被自动生成，但质量仍依赖后续约束检查与人工审阅。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/circuit-synth/circuit-synth" target="_blank">circuit-synth</a></h3><span class="tag">open_source</span></div><div class="org">circuit-synth / GitHub · 2026</div><div class="summary">一个以 Python 定义电路、再导出 KiCad 项目的开源栈，强调可编程电路描述和自动生成原理图/PCB。</div><div class="how">它不是纯文本到 PCB 的黑盒，而是把设计抽象成代码，再接 KiCad 输出。这类“代码化电路描述 + EDA 导出”的模式很适合 IoT 传感板模板复用。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/rjwalters/kicad-tools" target="_blank">kicad-tools</a></h3><span class="tag">open_source</span></div><div class="org">rjwalters / GitHub · 2025</div><div class="summary">提供程序化解析和修改 KiCad schematic / PCB 文件的 Python 工具，适合作为 agent 的执行后端。</div><div class="how">如果前端 agent 负责需求理解和约束生成，`kicad-tools` 这种库就能承担文件级编辑、规则修复和批量重写，是自动化 PCB 流水线里很关键的“文件操作层”。</div></div>
+        <div class="evidence-stack">
+          <div class="evidence-card">
+            <div class="readiness-chip">active_development</div>
+            <div style="margin-top:12px;"><div class="lang-zh lang-block">Ring 1 里的论文原型公开得并不多，但 Ring 2 已经出现了从架构到 schematic/BOM，再到部分 PCB layout 的连续工具链。Flux、Circuit Mind、Circuitron 和 PCB Designer AI 说明这个方向已经从“研究 demo”进入“工程产品化探索”，只是最后的布局、布线、EMI/PI 与 manufacturability 仍然普遍需要人工收尾。</div><div class="lang-en lang-block">Paper-linked open artifacts are still sparse, but Ring 2 already shows a continuous toolchain from architecture-level intent to schematic/BOM generation and even partial PCB layout. Flux, Circuit Mind, Circuitron, and PCB Designer AI indicate the field has moved beyond research demos into product exploration, although final layout, routing, EMI/PI, and manufacturability still require human closure.</div></div>
+          </div>
+          <div class="takeaway"><div class="lang-zh lang-block">当前最值得关注的模式不是“一步到位全文本到可投产 PCB”，而是“需求拆解 -&gt; 器件选择/BOM -&gt; schematic 生成 -&gt; 约束检查 -&gt; 局部 layout/routing 建议”的多阶段协同链。</div><div class="lang-en lang-block">The most important pattern is not one-shot text-to-manufacturable-PCB generation, but a staged chain: requirement decomposition -&gt; component/BOM selection -&gt; schematic generation -&gt; constraint checks -&gt; partial layout/routing assistance.</div></div>
+          <div class="takeaway gap-card"><div class="lang-zh lang-block">最大的缺口有三个：第一，真正 paper-linked 的开源 artifact 还不多；第二，公开 benchmark 大多仍停在 schematic 或 placement/routing 子任务；第三，面向 IoT 传感器板的电源完整性、连接器布局、射频约束和可制造性规则还没有形成稳定闭环。</div><div class="lang-en lang-block">Three gaps remain: first, genuinely paper-linked open artifacts are still sparse; second, public benchmarks mostly stop at schematic or placement/routing subtasks; third, IoT sensor-board constraints such as power integrity, connector placement, RF constraints, and manufacturability rules are not yet closed in a stable end-to-end loop.</div></div>
         </div>
       </section>
 
       <section class="section">
         <div class="section-title">
-          <h2>Products</h2>
-          <span>3 products / features</span>
+          <h2>Ring 1</h2>
+          <span>
+            <span class="lang-zh lang-inline">Paper-linked implementations</span>
+            <span class="lang-en lang-inline">Paper-linked implementations</span>
+          </span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://www.flux.ai/Copilot" target="_blank">Flux Copilot</a></h3><span class="tag">product</span></div><div class="org">Flux · 2023-2026</div><div class="summary">目前最接近“AI 辅助硬件设计”的商业产品之一，主打在原理图阶段提供器件建议、连接解释和设计协助。</div><div class="how">官方文档明确写到它当前主要理解 schematic，对 PCB layout 的理解仍有限。这和研究结论一致：真正难的是从原理图跨到布局与制造约束。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.celus.io/knowledge/design-assistant-accelerating-electronics-design-with-natural-language" target="_blank">CELUS Design Assistant</a></h3><span class="tag">product</span></div><div class="org">CELUS · 2026</div><div class="summary">CELUS 已把自然语言需求输入接到了电子设计平台上，强调从需求理解、器件选择到 schematic/BOM 生成的加速。</div><div class="how">它更像“需求到设计包”的前半段引擎：先拆功能块，再做元件匹配和系统设计，再交给 EDA 工具继续收尾。对 IoT 板来说，这是一条很现实的工程路径。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.kicad.org/" target="_blank">KiCad</a></h3><span class="tag">product</span></div><div class="org">KiCad Project · active</div><div class="summary">KiCad 本身不是 AI 产品，但它是当前开源自动化链路里最重要的目标格式和执行后端。</div><div class="how">大量自动化项目最终都落在 KiCad 的 schematic 与 PCB 文件上，因为它开放、可脚本化、生态完整。现实里“自动生成 PCB 文件”通常意味着最终落到 KiCad-compatible 项目。</div></div>
+          <div class="item">
+  <div class="item-top">
+    <h3><a href="https://arxiv.org/abs/2602.00510" target="_blank">Paper-linked artifacts remain sparse</a></h3>
+    <div class="tag">gap</div>
+  </div>
+  <div class="org">PCBSchemaGen / HWE-Bench / CircuitLM</div>
+  <div class="summary"><div class="lang-zh lang-block">这一方向目前最现实的情况是：论文已经把从需求到 schematic 的关键模块讲清楚了，但作者公开的完整 artifact 仍然有限。也就是说，research 已经证明路径存在，但真正可复现的工程链还没有完全公开化。</div><div class="lang-en lang-block">The realistic situation is that recent papers already clarify the key modules from requirements to schematics, but complete public artifacts are still limited. In other words, research has validated the path, while fully reproducible engineering pipelines are not yet broadly open.</div></div>
+  <div class="how"><div class="lang-zh lang-block">对项目落地来说，这意味着最稳妥的做法是把论文当作设计蓝图，再结合现成 EDA/automation 工具自己补齐工程环节。</div><div class="lang-en lang-block">For actual deployment, the safest approach is to treat the papers as design blueprints and combine them with existing EDA/automation tools to close the engineering gap yourself.</div></div>
+</div>
         </div>
       </section>
 
       <section class="section">
         <div class="section-title">
-          <h2>News & Deployment Signals</h2>
-          <span>3 recent signals</span>
+          <h2>Ring 2</h2>
+          <span>
+            <span class="lang-zh lang-inline">Independent engineering solutions</span>
+            <span class="lang-en lang-inline">Independent engineering solutions</span>
+          </span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://www.flux.ai/p/blog/flux-copilot-the-first-ai-powered-hardware-design-assistant" target="_blank">Flux Copilot launch post</a></h3><span class="tag">news</span></div><div class="org">Flux · 2023</div><div class="summary">官方把 Copilot 定位为 PCB 工具内的 AI 硬件设计助手，说明商业产品已经开始把 LLM 直接嵌入 EDA 工作流。</div><div class="how">这类发布信号的重要性在于：市场已经认可“AI 帮工程师做原理图和设计解释”是可卖的，但还没有宣称布局与量产完全自动化。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.electronicdesign.com/technologies/industrial/article/21264919/electronic-design-flux-releases-copilot-ai-powered-hardware-design-assistant" target="_blank">Electronic Design on Flux Copilot</a></h3><span class="tag">news</span></div><div class="org">Electronic Design · 2023</div><div class="summary">行业媒体把 Flux 视为 AI PCB assistant 的代表案例，同时也指出其准确性和成熟度仍处于早期阶段。</div><div class="how">这与科研和开源原型形成互相印证：需求到原理图已经能做出样子，但需求到可靠板级实现还需要强约束和人工兜底。</div></div><div class="item"><div class="item-top"><h3><a href="https://circuit-synth.readthedocs.io/_/downloads/en/latest/pdf/" target="_blank">Circuit-Synth docs: generate complete KiCad project</a></h3><span class="tag">news</span></div><div class="org">Circuit-Synth · 2026</div><div class="summary">文档已经把“生成完整 KiCad 项目”作为面向用户的公开能力来描述，说明开源生态正在把 AI/代码化硬件设计推向可操作工具链。</div><div class="how">虽然这还不等于工业级自动布线和量产，但它是非常直接的部署信号：需求到板级文件的路径已经从研究想法变成可下载可运行的软件。</div></div>
+          <div class="item">
+  <div class="item-top">
+    <h3><a href="https://www.flux.ai/" target="_blank">Flux</a></h3>
+    <div class="tag">product</div>
+  </div>
+  <div class="org">Browser-based PCB design platform</div>
+  <div class="summary"><div class="lang-zh lang-block">Flux 已经把 AI 嵌到 schematic、layout 与 design review 工作流里，适合做从需求讨论到原理图/PCB 协同编辑的产品化入口。</div><div class="lang-en lang-block">Flux already injects AI into schematic, layout, and design-review workflows, making it a strong productized entry point from requirements discussion to collaborative schematic/PCB work.</div></div>
+  <div class="how"><div class="lang-zh lang-block">它的现实实现路径是先让 AI 解释和修改 schematic / netlist / BOM，再把 layout 和 manufacturability 检查嵌入到浏览器式 EDA 环境中。</div><div class="lang-en lang-block">Its practical implementation path is to let AI interpret and modify schematics, netlists, and BOMs first, then integrate layout and manufacturability checks into a browser-native EDA environment.</div></div>
+</div>
+<div class="item">
+  <div class="item-top">
+    <h3><a href="https://www.circuitmind.io/" target="_blank">Circuit Mind</a></h3>
+    <div class="tag">product</div>
+  </div>
+  <div class="org">AI hardware architecture to schematic/BOM</div>
+  <div class="summary"><div class="lang-zh lang-block">Circuit Mind 更靠近“输入需求约束，自动生成 architecture、schematic 和 BOM”的方向，和你关心的 IoT sensor board 场景很贴近。</div><div class="lang-en lang-block">Circuit Mind is closer to the requirement-constrained generation path you care about: automatic architecture, schematic, and BOM generation for hardware teams.</div></div>
+  <div class="how"><div class="lang-zh lang-block">它的核心工程思路是把需求拆解成功能块、器件选择和约束优化，再生成可验证的 schematic/BOM，而不是直接跳到最终 layout。</div><div class="lang-en lang-block">Its core engineering idea is to decompose requirements into functional blocks, component selection, and constraint optimization, then generate verifiable schematics/BOMs instead of jumping directly to final layout.</div></div>
+</div>
+<div class="item">
+  <div class="item-top">
+    <h3><a href="https://github.com/Shaurya-Sethi/circuitron" target="_blank">Circuitron</a></h3>
+    <div class="tag">open-source</div>
+  </div>
+  <div class="org">Agentic PCB design accelerator</div>
+  <div class="summary"><div class="lang-zh lang-block">Circuitron 是很少见的开源尝试，目标直接就是从自然语言 prompt 生成 schematic、netlist，甚至 `.kicad_pcb`。</div><div class="lang-en lang-block">Circuitron is one of the rare open-source attempts that explicitly targets natural-language prompts to schematics, netlists, and even `.kicad_pcb` outputs.</div></div>
+  <div class="how"><div class="lang-zh lang-block">它的实现路径更像“agent orchestration + KiCad artifacts + verification”，很适合作为你自己搭建自动化原型时的工程参考。</div><div class="lang-en lang-block">Its implementation path looks like agent orchestration plus KiCad artifact generation and verification, which makes it a valuable engineering reference for building your own prototype pipeline.</div></div>
+</div>
+<div class="item">
+  <div class="item-top">
+    <h3><a href="https://pcbdesigner.ai/" target="_blank">PCB Designer AI</a></h3>
+    <div class="tag">product</div>
+  </div>
+  <div class="org">AI-assisted PCB generation workflow</div>
+  <div class="summary"><div class="lang-zh lang-block">PCB Designer AI 代表了另一条产品路线：把 schematic 理解、PCB 生成和设计复盘整合进一个 AI 硬件设计工具。</div><div class="lang-en lang-block">PCB Designer AI represents another product route that combines schematic understanding, PCB generation, and design iteration into one AI hardware tool.</div></div>
+  <div class="how"><div class="lang-zh lang-block">这类产品说明行业已经在追求“从草图到板卡”的更长链条自动化，但具体质量仍高度依赖约束输入和人工审查。</div><div class="lang-en lang-block">Products like this show the industry is chasing longer automation chains from sketch to board, but the resulting quality still depends heavily on constraint inputs and human review.</div></div>
+</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <h2>Ring 3</h2>
+          <span>
+            <span class="lang-zh lang-inline">Ecosystem and deployment signals</span>
+            <span class="lang-en lang-inline">Ecosystem and deployment signals</span>
+          </span>
+        </div>
+        <div class="items">
+          <div class="item">
+  <div class="item-top">
+    <h3><a href="https://www.tomshardware.com/tech-industry/artificial-intelligence/dual-pcb-linux-computer-with-843-components-designed-by-ai-boots-on-first-attempt-project-speedrun-was-made-in-just-one-week-and-required-less-than-40-hours-of-human-work" target="_blank">Quilter / Project Speedrun coverage</a></h3>
+    <div class="tag">news</div>
+  </div>
+  <div class="org">Industry signal</div>
+  <div class="summary"><div class="lang-zh lang-block">Quilter 的“Project Speedrun”新闻说明，产业界已经开始把 AI 用到高复杂度双板 Linux 计算机设计，而不只是简单 demo。</div><div class="lang-en lang-block">Quilter’s “Project Speedrun” coverage shows that industry is already applying AI to relatively complex dual-PCB Linux computer design, not just toy demos.</div></div>
+  <div class="how"><div class="lang-zh lang-block">这类信号很重要，因为它意味着自动化不再停留在 academic prototype，而是开始进入真实产品开发节奏。</div><div class="lang-en lang-block">This matters because it indicates automation is moving beyond academic prototypes into real product-development tempo.</div></div>
+</div>
+<div class="item">
+  <div class="item-top">
+    <h3><a href="https://www.flux.ai/Copilot" target="_blank">Flux Copilot documentation</a></h3>
+    <div class="tag">signal</div>
+  </div>
+  <div class="org">Product documentation</div>
+  <div class="summary"><div class="lang-zh lang-block">Flux 公开把 Copilot 描述为 AI-powered hardware design assistant，本身就是“AI 协作式 PCB 设计”已进入主流产品语境的信号。</div><div class="lang-en lang-block">Flux publicly positioning Copilot as an AI-powered hardware design assistant is itself a signal that AI-assisted PCB design has entered mainstream product language.</div></div>
+  <div class="how"><div class="lang-zh lang-block">对工程判断来说，这说明该领域已经有稳定的商业叙事和用户需求，只是完全自动 layout 仍未成熟。</div><div class="lang-en lang-block">From an engineering-readiness perspective, it suggests a stable commercial narrative and user demand already exist, even though fully automatic layout is not yet mature.</div></div>
+</div>
         </div>
       </section>
     </div>
@@ -149,19 +249,31 @@ body.light {
 <aside id="chat-drawer" class="chat-drawer" aria-hidden="true">
   <div class="chat-header">
     <div>
-      <div class="chat-title">Project Chat</div>
+      <div class="chat-title">
+        <span class="lang-zh lang-inline">项目对话</span>
+        <span class="lang-en lang-inline">Project Chat</span>
+      </div>
       <div class="chat-subtitle">PCB硬件自动化流程(面向 IoT传感器板) · engineering</div>
     </div>
-    <button class="nav-btn" onclick="toggleChatDrawer()">Close</button>
+    <button class="nav-btn" onclick="toggleChatDrawer()">
+      <span class="lang-zh lang-inline">关闭</span>
+      <span class="lang-en lang-inline">Close</span>
+    </button>
   </div>
   <div id="chat-history" class="chat-history">
-    <div class="chat-empty">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>
+    <div class="chat-empty">
+      <div class="lang-zh lang-block">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>
+      <div class="lang-en lang-block">This drawer keeps an engineering-page-specific chat history. It starts empty and persists for the same project.</div>
+    </div>
   </div>
   <div class="chat-compose">
     <div id="chat-status" class="chat-status"></div>
     <textarea id="chat-input" class="chat-input" placeholder="直接提问。当前工程页内容和 Codex 网络搜索都会作为可用能力。"></textarea>
     <div class="chat-actions">
-      <button class="nav-btn" onclick="submitChat()">Send</button>
+      <button class="nav-btn" onclick="submitChat()">
+        <span class="lang-zh lang-inline">发送</span>
+        <span class="lang-en lang-inline">Send</span>
+      </button>
     </div>
   </div>
 </aside>
@@ -169,14 +281,34 @@ body.light {
 const API = 'http://localhost:5678';
 const PROJECT_TOPIC = 'PCB硬件自动化流程(面向 IoT传感器板)';
 const PROJECT_PAGE_TYPE = 'engineering';
+const AUTO_GENERATE_ENGINEERING = false;
 let chatLoaded = false;
 let chatPending = false;
 
 async function init() {
   applyTheme();
+  applyLanguage();
+  if (AUTO_GENERATE_ENGINEERING) {
+    await ensureEngineeringReady();
+  }
 }
 
-async function ensureEngineeringReady() { return; }
+async function ensureEngineeringReady() {
+  try {
+    const status = await fetchStatus();
+    const shouldStart = !status.page_ready || status.status === 'idle' || status.status === 'error' || status.topic !== status.expected_topic;
+    if (shouldStart) {
+      showStatus('正在生成 Engineering View：自动收集实现、产品与部署信号。');
+      await fetch(`${API}/api/generate-engineering`, { method:'POST' });
+      pollStatus();
+    } else if (status.status === 'running') {
+      showStatus(status.message || 'Engineering scout 正在运行中。');
+      pollStatus();
+    }
+  } catch {
+    showStatus('无法连接本地服务。启动 `python serve.py` 后刷新页面即可自动生成。', true);
+  }
+}
 
 async function fetchStatus() {
   const r = await fetch(`${API}/api/engineering-status`);
@@ -218,24 +350,26 @@ function escapeHtml(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+function renderChatHistory(messages) {
+  const el = document.getElementById('chat-history');
+  if (!messages.length) {
+    el.innerHTML = '<div class="chat-empty"><div class="lang-zh lang-block">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div><div class="lang-en lang-block">This drawer keeps an engineering-page-specific chat history. It starts empty and persists for the same project.</div></div>';
+    return;
+  }
+  el.innerHTML = messages.map(msg => `<div class="chat-msg ${msg.role}">${escapeHtml(msg.content || '')}</div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
 async function readJsonResponse(r) {
   const raw = await r.text();
-  if (!raw.trim()) throw new Error(`Empty response (${r.status})`);
+  if (!raw.trim()) {
+    throw new Error(`Empty response (${r.status})`);
+  }
   try {
     return JSON.parse(raw);
   } catch (err) {
     throw new Error(`Invalid JSON response (${r.status})`);
   }
-}
-
-function renderChatHistory(messages) {
-  const el = document.getElementById('chat-history');
-  if (!messages.length) {
-    el.innerHTML = '<div class="chat-empty">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>';
-    return;
-  }
-  el.innerHTML = messages.map(msg => `<div class="chat-msg ${msg.role}">${escapeHtml(msg.content || '')}</div>`).join('');
-  el.scrollTop = el.scrollHeight;
 }
 
 async function loadChatHistory() {
@@ -292,6 +426,18 @@ function applyTheme() {
   const light = localStorage.getItem('theme') === 'light';
   document.body.classList.toggle('light', light);
   document.querySelector('.theme-toggle').textContent = light ? '☀️' : '🌙';
+}
+
+function applyLanguage() {
+  const isEn = localStorage.getItem('ui-lang') === 'en';
+  document.body.classList.toggle('lang-en', isEn);
+  document.querySelector('.lang-toggle').textContent = isEn ? 'EN' : '中';
+}
+
+function toggleLanguage() {
+  const isEn = !(localStorage.getItem('ui-lang') === 'en');
+  localStorage.setItem('ui-lang', isEn ? 'en' : 'zh');
+  applyLanguage();
 }
 
 function toggleTheme() {

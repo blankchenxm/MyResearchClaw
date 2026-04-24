@@ -1,181 +1,258 @@
 ---
 name: conference-scout
 description: >
-  Search for top-conference academic papers by topic, year range, and venue group, then update
-  the persistent paper database and kanban dashboard. Use when the user asks to find papers,
-  search top venues, compare conference coverage, or says phrases such as 搜论文, 顶会论文,
-  find papers, conference papers, scout papers, or "[topic] papers in [conference]".
+  Search for academic papers by topic across top-conference venues, then organize results into
+  a research timeline with four roles: survey, foundation/breakthrough, consolidation, and frontier.
+  Timeline roles are determined by citation structure and related-work language, not fixed year
+  thresholds. Use when the user asks to find papers, search top venues, map a research area,
+  or says phrases such as 搜论文, 顶会论文, find papers, conference papers, scout papers,
+  research timeline, or "[topic] papers in [conference]".
 ---
 
 # Conference Scout
 
-Goal: find top-venue papers on a topic, merge them into persistent project state, and regenerate `output/kanban.html`.
+Goal: act as an iterative research agent — search, read, extract anchors, expand citations,
+gate by relevance, then assemble a chronological timeline organized by each paper's role in
+the field. Output a persistent paper database and regenerate `output/kanban.html`.
 
 ## Inputs
-
-Extract:
 
 | Field | Description | Default |
 |---|---|---|
 | `topic` | research topic, preferably English keywords | required |
-| `year_start` | start year | `2022` |
+| `year_start` | start year for frontier search | auto-inferred from discovery |
 | `year_end` | end year | current year |
-| `conference_groups` | venue groups such as `ai_ml`, `iot_systems`, `security` | ask if missing |
-| `specific_venues` | explicit venue override | optional |
-| `output_html` | optional standalone HTML output path when the user wants a topic-specific page without overwriting the shared dashboard | optional |
+| `venue_group` | venue group key from the venue registry below | ask if missing |
+| `specific_venues` | explicit venue override, bypasses group selection | optional |
+| `output_html` | standalone HTML output path for topic-specific page | optional |
 
-If venue intent is missing, ask which venue family the user wants.
+If venue intent is missing, ask which venue family the user wants before proceeding.
 
 If the user asks for "顶会论文", "top venues", "完整调查", or otherwise signals completeness:
+- do not silently narrow to a hand-picked subset
+- report the exact venue set searched in the response
 
-- do not silently narrow to a hand-picked subset of venues
-- either ask for the venue family if truly ambiguous, or use the topic-to-venue profile rules below
-- report the exact venue set you searched
+---
 
-## Topic-to-Venue Profiles
+## Venue Registry
 
-When the topic clearly falls into one of the following buckets, use the full profile by default instead of a partial subset:
-
-```yaml
-embedded_iot_firmware:
-  - SenSys
-  - IPSN
-  - MobiSys
-  - UbiComp / IMWUT
-  - RTSS
-  - EMSOFT
-  - ASP-DAC
-  - DATE
-  - USENIX Security
-  - NDSS
-
-pcb_hardware_automation:
-  - UIST
-  - CHI
-  - DAC
-  - ICCAD
-  - ASP-DAC
-  - DATE
-  - arXiv
-
-embedded_ai_systems:
-  - SenSys
-  - IPSN
-  - MobiSys
-  - UbiComp / IMWUT
-  - MobiCom
-  - ASPLOS
-  - EuroSys
-  - OSDI
-  - SOSP
-```
-
-Mapping rules:
-
-- MCU firmware generation, auto flashing, embedded IoT software generation, cross-chip firmware adaptation:
-  use `embedded_iot_firmware`
-- PCB automation, schematic generation, board-level design automation, requirement-to-PCB:
-  use `pcb_hardware_automation`
-- If the topic spans multiple buckets, take the union instead of picking one narrow family
-
-## Venue Groups
+Each venue group has two tiers. Tier 1 is the main sweep target. Tier 2 is used for
+cross-checking only unless the user asks for broader coverage. Every venue entry includes
+its DBLP listing URL for reliable venue-level completeness checks.
 
 ```yaml
+wearable_sensing:
+  tier_1:
+    - name: UbiComp / IMWUT
+      dblp: https://dblp.org/db/journals/imwut/
+    - name: MobiCom
+      dblp: https://dblp.org/db/conf/mobicom/
+    - name: MobiSys
+      dblp: https://dblp.org/db/conf/mobisys/
+    - name: SenSys
+      dblp: https://dblp.org/db/conf/sensys/
+  tier_2:
+    - name: IPSN
+      dblp: https://dblp.org/db/conf/ipsn/
+    - name: CHI
+      dblp: https://dblp.org/db/conf/chi/
+    - name: ISWC
+      dblp: https://dblp.org/db/conf/iswc/
+    - name: HotMobile
+      dblp: https://dblp.org/db/conf/hotmobile/
+
 ai_ml:
-  - NeurIPS / Neural Information Processing Systems / NIPS
-  - ICLR / International Conference on Learning Representations
-  - ICML / International Conference on Machine Learning
-  - AAAI
-  - CVPR / Computer Vision and Pattern Recognition
-  - ACL / Association for Computational Linguistics
-  - EMNLP
+  tier_1:
+    - name: NeurIPS
+      dblp: https://dblp.org/db/conf/nips/
+    - name: ICLR
+      dblp: https://dblp.org/db/conf/iclr/
+    - name: ICML
+      dblp: https://dblp.org/db/conf/icml/
+    - name: CVPR
+      dblp: https://dblp.org/db/conf/cvpr/
+  tier_2:
+    - name: AAAI
+      dblp: https://dblp.org/db/conf/aaai/
+    - name: ACL
+      dblp: https://dblp.org/db/conf/acl/
+    - name: EMNLP
+      dblp: https://dblp.org/db/conf/emnlp/
 
 iot_systems:
-  - MobiCom / Mobile Computing and Networking
-  - MobiSys / Mobile Systems
-  - SenSys / Embedded Networked Sensor Systems
-  - UbiComp / IMWUT / Interactive Mobile Wearable and Ubiquitous Technologies
-  - IPSN
-
-networking:
-  - SIGCOMM
-  - NSDI / Networked Systems Design
-  - INFOCOM
-
-systems:
-  - OSDI / Operating Systems Design
-  - SOSP / Operating Systems Principles
-  - ATC / USENIX Annual Technical
-  - EuroSys
+  tier_1:
+    - name: SenSys
+      dblp: https://dblp.org/db/conf/sensys/
+    - name: MobiSys
+      dblp: https://dblp.org/db/conf/mobisys/
+    - name: IPSN
+      dblp: https://dblp.org/db/conf/ipsn/
+    - name: UbiComp / IMWUT
+      dblp: https://dblp.org/db/journals/imwut/
+  tier_2:
+    - name: MobiCom
+      dblp: https://dblp.org/db/conf/mobicom/
+    - name: EuroSys
+      dblp: https://dblp.org/db/conf/eurosys/
 
 security:
-  - USENIX Security / USENIX Security Symposium
-  - CCS / ACM Conference on Computer and Communications Security
-  - IEEE S&P / IEEE Symposium on Security and Privacy
-  - NDSS
+  tier_1:
+    - name: USENIX Security
+      dblp: https://dblp.org/db/conf/uss/
+    - name: CCS
+      dblp: https://dblp.org/db/conf/ccs/
+    - name: IEEE S&P
+      dblp: https://dblp.org/db/conf/sp/
+    - name: NDSS
+      dblp: https://dblp.org/db/conf/ndss/
+  tier_2:
+    - name: USENIX ATC
+      dblp: https://dblp.org/db/conf/usenix/
+
+systems:
+  tier_1:
+    - name: OSDI
+      dblp: https://dblp.org/db/conf/osdi/
+    - name: SOSP
+      dblp: https://dblp.org/db/conf/sosp/
+    - name: EuroSys
+      dblp: https://dblp.org/db/conf/eurosys/
+    - name: ASPLOS
+      dblp: https://dblp.org/db/conf/asplos/
+  tier_2:
+    - name: USENIX ATC
+      dblp: https://dblp.org/db/conf/usenix/
+    - name: NSDI
+      dblp: https://dblp.org/db/conf/nsdi/
 
 hci:
-  - CHI / ACM CHI Conference on Human Factors in Computing Systems
-  - UIST / ACM Symposium on User Interface Software and Technology
-  - CSCW / Computer-Supported Cooperative Work
+  tier_1:
+    - name: CHI
+      dblp: https://dblp.org/db/conf/chi/
+    - name: UIST
+      dblp: https://dblp.org/db/conf/uist/
+  tier_2:
+    - name: CSCW
+      dblp: https://dblp.org/db/conf/cscw/
+    - name: IUI
+      dblp: https://dblp.org/db/conf/iui/
 ```
+
+### Topic-to-Venue Mapping
+
+When the topic clearly fits a profile, auto-select it instead of asking:
+
+- wearable sensing, ExG, EEG/EMG sensing, auditory wearables, AR glasses audio → `wearable_sensing`
+- MCU firmware, embedded IoT software, cross-chip adaptation → `embedded_iot_firmware`
+- machine learning, deep learning, representation learning → `ai_ml`
+- sensor systems, mobile systems, IoT platforms → `iot_systems`
+- adversarial attacks, sensor security, side channels → `security` + `iot_systems`
+- OS, storage, distributed systems → `systems`
+- human-computer interaction, user interfaces → `hci`
+- topic spans multiple buckets → take the union of relevant tier-1 lists
+
+---
 
 ## Data Sources
 
 Priority order:
+1. DBLP venue listing (most reliable for venue membership)
+2. Semantic Scholar API (abstract, citations, references)
+3. arXiv export API (supplement only)
 
-1. Semantic Scholar API
-2. DBLP API
-3. arXiv export API
+### DBLP Venue Listing
 
-Use DBLP as the fallback when Semantic Scholar is rate-limited or too sparse.
+Use this to check venue completeness for specific years. Query pattern:
+
+```
+GET https://dblp.org/search/publ/api
+  ?q={TOPIC_KEYWORDS}+venue:{VENUE_NAME}
+  &format=json
+  &h=30
+```
+
+Or fetch the DBLP venue page directly to get the full paper list for a given year:
+`{dblp_url}` + year suffix, e.g. `https://dblp.org/db/conf/sensys/sensys2024.html`
+
+DBLP venue fields are human-maintained and far more reliable than Semantic Scholar's
+auto-assigned venue strings. Always prefer DBLP for answering "did this paper appear
+in this venue?"
+
+### Semantic Scholar API
+
+```
+GET https://api.semanticscholar.org/graph/v1/paper/search
+  ?query={TOPIC_KEYWORDS}
+  &fields=title,authors,year,venue,abstract,citationCount,influentialCitationCount,
+          externalIds,url,references,citations
+  &limit=50
+  &year={YEAR_START}-{YEAR_END}
+```
+
+Use `influentialCitationCount` (not just `citationCount`) when assessing whether a paper
+is a genuine foundation. Highly cited papers with low `influentialCitationCount` are
+likely survey-inflated and should not be elevated to foundation status.
+
+Reference and citation expansion:
+```
+GET https://api.semanticscholar.org/graph/v1/paper/{id}/references
+  ?fields=title,authors,year,venue,citationCount,influentialCitationCount
+  &limit=50
+
+GET https://api.semanticscholar.org/graph/v1/paper/{id}/citations
+  ?fields=title,authors,year,venue,citationCount
+  &limit=50
+```
+
+On `429`: switch to DBLP immediately. On network failure: retry once, then DBLP.
+
+### arXiv Supplement
+
+```
+GET http://export.arxiv.org/api/query
+  ?search_query=all:{TOPIC_KEYWORDS}
+  &sortBy=submittedDate
+  &sortOrder=descending
+  &max_results=20
+```
+
+Keep arXiv results only when:
+- published year is within range
+- title or abstract matches at least 2 topic-specific (non-generic) keywords
+- no venue-confirmed version exists for the same work
+
+---
 
 ## Search Workflow
 
-Conference-scout is not a one-shot batch pipeline anymore. It must behave like an iterative research agent:
+This skill is an iterative research agent. You must log which round you are in.
+Do not skip rounds. Do not merge rounds.
 
-- search once
-- read what came back
-- extract anchors
-- decide the next query shape
-- expand citations only after strong anchors exist
-- assemble a timeline instead of returning a flat ranked list
+---
 
-You must explicitly log which round you are in.
+### Round 1 — Discovery
 
-### Round 1. Discovery
+Purpose: find entry points and field vocabulary, not final answers.
 
-Purpose:
+Queries to run (in order, stop early if rich survey coverage is found):
 
-- find entry points, not final answers
-- prioritize recent surveys, reviews, tutorials, and recent tier-1 papers with rich related-work sections
-- discover the vocabulary the field actually uses
-
-Queries:
-
-- `{topic} survey`
-- `{topic} review`
-- `{topic} tutorial`
-- `a survey of {topic}`
-- if survey coverage is weak: recent tier-1 venue + topic + year
-
-Tools:
-
-- Semantic Scholar search
-- DBLP search
-- arXiv supplement only when venue coverage is sparse
+1. `{topic} survey`
+2. `{topic} review`
+3. `{topic} tutorial`
+4. `a survey of {topic}`
+5. If survey coverage is weak: `{topic}` scoped to the most relevant tier-1 venue + recent year
 
 Rules:
+- read the abstracts and related-work hints in what comes back
+- note which subfield vocabulary appears (system names, task names, metric names)
+- do not filter by venue in this round — discovery is intentionally broad
+- if multiple distinct subfields appear, note the boundary so Round 2 can set constraints
 
-- do not stop after the first few hits
-- if the topic is broad, use 1 to 2 wide discovery queries first
-- when the user asked for top conferences, discovery still starts broad, but later rounds must tighten to tier-1 venue sweeps
+---
 
-### Round 2. Anchor Extraction
+### Round 2 — Anchor Extraction  *(LLM reasoning step — no API call)*
 
-This is a required LLM reasoning step. Do not skip it.
-
-After reading Round 1 results, produce an explicit JSON object:
+Read all Round 1 results and produce this JSON before proceeding:
 
 ```json
 {
@@ -187,150 +264,171 @@ After reading Round 1 results, produce an explicit JSON object:
   "breakthrough_candidates": [],
   "survey_candidates": [],
   "constraint_terms": [],
-  "negative_patterns": []
+  "negative_patterns": [],
+  "subfield_boundary": ""
 }
 ```
 
-What to extract:
+Field guidance:
 
-- system names, framework names, dataset names, benchmark names
-- author names and `X et al.` patterns
-- quoted or highly specific technical noun phrases
-- explicit conference-year combinations such as `CVPR 2021`
-- false-positive patterns from discovery results
-- constraint terms that better describe the intended subproblem
+- `system_names`: proper-noun system/framework/model names seen in results; use as quoted anchors
+- `author_names`: recurring author names; trigger author-based search in Round 3
+- `key_phrases`: technical noun phrases specific enough to quote; avoid generic words
+- `venue_year_pairs`: explicit conference-year pairs found (e.g. `["SenSys 2023", "IMWUT 2024"]`)
+- `breakthrough_candidates`: papers described with language like "first", "seminal", "foundational",
+  "the first to", "pioneering", "introduced the concept of"
+- `survey_candidates`: papers that appear to be surveys or tutorials
+- `constraint_terms`: 1–2 words that narrow the topic to the intended subproblem
+- `negative_patterns`: recurring false-positive patterns to exclude in Round 4
+  (e.g. "industrial control systems" if topic is wearables, not SCADA)
+- `subfield_boundary`: one sentence describing where the intended topic ends and adjacent
+  fields begin; used as the Round 4 relevance rubric anchor
+
+---
+
+### Round 3 — Precision Search
+
+Purpose: convert anchors into high-precision queries and sweep tier-1 venues systematically.
+
+Query types (run all that apply given Round 2 anchors):
+
+| Anchor type | Query form |
+|---|---|
+| system name | `"SystemName"` |
+| author name | `"Author Name" {topic}` |
+| key phrase | `"exact technical phrase" {context}` |
+| venue + year | `{topic} {constraint_terms}` scoped to `{venue} {year}` |
+| constraint | `{topic} {constraint_term_1} {constraint_term_2}` |
+
+Venue sweep rule:
+
+- for the latest 2 years: enumerate `tier_1 venue × year` explicitly
+- use DBLP venue listing pages (`{dblp_url}`) to confirm membership when Semantic Scholar
+  venue strings are ambiguous or missing
+- record a per-venue completeness note: which venues were explicitly checked and for which years
+
+Do not rely on Semantic Scholar's `venue` field alone for tier-1 confirmation. If a
+paper's venue field is missing or ambiguous, check DBLP by DOI or title search.
+
+---
+
+### Round 4 — Relevance Gate  *(LLM reasoning step — no API call)*
+
+Every candidate paper must pass this rubric before entering the pool.
+Apply `constraint_terms` and `negative_patterns` from Round 2 explicitly.
+
+Questions to answer for each paper (all three must be yes):
+
+1. Is this paper about the specific subproblem, or only about a nearby field that shares keywords?
+   Use `subfield_boundary` from Round 2 as the reference line.
+2. Does the paper match the intended context — device type, application scenario, population,
+   or system layer — that the user is researching?
+3. Does the paper contribute meaningfully to the timeline, or does it only share surface keywords?
+
+Rejection rules:
+
+- reject if the paper matches `negative_patterns` from Round 2
+- reject if the paper's primary contribution is clearly outside `subfield_boundary`
+- reject if the paper is a workshop version of a venue-confirmed paper already in the pool
+- venue membership alone is not sufficient — top venues contain many off-topic papers
+
+---
+
+### Round 5 — Citation Expansion
+
+Only run after Round 3 has produced at least 3 anchor papers that passed Round 4.
+
+Steps:
+
+1. For each top-3 frontier paper from Round 3, fetch its `references` via Semantic Scholar
+2. Collect the union of all references; sort by frequency of co-occurrence across the 3 papers
+3. Papers co-cited by 2 or more frontier papers are strong foundation / consolidation candidates
+4. For each top-3 anchor paper, fetch its `citations`; sort by year descending
+5. Recent papers in the citations list that also appear in tier-1 venues are new frontier candidates
+
+Foundation elevation rules:
+
+- papers described as "first", "seminal", "foundational", "introduced", or "pioneering" in the
+  related-work sections of multiple frontier papers → promote to `breakthrough` or `foundation`
+- papers with high `influentialCitationCount` relative to total `citationCount` → stronger
+  foundation signal
+- papers that bridge the earliest foundational work and the current frontier → `consolidation`
+
+---
+
+### Round 6 — Timeline Assembly
+
+Classify every paper that passed Round 4 into exactly one role:
+
+| Role | Definition |
+|---|---|
+| `survey` | papers that provide a field-wide literature map |
+| `breakthrough` | papers described as seminal / first / foundational by the community; introduced a key concept or technique |
+| `foundation` | early core papers that established the baseline the field builds on; may overlap with breakthrough |
+| `consolidation` | papers between the earliest foundations and the current frontier; show how the field branched |
+| `frontier` | recent tier-1 papers representing the current strongest direction |
 
 Rules:
 
-- system names should be used as quoted anchors in later rounds
-- author names should trigger author-based search in Round 3
-- key phrases should be quoted exactly when precise enough
-- venue-year pairs should bypass fuzzy venue alias matching when possible
+- role is determined by citation structure and related-work language, not by year
+- a 2023 paper can be a breakthrough if it introduced a concept the rest of the field treats as foundational
+- a 2019 paper can be frontier if the field is young and recent work still cites it as state-of-the-art
+- if role confidence is low, prefer `consolidation` over inventing certainty
+- year is metadata on the timeline, not the classification criterion
 
-### Round 3. Precision Search
+Output order: sort chronologically by year within and across roles.
+The timeline is continuous; the role label is an annotation, not a section break.
 
-Purpose:
+---
 
-- convert Round 2 anchors into high-precision queries
-- sweep top venues systematically instead of hoping a generic query surfaces the right paper
+### Round 7 — Final Output
 
-Query construction rules:
+Ranking priority within each role:
 
-- system name: `"SystemName"`
-- author-based: `"Author Name" {topic}`
-- phrase-based: `"exact technical phrase"`
-- venue-year-based: `{topic} {venue} {year}`
-- context-constrained: `{topic} {constraint_term_1} {constraint_term_2}`
+1. Relevance to the exact topic and user constraints (from Round 4 rubric)
+2. Timeline role usefulness (breakthrough > consolidation > frontier for foundational context;
+   frontier > consolidation for latest-work queries)
+3. Tier-1 venue confirmation
+4. Recency (for frontier), `influentialCitationCount` (for foundation/breakthrough)
+5. Raw `citationCount` as a weak supporting signal only
 
-Top-venue rule:
+Target counts per search:
+- `survey`: 1–3
+- `breakthrough` / `foundation`: 2–4
+- `consolidation`: 3–5
+- `frontier`: 4–8
+- arXiv supplements (no venue): up to 3, clearly labeled
 
-- if the user wants top conferences, maintain explicit `tier_1` and optional `tier_2` venue lists
-- tier 1 is the main sweep
-- tier 2 is cross-check only unless the user asks for broader coverage
+Never let high-citation older loose matches crowd out clearly on-topic recent tier-1 papers.
 
-Venue execution rule:
-
-- for recent work, do `venue × year` enumeration for the latest 2 years in range
-- prefer DBLP venue listings when possible because venue membership is more reliable than Semantic Scholar aliases
-- keep a per-venue completeness note so the user can see which venues were explicitly checked
-
-### Round 4. Relevance Gate
-
-This is another required LLM reasoning step.
-
-Every candidate paper must pass a relevance rubric before entering the final pool.
-
-Rubric:
-
-1. Is the paper actually about the requested topic rather than a nearby but different subfield?
-2. Does it match the intended context, device, population, or application scenario?
-3. Does it meaningfully contribute to the field timeline rather than only sharing keywords?
-
-Rules:
-
-- reject candidates that only match broad keywords
-- explicitly use `constraint_terms` and `negative_patterns` from Round 2
-- venue membership alone is not enough; top venues still contain many off-topic papers
-
-### Round 5. Citation Expansion
-
-Only do this after Round 3 has found strong anchor papers.
-
-Use:
-
-- backward citations to find likely foundations and consolidation papers
-- forward citations to find newer frontier follow-ups
-- overlap across multiple frontier papers to detect shared milestone references
-
-Heuristics:
-
-- papers repeatedly cited by recent top papers are stronger foundation candidates
-- papers described in related-work language as `first`, `seminal`, `foundational`, or `breakthrough` should be elevated
-- papers between early foundational work and the newest frontier papers are consolidation candidates
-
-### Round 6. Timeline Assembly
-
-Do not use fixed year buckets such as `>5 years`.
-
-Instead, classify by field role:
-
-- `survey`
-- `breakthrough`
-- `foundation`
-- `consolidation`
-- `frontier`
-
-Definitions:
-
-- `breakthrough` / `foundation`: repeatedly cited anchors or papers described as seminal / first / foundational
-- `consolidation`: papers that connect early foundations to current frontier threads
-- `frontier`: recent top-venue papers representing the latest strong direction
-- `survey`: papers that help explain the field map directly
-
-Output should still appear on a continuous chronological timeline. Year is shown as metadata, but role is decided by the citation / related-work structure, not by rigid date thresholds.
-
-### Round 7. Final Ranking
-
-Ranking happens only after:
-
-- anchor extraction
-- relevance gating
-- citation expansion
-- timeline role assignment
-
-Ranking priorities:
-
-1. relevance to the exact topic and user constraints
-2. timeline role usefulness
-3. top-venue confirmation
-4. recency for frontier papers
-5. citations as a supporting signal only
-
-Never let older high-citation loose matches crowd out clearly on-topic frontier papers.
+---
 
 ## Latest-Paper Safeguard
 
-When the user asks for recent or latest papers, you must verify whether the newest year in range has any venue-confirmed matches.
+When the user asks for recent or latest papers:
 
-Checklist:
+1. Verify at least one tier-1 paper from the newest year in range exists
+2. If none found, say so explicitly and report what the most recent tier-1 result was
+3. Reference concrete years in the response (e.g. `SenSys 2025`) — never just say "latest"
+4. Do not let this safeguard be satisfied by a tier-2 venue hit if tier-1 was checked and came up empty
 
-1. Check whether at least one target-venue paper from the newest year exists
-2. If none appear, say that explicitly
-3. If one exists, ensure it is not accidentally excluded by an incomplete venue set
-4. In the response, mention concrete years, for example `SenSys 2026`, instead of vague wording like `latest`
+---
 
 ## Summaries
 
 For each retained paper, generate:
 
-1. `summary_en`: 4 to 6 sentences on problem, approach, result, significance, and why it matters for the searched topic
-2. `summary_zh`: 4 to 6 Chinese sentences covering the same substance with concrete technical detail
+- `summary_en`: 4–6 sentences covering problem, approach, result, significance, and why it
+  matters for the searched topic
+- `summary_zh`: 4–6 Chinese sentences covering the same substance with concrete technical detail
 
 Rules:
-
 - prefer concrete technical detail over generic praise
-- mention at least one mechanism, metric, architecture choice, benchmark result, or deployment constraint when available
-- make each summary readable as a compact research brief rather than a short abstract rewrite
+- mention at least one: mechanism, metric, architecture choice, benchmark result, deployment constraint
+- write as a compact research brief, not an abstract rewrite
+- for `survey` papers, summarize the taxonomy or periodization the survey imposes on the field
+
+---
 
 ## Persistent State
 
@@ -346,13 +444,7 @@ If missing, create:
 }
 ```
 
-For each new paper:
-
-- deduplicate by `url`
-- preserve existing `status`, `progress`, and `note_path`
-- create new entries with `status: "unread"` only when absent
-
-Suggested schema:
+Paper schema:
 
 ```json
 {
@@ -361,13 +453,14 @@ Suggested schema:
   "authors": "First Author et al.",
   "year": 2024,
   "venue": "IMWUT",
+  "venue_tier": 1,
   "citations": 37,
+  "influential_citations": 12,
   "url": "https://doi.org/...",
   "arxiv_id": "2401.XXXXX",
   "is_arxiv": false,
-  "rank": 1,
   "timeline_role": "frontier",
-  "timeline_reason_zh": "为什么它属于当前时间线节点",
+  "timeline_reason_zh": "首次在 AR 眼镜上实现了端侧 neural beamforming，被后续工作广泛引用",
   "summary_en": "...",
   "summary_zh": "...",
   "status": "unread",
@@ -379,78 +472,109 @@ Suggested schema:
 }
 ```
 
-Additional rules:
+Field rules:
+- `timeline_role`: one of `survey`, `breakthrough`, `foundation`, `consolidation`, `frontier`
+- `timeline_reason_zh`: one concrete sentence explaining the role assignment
+- `venue_tier`: 1, 2, or 0 for arXiv/unconfirmed
+- `influential_citations`: from Semantic Scholar `influentialCitationCount`; set to null if unavailable
+- deduplication by `url`; preserve existing `status`, `progress`, `note_path` on re-search
 
-- `timeline_role` must be one of `survey`, `breakthrough`, `foundation`, `consolidation`, `frontier`
-- `timeline_reason_zh` should explain why the paper occupies that role in one concrete sentence
-- if role confidence is weak, prefer `frontier` or `consolidation` over inventing certainty
-- keep role assignment explainable from Round 4 and Round 5 evidence
+Append each search to `searches`:
 
-Append each search to `searches` with topic, date, year range, venues, and `papers_added`.
+```json
+{
+  "topic": "...",
+  "date": "...",
+  "year_range": "...",
+  "venues_checked": ["SenSys 2024", "SenSys 2025", "IMWUT 2024", "..."],
+  "papers_added": 7
+}
+```
 
 ### `output/kanban.html`
 
 Load the dashboard template from `assets/kanban.html`.
 
 Fill:
-
 - `{{LAST_UPDATED}}`
 - `{{ACTIVE_TOPIC}}`
 - `{{ACTIVE_YEAR_RANGE}}`
 - `{{ACTIVE_VENUES}}`
+- `{{TOTAL_PAPERS}}`
+- `{{TIMELINE_SPAN}}`
+- `{{SURVEY_COUNT}}`
+- `{{BREAKTHROUGH_COUNT}}`
+- `{{CONSOLIDATION_COUNT}}`
+- `{{FRONTIER_COUNT}}`
+- `{{OVERVIEW_ZH}}`
+- `{{OVERVIEW_EN}}`
 - `{{TIMELINE_ITEMS}}`
-- `{{ALL_PAPERS}}`
 - `{{ENGINEERING_LINK}}`
 
 Render:
+- an opening overview paragraph summarizing total paper count and role breakdown
+- a continuous chronological timeline with role annotations
+- paper cards showing `timeline_role`, bilingual role reasoning, reading progress, and note links
+- venue tier badge on each card
 
-- a continuous timeline view ordered chronologically
-- detailed paper cards that include each paper's `timeline_role`
-- existing reading progress and note links when present
-
-If the user explicitly asks for topic-specific standalone HTML that must not overwrite existing results:
-
+If the user requests topic-specific standalone HTML:
 - still update `output/papers.json`
-- additionally generate a dedicated paper report HTML such as `output/projects/{topic_slug}/papers.html`
-- use `assets/results.html` as the base template for that standalone report
+- generate `output/projects/{topic_slug}/papers.html` using `assets/kanban.html` as the base layout
+- do not overwrite the shared dashboard
+
+---
 
 ## Response Format
 
-Reply with a compact summary:
-
-```text
+```
 Conference Scout — {TOPIC}
-{YEAR_START}-{YEAR_END} | {VENUES}
+{YEAR_RANGE_INFERRED} | {VENUES_CHECKED}
+
+Rounds completed: Discovery → Anchors → Precision → Relevance Gate → Citation Expansion → Timeline
+
 {N} new papers added | {TOTAL} total tracked
 
-Timeline:
-- Survey: {N}
-- Breakthrough / Foundation: {N}
-- Consolidation: {N}
-- Frontier: {N}
+Timeline summary:
+  Survey:               {N}
+  Breakthrough/Found.:  {N}
+  Consolidation:        {N}
+  Frontier:             {N}
+  arXiv supplement:     {N}
 
-Key papers:
-1. {Title} — {timeline_role} — {Venue} {Year}
-   {timeline_reason_zh}
+Key papers by timeline role:
 
-Supplements:
-- {Title} — arXiv {Year}
+[Foundation / Breakthrough]
+1. {Title} ({Venue} {Year}, {citations} citations)
+   Role: {timeline_reason_zh}
+   {summary_zh}
+
+[Consolidation]
+2. {Title} ({Venue} {Year})
+   Role: {timeline_reason_zh}
+   {summary_zh}
+
+[Frontier]
+3. {Title} ({Venue} {Year})
+   Role: {timeline_reason_zh}
+   {summary_zh}
+
+Venues explicitly checked:
+  Tier 1: SenSys 2024/2025, IMWUT 2024/2025, MobiCom 2024/2025, MobiSys 2024/2025
+  Tier 2: (cross-check only)
 
 Dashboard: output/kanban.html
 ```
 
-## Template Assets
-
-- Dashboard: `assets/kanban.html`
-- Optional search report: `assets/results.html`
+---
 
 ## Error Handling
 
-| Error | Handling |
+| Error | Action |
 |---|---|
 | Semantic Scholar `429` | switch to DBLP immediately |
 | Semantic Scholar network failure | retry once, then DBLP |
-| DBLP returns no relevant hits | try alternative keyword subsets |
-| arXiv is noisy | filter aggressively by topic relevance |
-| no venue-confirmed papers | show best unfiltered matches and mark them as fallback |
-| malformed `papers.json` | recreate carefully and warn in the response |
+| DBLP venue page unavailable | fall back to DBLP search API with venue keyword |
+| No venue-confirmed papers found | show best unfiltered matches, mark as unconfirmed |
+| arXiv results are noisy | filter aggressively; require ≥2 non-generic topic keyword matches |
+| `papers.json` malformed | recreate with warning; do not silently overwrite existing data |
+| Round 4 rejects >80% of candidates | warn the user; loosen one constraint and re-gate |

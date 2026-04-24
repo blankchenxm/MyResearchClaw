@@ -9,13 +9,22 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --bg:#0d1117; --panel:#151b24; --panel-2:#101620; --text:#e8eef8; --dim:#91a0b8;
-  --muted:#66748a; --line:rgba(255,255,255,0.08); --blue:#67a4ff; --cyan:#38d9c7; --amber:#ffd66e;
+  --muted:#66748a; --line:rgba(255,255,255,0.08); --blue:#67a4ff; --cyan:#38d9c7; --amber:#ffd66e; --rose:#ff8d6b;
 }
 body { font-family:'Noto Sans SC',sans-serif; background:radial-gradient(circle at top right, rgba(103,164,255,0.12), transparent 28%), var(--bg); color:var(--text); min-height:100vh; }
 body.light {
   --bg:#f4f7fb; --panel:#ffffff; --panel-2:#eef3f8; --text:#18202c; --dim:#516277;
-  --muted:#66768c; --line:rgba(15,23,42,0.10); --blue:#2364d2; --cyan:#0f9f90; --amber:#b98911;
+  --muted:#66768c; --line:rgba(15,23,42,0.10); --blue:#2364d2; --cyan:#0f9f90; --amber:#b98911; --rose:#d66033;
 }
+.lang-block { display:block; }
+.lang-inline { display:inline; }
+.lang-en { display:none; }
+body.lang-en .lang-zh { display:none !important; }
+body.lang-en .lang-en.lang-block { display:block; }
+body.lang-en .lang-en.lang-inline { display:inline; }
+body:not(.lang-en) .lang-zh.lang-block { display:block; }
+body:not(.lang-en) .lang-zh.lang-inline { display:inline; }
+body:not(.lang-en) .lang-en { display:none !important; }
 .wrap { max-width: 1320px; margin: 0 auto; padding: 28px 28px 80px; }
 .theme-toggle {
   position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
@@ -25,6 +34,10 @@ body.light {
   position:fixed; top:64px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font-size:16px;
 }
+.lang-toggle {
+  position:fixed; top:112px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font:700 11px 'JetBrains Mono', monospace;
+}
 .hero { background:linear-gradient(145deg, rgba(103,164,255,0.14), rgba(56,217,199,0.06)); border:1px solid var(--line); border-radius:24px; padding:28px 30px; margin-bottom:24px; }
 .eyebrow { font:600 12px 'JetBrains Mono',monospace; color:var(--amber); letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
 .hero h1 { font-size:42px; line-height:1.08; font-weight:900; max-width:980px; }
@@ -32,25 +45,27 @@ body.light {
 .meta { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
 .badge { border:1px solid var(--line); background:rgba(255,255,255,0.04); border-radius:999px; padding:8px 14px; font:500 12px 'JetBrains Mono',monospace; color:var(--dim); }
 .nav { display:flex; gap:10px; margin-bottom:22px; }
-.nav a { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; }
-.nav-btn { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; cursor:pointer; }
+.nav a, .nav-btn { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; cursor:pointer; }
 .grid { display:grid; grid-template-columns:1fr; gap:18px; }
 .section { background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:22px; }
 .section-title { display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:16px; }
 .section-title h2 { font-size:24px; font-weight:800; }
 .section-title span { color:var(--dim); font:500 12px 'JetBrains Mono',monospace; }
-.items { display:grid; gap:14px; }
-.item { background:var(--panel-2); border:1px solid var(--line); border-radius:16px; padding:18px; }
+.items, .takeaways, .evidence-stack { display:grid; gap:14px; }
+.item, .takeaway, .evidence-card {
+  background:var(--panel-2); border:1px solid var(--line); border-radius:16px; padding:18px;
+}
 .item-top { display:flex; justify-content:space-between; gap:12px; align-items:start; margin-bottom:10px; }
 .item h3 { font-size:18px; line-height:1.35; }
 .item h3 a { color:inherit; text-decoration:none; }
 .item h3 a:hover { color:var(--blue); }
 .tag { white-space:nowrap; border:1px solid var(--line); border-radius:999px; padding:5px 10px; font:600 11px 'JetBrains Mono',monospace; color:var(--blue); }
 .org { color:var(--dim); font-size:13px; margin-bottom:10px; }
-.summary { color:var(--text); font-size:14px; line-height:1.85; margin-bottom:10px; }
-.how { color:#b7c5da; font-size:14px; line-height:1.85; border-left:3px solid rgba(103,164,255,0.35); padding-left:12px; }
-.takeaways { display:grid; gap:12px; }
-.takeaway { background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:16px 18px; color:var(--text); line-height:1.8; }
+.summary, .how, .evidence-card, .takeaway { font-size:14px; line-height:1.85; }
+.summary { color:var(--text); margin-bottom:10px; }
+.how { color:#b7c5da; border-left:3px solid rgba(103,164,255,0.35); padding-left:12px; }
+.readiness-chip { display:inline-flex; align-items:center; border-radius:999px; padding:6px 12px; font:700 11px 'JetBrains Mono', monospace; border:1px solid rgba(56,217,199,0.24); color:var(--cyan); background:rgba(56,217,199,0.08); }
+.gap-card { border-left:3px solid rgba(255,141,107,0.32); }
 .status-card { margin-bottom:18px; background:rgba(56,217,199,0.07); border:1px solid rgba(56,217,199,0.16); border-radius:16px; padding:14px 16px; color:var(--dim); }
 .status-card.error { background:rgba(255,141,107,0.08); border-color:rgba(255,141,107,0.18); }
 .chat-drawer {
@@ -84,21 +99,29 @@ body.light {
 <body>
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
   <button class="chat-toggle" onclick="toggleChatDrawer()" title="Toggle project chat">💬</button>
+  <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle language">中/EN</button>
   <div class="wrap">
     <div class="nav">
-      <a href="/projects/silent-speech-recognition-emg-llm/papers.html">← Back to Papers</a>
+      <a href="/projects/silent-speech-recognition-emg-llm/papers.html">
+        <span class="lang-zh lang-inline">← 返回论文页</span>
+        <span class="lang-en lang-inline">← Back to Papers</span>
+      </a>
     </div>
 
     <section class="hero">
-      <div class="eyebrow">Engineering Scout</div>
+      <div class="eyebrow">
+        <span class="lang-zh lang-inline">工程实现调研</span>
+        <span class="lang-en lang-inline">Engineering Scout</span>
+      </div>
       <h1>Silent Speech Recognition（骨传导 + EMG + LLM）</h1>
-      <p>这一页聚焦“论文之外”的工程落地信息：GitHub 开源实现、现实产品与功能、以及相关新闻与实际部署信号，帮助你判断一个研究主题距离工程可用还有多远。</p>
+      <p>
+        <span class="lang-zh lang-block">这一页聚焦“论文之外”的工程落地信息：直接由论文衍生的实现、独立工程方案，以及产业/生态信号。它对应 engineering-scout 的三层 ring 模型，而不是简单的开源列表。</span>
+        <span class="lang-en lang-block">This page focuses on engineering evidence beyond papers: paper-linked implementations, independent engineering solutions, and ecosystem signals. It follows the three-ring engineering-scout model instead of a flat project list.</span>
+      </p>
       <div class="meta">
         <div class="badge">Range: 2018-2026</div>
-        <div class="badge">Updated: 2026-04-21</div>
-        <div class="badge">Open source: 4</div>
-        <div class="badge">Products: 4</div>
-        <div class="badge">News: 3</div>
+        <div class="badge">Updated: 2026-04-24</div>
+        <div class="badge">Readiness: active_development</div>
       </div>
     </section>
 
@@ -107,41 +130,118 @@ body.light {
     <div class="grid">
       <section class="section">
         <div class="section-title">
-          <h2>Key Takeaways</h2>
-          <span>High-level engineering readout</span>
+          <h2>
+            <span class="lang-zh lang-inline">Readiness Assessment</span>
+            <span class="lang-en lang-inline">Readiness Assessment</span>
+          </h2>
+          <span>active_development</span>
         </div>
-        <div class="takeaways">
-          <div class="takeaway">对你关心的路线来说，最现实的系统形态不是“骨传导耳机本身完成识别”，而是 EMG 负责静默输入、语言模型负责纠错/重排、骨传导负责私密回传。骨传导在今天更成熟的角色是输出通道，而不是主输入模态。</div><div class="takeaway">从工程落地角度看，around-ear / headphone / neckband 这三种形态最值得盯。它们比贴片式面部电极更接近产品，但真正难点是电极耦合变化、跨日重戴、个体差异和校准成本。</div><div class="takeaway">大模型在 silent speech 里最适合做后端语言约束，而不是直接替代前端信号解码。更稳的架构是“biosignal encoder -&gt; token/command lattice -&gt; LM or LLM rescoring -&gt; private audio / agent action”。</div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-title">
-          <h2>Open Source</h2>
-          <span>4 repos / projects</span>
-        </div>
-        <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://github.com/dgaddy/silent_speech" target="_blank">dgaddy/silent_speech</a></h3><span class="tag">open_source</span></div><div class="org">Danny Gaddy / GitHub · EMNLP 2020 / ACL 2021 lineage</div><div class="summary">当前最有代表性的 EMG silent speech 开源栈之一，既支持 EMG 到语音合成，也包含 EMG 到文本的静默识别代码。</div><div class="how">它的工程价值在于给出了完整训练与评测链路：EMG 数据、HiFi-GAN、CTC 识别、KenLM，以及开放词表 WER 评测。想做“EMG 前端 + 语言模型后端”的系统，这个 repo 是最好的起点之一。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/MateusAquino/subvocalization-emg" target="_blank">MateusAquino/subvocalization-emg</a></h3><span class="tag">open_source</span></div><div class="org">Mateus de Aquino Batista / GitHub · 研究型原型</div><div class="summary">一个偏硬件原型与数据采集的开源项目，围绕 OpenBCI Cyton 做表面肌电采集、词级分类和实验工作流。</div><div class="how">它很适合拿来理解“怎么把一套真的 EMG 采集原型搭起来”：电极布置、记录界面、训练页面、评估页面都给出来了。虽然词表较小，但它对做实验平台非常实用。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/brainflow-dev/brainflow" target="_blank">brainflow-dev/brainflow</a></h3><span class="tag">open_source</span></div><div class="org">BrainFlow Project · biosignal SDK</div><div class="summary">一个跨设备的 biosignal SDK，统一支持 EEG、EMG、ECG 等采集、解析和信号处理。</div><div class="how">如果要做 silent speech 工程系统，BrainFlow 很适合做采集与预处理底座。它把不同硬件抽象成统一 API，并自带滤波、降噪、下采样等工具，可以大幅减少你在设备接入层的重复工作。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/OpenBCI/OpenBCI_GUI" target="_blank">OpenBCI/OpenBCI_GUI</a></h3><span class="tag">open_source</span></div><div class="org">OpenBCI · acquisition GUI</div><div class="summary">OpenBCI 的官方 GUI 和实验框架，可实时可视化、过滤、记录和外发脑电/肌电数据。</div><div class="how">对于 silent speech 原型来说，它的价值不是“直接给你识别器”，而是提供一个稳定的实验采集与可视化前端。很多 EMG/EEG 研究原型都会先用 OpenBCI + GUI 把数据流跑顺，再接自己的识别模型。</div></div>
+        <div class="evidence-stack">
+          <div class="evidence-card">
+            <div class="readiness-chip">active_development</div>
+            <div style="margin-top:12px;"><div class="lang-zh lang-block">这个方向已经从实验室可行性进入可穿戴原型与早期产品探索阶段。Ring 1 有公开 code / dataset；Ring 2 出现了 AlterEgo、Engram、SilentSpeak 这类明确面向 AI 交互和私密输入的产品化尝试；但在连续语音、长期佩戴舒适性、跨用户校准和法规上仍然远未成熟。</div><div class="lang-en lang-block">This direction has moved beyond lab-only feasibility into wearable prototypes and early product exploration. Ring 1 includes public code and datasets; Ring 2 already has product-facing attempts such as AlterEgo, Engram, and SilentSpeak aimed at AI interaction and private input; but continuous speech, long-term wear comfort, cross-user calibration, and regulation are still far from solved.</div></div>
+          </div>
+          <div class="takeaway"><div class="lang-zh lang-block">如果你对“骨传导 + EMG + 大模型”感兴趣，最值得关注的是感知链路并不只靠一个模型，而是 EMG sensing、个体化校准、语言模型纠错和骨传导回传共同组成闭环。</div><div class="lang-en lang-block">If you are interested in the “bone conduction + EMG + LLM” route, the key observation is that the system is not just one model: EMG sensing, personalization/calibration, language-model correction, and bone-conduction feedback form the closed loop together.</div></div>
+          <div class="takeaway gap-card"><div class="lang-zh lang-block">目前最大的缺口仍然是部署侧：公开结果大多还在有限词表、受控句子或短时佩戴下测试，而真正产品化需要稳定处理长时漂移、汗液/皮肤接触变化、无声口型歧义和多语言泛化。</div><div class="lang-en lang-block">The largest gap is still deployment: most published results are evaluated on limited vocabularies, controlled sentences, or short wear sessions, whereas productization requires stable handling of long-term drift, sweat/skin-contact variation, silent articulation ambiguity, and multilingual generalization.</div></div>
         </div>
       </section>
 
       <section class="section">
         <div class="section-title">
-          <h2>Products</h2>
-          <span>4 products / features</span>
+          <h2>Ring 1</h2>
+          <span>
+            <span class="lang-zh lang-inline">Paper-linked implementations</span>
+            <span class="lang-en lang-inline">Paper-linked implementations</span>
+          </span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://www.media.mit.edu/projects/alterego/overview/" target="_blank">AlterEgo</a></h3><span class="tag">product</span></div><div class="org">MIT Media Lab / AlterEgo · 2018-2025</div><div class="summary">最经典的 silent speech 产品化方向之一：利用面部和颈部的细微神经肌肉信号做无声输入，并通过骨传导返回私密音频。</div><div class="how">它的实现路径非常接近你关心的组合：输入侧不是脑机接口，而是外围神经肌肉信号；输出侧则通过骨传导把 AI 或系统反馈悄悄送回用户。它证明了“EMG / neuromuscular sensing + bone conduction closed loop”在设备形态上是成立的。</div></div><div class="item"><div class="item-top"><h3><a href="https://silentspeak.io/" target="_blank">SilentSpeak</a></h3><span class="tag">product</span></div><div class="org">SilentSpeak · 2026</div><div class="summary">一个非常贴近你目标形态的原型产品：三路 sEMG 电极采脸部肌肉，ESP32-S3 做 DSP + MFCC，再通过 BLE 把特征发到手机端做识别，并用骨传导回传结果。</div><div class="how">它把工程栈写得很清楚：Ag/AgCl 电极、1 kHz 采样、ESP32-S3、BLE、手机端推理、Whisper/Parakeet/SeamlessM4T 这类模型做语音侧处理。也就是说，它本质上是在把 EMG 静默输入和现代语音/翻译模型结合成一套消费级交互链路。</div></div><div class="item"><div class="item-top"><h3><a href="https://engramlabs.co/" target="_blank">Engram</a></h3><span class="tag">product</span></div><div class="org">Engram Labs · 2026 prototype</div><div class="summary">一个新近面向“和 AI 静默对话”的 around-ear EMG 原型，强调本地处理、私密输入和 AI agent 控制。</div><div class="how">它的路线很明确：耳周/下颌表面肌电采集 silent intent，模型把信号映射成短语或意图，再把结果接给 AI agent。它没有强调骨传导硬件细节，但在“EMG 输入 + AI agent 控制”这条产品路线上非常直接。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.wisear.io/wisearphones" target="_blank">WisEarphones</a></h3><span class="tag">product</span></div><div class="org">Wisear · neural-interface earphones</div><div class="summary">Wisear 走的是“耳内神经接口”路线，用 2 路 ExG、低功耗前端、Cortex-M4 和设备端 AI 做无手、无声控制。</div><div class="how">它当前更像神经接口控制平台，而不是完整自然语言 silent speech 产品，但 form factor 很重要：真正可穿戴、蓝牙兼容、AI 在设备端运行。对后续把 EMG 静默语音命令收进耳机形态很有参考价值。</div></div>
+          <div class="item">
+  <div class="item-top">
+    <h3><a href="https://github.com/dgaddy/silent_speech" target="_blank">dgaddy/silent_speech</a></h3>
+    <div class="tag">paper-linked</div>
+  </div>
+  <div class="org">EMG silent-speech repository</div>
+  <div class="summary"><div class="lang-zh lang-block">这是最直接的公开代码资产之一，覆盖 silent speech 到文字/语音的 EMG 管线。</div><div class="lang-en lang-block">This is one of the clearest public code assets for EMG-based silent-speech pipelines, spanning silent articulation to text or voiced output.</div></div>
+  <div class="how"><div class="lang-zh lang-block">它对工程实现的价值在于把数据预处理、模型训练和 silent speech 识别目标串成了可复现 baseline。</div><div class="lang-en lang-block">Its engineering value lies in turning preprocessing, training, and silent-speech objectives into a reproducible baseline.</div></div>
+</div>
+<div class="item">
+  <div class="item-top">
+    <h3><a href="https://huggingface.co/datasets/PulpBio/SilentWear" target="_blank">SilentWear dataset / repo</a></h3>
+    <div class="tag">paper-linked</div>
+  </div>
+  <div class="org">Pulp Bio dataset and code path</div>
+  <div class="summary"><div class="lang-zh lang-block">SilentWear 对“超低功耗 wearable EMG + 边缘部署”非常关键，因为它同时提供了数据和系统方向。</div><div class="lang-en lang-block">SilentWear is highly relevant to the ultra-low-power wearable-EMG plus edge-deployment route because it exposes both data and system direction.</div></div>
+  <div class="how"><div class="lang-zh lang-block">如果你要自己做 neckband / around-ear 原型，它比纯算法论文更像真实工程起点。</div><div class="lang-en lang-block">If you want to build your own neckband or around-ear prototype, it feels more like a real engineering starting point than a purely algorithmic paper.</div></div>
+</div>
         </div>
       </section>
 
       <section class="section">
         <div class="section-title">
-          <h2>News & Deployment Signals</h2>
-          <span>3 recent signals</span>
+          <h2>Ring 2</h2>
+          <span>
+            <span class="lang-zh lang-inline">Independent engineering solutions</span>
+            <span class="lang-en lang-inline">Independent engineering solutions</span>
+          </span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://www.media.mit.edu/articles/exclusive-startup-lets-you-query-ai-with-silent-speech/" target="_blank">MIT/Decrypt: AlterEgo moves toward commercialization</a></h3><span class="tag">news</span></div><div class="org">MIT Media Lab / Decrypt · 2025-09-08</div><div class="summary">MIT 转述的报道显示 AlterEgo 已在 2025 年朝公司化推进，并继续强调“读取面部与喉部的微弱神经肌肉信号，再通过骨传导回传结果”的产品逻辑。</div><div class="how">这说明 silent speech 不再只是实验室演示，而是在往真实创业产品过渡。尤其是骨传导回传这点，表明私密双向交互被视为核心卖点。</div></div><div class="item"><div class="item-top"><h3><a href="https://www.wisear.io/posts/press-release-wisear-unveils-the-wisear-pod-at-ces-2024" target="_blank">Wisear CES 2024 WiseAR Pod</a></h3><span class="tag">news</span></div><div class="org">Wisear · 2024-01-02</div><div class="summary">Wisear 在 CES 2024 公开展示了利用面部、眼部和脑活动做无手无声控制的演示，重点面向音频和 AR/XR 设备。</div><div class="how">这类发布的意义在于，它把“neural / EMG-like silent control”明确推向了耳机、眼镜和 XR 的消费设备入口，而不是停留在论文系统。</div></div><div class="item"><div class="item-top"><h3><a href="https://techcrunch.com/2024/01/10/augmental-head-tracking/" target="_blank">TechCrunch: Augmental adds silent speech and bone-conduction feedback</a></h3><span class="tag">news</span></div><div class="org">TechCrunch / Augmental · 2024-01-10</div><div class="summary">Augmental 对外谈到其口腔设备正在研发 silent speech，并计划加入骨传导反馈，让用户在不发声情况下形成词语并获得私密回传。</div><div class="how">虽然它不是 EMG 路线，而是舌部/口腔动作路线，但它再次验证了“silent input + bone conduction feedback”这套交互闭环正在成为一个真实的产品方向。</div></div>
+          <div class="item">
+  <div class="item-top">
+    <h3><a href="https://www.alterego.io/" target="_blank">AlterEgo</a></h3>
+    <div class="tag">product</div>
+  </div>
+  <div class="org">Official product site</div>
+  <div class="summary"><div class="lang-zh lang-block">AlterEgo 是当前“骨传导回传 + 静默输入”路线最标志性的产品化尝试，直接把 silent speech 和 AI 交互叙事绑在一起。</div><div class="lang-en lang-block">AlterEgo is the most visible productization attempt of the bone-conduction-plus-silent-input route, directly tying silent speech to AI interaction.</div></div>
+  <div class="how"><div class="lang-zh lang-block">它的系统意义不只是识别准确率，而是证明了 around-ear / jawline form factor 与 bone-conduction feedback 的完整交互闭环。</div><div class="lang-en lang-block">Its significance is not only recognition accuracy, but proving a full interaction loop that combines an around-ear/jawline form factor with bone-conduction feedback.</div></div>
+</div>
+<div class="item">
+  <div class="item-top">
+    <h3><a href="https://engramlabs.co/" target="_blank">Engram</a></h3>
+    <div class="tag">product</div>
+  </div>
+  <div class="org">Silent-speech interface for AI</div>
+  <div class="summary"><div class="lang-zh lang-block">Engram 明确把产品定位成“对 AI 静默说话”的接口，说明 silent speech 已经开始直接对接 AI agent 场景。</div><div class="lang-en lang-block">Engram explicitly positions itself as a “silent speech interface for AI,” showing that the field is already targeting AI-agent interaction directly.</div></div>
+  <div class="how"><div class="lang-zh lang-block">从工程角度看，这种产品强调的是实时性、佩戴形态和 prompt-style 命令集，而不只是学术识别指标。</div><div class="lang-en lang-block">From an engineering point of view, products like this emphasize latency, wearable form factor, and prompt-style command sets instead of only academic recognition metrics.</div></div>
+</div>
+<div class="item">
+  <div class="item-top">
+    <h3><a href="https://silentspeak.io/" target="_blank">SilentSpeak</a></h3>
+    <div class="tag">product</div>
+  </div>
+  <div class="org">Mouth words, get text</div>
+  <div class="summary"><div class="lang-zh lang-block">SilentSpeak 的卖点是“默念/默动口型后直接得到文本或翻译结果”，这代表更直接的交互产品路线。</div><div class="lang-en lang-block">SilentSpeak’s pitch—mouth words silently and get text or translation—represents a more direct interaction-product route.</div></div>
+  <div class="how"><div class="lang-zh lang-block">它说明 silent speech 不一定非要走脑机接口叙事，EMG + 私密输入本身就足够构成产品定位。</div><div class="lang-en lang-block">It shows that silent speech does not need to lean on a brain-interface narrative; EMG plus private input is already enough for a product story.</div></div>
+</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <h2>Ring 3</h2>
+          <span>
+            <span class="lang-zh lang-inline">Ecosystem and deployment signals</span>
+            <span class="lang-en lang-inline">Ecosystem and deployment signals</span>
+          </span>
+        </div>
+        <div class="items">
+          <div class="item">
+  <div class="item-top">
+    <h3><a href="https://www.axios.com/2025/09/08/startup-query-ai-silent-speech-neural-interface" target="_blank">AlterEgo launch coverage</a></h3>
+    <div class="tag">news</div>
+  </div>
+  <div class="org">Axios 2025</div>
+  <div class="summary"><div class="lang-zh lang-block">Axios 对 AlterEgo 的报道说明这个方向已经进入主流科技媒体关注范围。</div><div class="lang-en lang-block">Axios coverage of AlterEgo shows the field has entered mainstream tech-media attention.</div></div>
+  <div class="how"><div class="lang-zh lang-block">这类报道的重要性在于它反映了“silent speech for AI”已经被视为真实产品类别，而不是纯实验室奇观。</div><div class="lang-en lang-block">The importance of this coverage is that it frames “silent speech for AI” as a real product category rather than a lab curiosity.</div></div>
+</div>
+<div class="item">
+  <div class="item-top">
+    <h3><a href="https://get.wisear.io/" target="_blank">Wisear earbuds</a></h3>
+    <div class="tag">ecosystem</div>
+  </div>
+  <div class="org">Earbud-based bioelectrical control</div>
+  <div class="summary"><div class="lang-zh lang-block">Wisear 虽然不完全等同于 silent speech，但它证明了耳机式 EMG / bioelectrical sensing 形态在消费电子里是有路线可走的。</div><div class="lang-en lang-block">Wisear is not identical to silent speech, but it proves that earbud-form EMG/bioelectrical sensing is a viable consumer-electronics route.</div></div>
+  <div class="how"><div class="lang-zh lang-block">对于你关心的 around-ear / headphone 方向，这类产品是非常有价值的相邻工程信号。</div><div class="lang-en lang-block">For the around-ear/headphone direction you care about, products like this are highly valuable adjacent engineering signals.</div></div>
+</div>
         </div>
       </section>
     </div>
@@ -149,19 +249,31 @@ body.light {
 <aside id="chat-drawer" class="chat-drawer" aria-hidden="true">
   <div class="chat-header">
     <div>
-      <div class="chat-title">Project Chat</div>
+      <div class="chat-title">
+        <span class="lang-zh lang-inline">项目对话</span>
+        <span class="lang-en lang-inline">Project Chat</span>
+      </div>
       <div class="chat-subtitle">Silent Speech Recognition（骨传导 + EMG + LLM） · engineering</div>
     </div>
-    <button class="nav-btn" onclick="toggleChatDrawer()">Close</button>
+    <button class="nav-btn" onclick="toggleChatDrawer()">
+      <span class="lang-zh lang-inline">关闭</span>
+      <span class="lang-en lang-inline">Close</span>
+    </button>
   </div>
   <div id="chat-history" class="chat-history">
-    <div class="chat-empty">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>
+    <div class="chat-empty">
+      <div class="lang-zh lang-block">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>
+      <div class="lang-en lang-block">This drawer keeps an engineering-page-specific chat history. It starts empty and persists for the same project.</div>
+    </div>
   </div>
   <div class="chat-compose">
     <div id="chat-status" class="chat-status"></div>
     <textarea id="chat-input" class="chat-input" placeholder="直接提问。当前工程页内容和 Codex 网络搜索都会作为可用能力。"></textarea>
     <div class="chat-actions">
-      <button class="nav-btn" onclick="submitChat()">Send</button>
+      <button class="nav-btn" onclick="submitChat()">
+        <span class="lang-zh lang-inline">发送</span>
+        <span class="lang-en lang-inline">Send</span>
+      </button>
     </div>
   </div>
 </aside>
@@ -175,6 +287,7 @@ let chatPending = false;
 
 async function init() {
   applyTheme();
+  applyLanguage();
   if (AUTO_GENERATE_ENGINEERING) {
     await ensureEngineeringReady();
   }
@@ -185,7 +298,7 @@ async function ensureEngineeringReady() {
     const status = await fetchStatus();
     const shouldStart = !status.page_ready || status.status === 'idle' || status.status === 'error' || status.topic !== status.expected_topic;
     if (shouldStart) {
-      showStatus('正在生成 Engineering View：自动收集 GitHub 开源实现、产品与新闻信号。');
+      showStatus('正在生成 Engineering View：自动收集实现、产品与部署信号。');
       await fetch(`${API}/api/generate-engineering`, { method:'POST' });
       pollStatus();
     } else if (status.status === 'running') {
@@ -240,7 +353,7 @@ function escapeHtml(text) {
 function renderChatHistory(messages) {
   const el = document.getElementById('chat-history');
   if (!messages.length) {
-    el.innerHTML = '<div class="chat-empty">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>';
+    el.innerHTML = '<div class="chat-empty"><div class="lang-zh lang-block">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div><div class="lang-en lang-block">This drawer keeps an engineering-page-specific chat history. It starts empty and persists for the same project.</div></div>';
     return;
   }
   el.innerHTML = messages.map(msg => `<div class="chat-msg ${msg.role}">${escapeHtml(msg.content || '')}</div>`).join('');
@@ -313,6 +426,18 @@ function applyTheme() {
   const light = localStorage.getItem('theme') === 'light';
   document.body.classList.toggle('light', light);
   document.querySelector('.theme-toggle').textContent = light ? '☀️' : '🌙';
+}
+
+function applyLanguage() {
+  const isEn = localStorage.getItem('ui-lang') === 'en';
+  document.body.classList.toggle('lang-en', isEn);
+  document.querySelector('.lang-toggle').textContent = isEn ? 'EN' : '中';
+}
+
+function toggleLanguage() {
+  const isEn = !(localStorage.getItem('ui-lang') === 'en');
+  localStorage.setItem('ui-lang', isEn ? 'en' : 'zh');
+  applyLanguage();
 }
 
 function toggleTheme() {

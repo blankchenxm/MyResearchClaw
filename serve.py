@@ -372,6 +372,84 @@ def timeline_reason_text(paper):
     )
 
 
+def render_lang_html(zh_text, en_text, tag="div", class_name=""):
+    classes = f" {class_name}" if class_name else ""
+    zh = escape((zh_text or "").strip())
+    en = escape((en_text or "").strip())
+    parts = []
+    if zh:
+        parts.append(f"<{tag} class=\"lang-zh lang-block{classes}\">{zh}</{tag}>")
+    if en:
+        parts.append(f"<{tag} class=\"lang-en lang-block{classes}\">{en}</{tag}>")
+    if not parts:
+        parts.append(f"<{tag} class=\"lang-zh lang-block{classes}\"></{tag}>")
+    return "".join(parts)
+
+
+def render_lang_inline(zh_text, en_text):
+    zh = escape((zh_text or "").strip())
+    en = escape((en_text or "").strip())
+    parts = []
+    if zh:
+        parts.append(f"<span class=\"lang-zh lang-inline\">{zh}</span>")
+    if en:
+        parts.append(f"<span class=\"lang-en lang-inline\">{en}</span>")
+    if not parts:
+        parts.append("<span class=\"lang-zh lang-inline\"></span>")
+    return "".join(parts)
+
+
+def timeline_reason_pair(paper):
+    zh = (
+        (paper.get("timeline_reason_zh") or "").strip()
+        or (paper.get("summary_zh") or "").strip()
+        or (paper.get("timeline_reason_en") or "").strip()
+        or (paper.get("summary_en") or "").strip()
+    )
+    en = (
+        (paper.get("timeline_reason_en") or "").strip()
+        or (paper.get("summary_en") or "").strip()
+        or (paper.get("timeline_reason_zh") or "").strip()
+        or (paper.get("summary_zh") or "").strip()
+    )
+    return zh, en
+
+
+def summarize_timeline(papers):
+    counts = {"survey": 0, "breakthrough": 0, "consolidation": 0, "frontier": 0, "other": 0}
+    years = []
+    for paper in papers:
+        role = infer_timeline_role(paper)
+        if role in {"foundation", "foundational", "seminal"}:
+            role = "breakthrough"
+        if role not in counts:
+            role = "other"
+        counts[role] += 1
+        year = int(paper.get("year") or 0)
+        if year:
+            years.append(year)
+    span = f"{min(years)}-{max(years)}" if years else "Unknown"
+    return counts, span
+
+
+def build_timeline_overview(papers, venues):
+    counts, span = summarize_timeline(papers)
+    total = len(papers)
+    zh = (
+        f"本次共整理 {total} 篇论文，时间线覆盖 {span}。其中包含 "
+        f"{counts['survey']} 篇 survey、{counts['breakthrough']} 篇 breakthrough / foundation、"
+        f"{counts['consolidation']} 篇 consolidation，以及 {counts['frontier']} 篇 frontier。"
+        f"检索范围重点覆盖：{venues or 'selected top venues'}。"
+    )
+    en = (
+        f"This topic timeline contains {total} papers spanning {span}. It includes "
+        f"{counts['survey']} survey papers, {counts['breakthrough']} breakthrough/foundation papers, "
+        f"{counts['consolidation']} consolidation papers, and {counts['frontier']} frontier papers. "
+        f"Venue sweep focused on: {venues or 'selected top venues'}."
+    )
+    return counts, span, zh, en
+
+
 def render_timeline_items(papers):
     ordered = sorted(
         papers,
@@ -380,7 +458,7 @@ def render_timeline_items(papers):
     rendered = []
     for idx, paper in enumerate(ordered, start=1):
         _, label, css = timeline_role_meta(paper)
-        reason = escape(timeline_reason_text(paper)[:220])
+        reason_zh, reason_en = timeline_reason_pair(paper)
         year = escape(str(paper.get("year") or "Unknown"))
         card_html = render_paper_card(idx, paper)
         rendered.append(
@@ -394,7 +472,7 @@ def render_timeline_items(papers):
                 <div class="timeline-top">
                   <span class="timeline-role {css}">{escape(label)}</span>
                 </div>
-                <div class="timeline-note">{reason}</div>
+                <div class="timeline-note">{render_lang_html(reason_zh[:220], reason_en[:220], tag="div")}</div>
               </div>
               <div class="timeline-card-wrap">
                 {card_html}
@@ -411,39 +489,43 @@ def render_progress_state(paper):
 
     fill_class = "progress-fill"
     label_class = "progress-label"
-    label_text = ""
+    label_html = ""
 
     if status == "done" or progress >= 100:
         fill_class += " done"
         label_class += " done"
-        label_text = "✓ Complete"
+        label_html = render_lang_inline("✓ 已完成", "✓ Complete")
     elif progress > 0 or status == "reading":
         fill_class += " active"
-        label_text = f"Reading... {progress}%"
+        label_html = render_lang_inline(f"精读中... {progress}%", f"Reading... {progress}%")
 
     if status == "done":
         button_html = (
             f'<button data-role="read-btn" class="btn btn-done" onclick="navigateTo(\'notes\', \'{escape_js(paper["id"])}\')">'
-            "✅ Done"
+            f'{render_lang_inline("✅ 已完成", "✅ Done")}'
             "</button>"
         )
     elif note_path and os.path.exists(os.path.join(ROOT, note_path)):
         button_html = (
             f'<button data-role="read-btn" class="btn btn-notes" onclick="navigateTo(\'notes\', \'{escape_js(paper["id"])}\')">'
-            "📄 View Notes"
+            f'{render_lang_inline("📄 查看笔记", "📄 View Notes")}'
             "</button>"
         )
     elif progress > 0 or status == "reading":
-        button_html = '<button data-role="read-btn" class="btn btn-read reading" disabled>⏳ Reading...</button>'
+        button_html = (
+            '<button data-role="read-btn" class="btn btn-read reading" disabled>'
+            f'{render_lang_inline("⏳ 精读中...", "⏳ Reading...")}'
+            "</button>"
+        )
     else:
         button_html = (
             '<button data-role="read-btn" class="btn btn-read" '
             f'onclick="triggerRead(\'{escape_js(paper["id"])}\','
             f'\'{escape_js(paper.get("url") or "")}\','
-            f'\'{escape_js(paper.get("title") or "")}\')">📖 Read Paper</button>'
+            f'\'{escape_js(paper.get("title") or "")}\')">{render_lang_inline("📖 精读论文", "📖 Read Paper")}</button>'
         )
 
-    return progress, fill_class, label_class, label_text, button_html
+    return progress, fill_class, label_class, label_html, button_html
 
 
 def escape_js(text):
@@ -677,16 +759,16 @@ def ensure_local_pdf(paper_id):
 def render_paper_card(idx, paper):
     citations_class, citations_text = citation_badge(paper.get("citations"))
     venue_class, venue_text = venue_badge(paper)
-    progress, fill_class, label_class, label_text, button_html = render_progress_state(paper)
+    progress, fill_class, label_class, label_html, button_html = render_progress_state(paper)
     tags_html = render_tags(paper.get("tags"))
-    summary_en = escape(paper.get("summary_en") or "")
-    summary_zh = escape(paper.get("summary_zh") or "")
+    summary_en = (paper.get("summary_en") or "").strip()
+    summary_zh = (paper.get("summary_zh") or "").strip()
     paper_url = escape(paper.get("url") or "")
     pdf_url = escape(infer_pdf_url(paper))
     title = escape(paper.get("title") or "Untitled")
     authors = escape(paper.get("authors") or "Unknown authors")
     _, role_label, role_css = timeline_role_meta(paper)
-    role_reason = escape(timeline_reason_text(paper)[:180])
+    role_reason_zh, role_reason_en = timeline_reason_pair(paper)
 
     tags_block = f"\n          {tags_html}" if tags_html else ""
 
@@ -699,24 +781,22 @@ def render_paper_card(idx, paper):
         </div>
         <div class="card-role-row">
           <span class="timeline-role {role_css}">{escape(role_label)}</span>
-          <span class="card-role-reason">{role_reason}</span>
+          <span class="card-role-reason">{render_lang_inline(role_reason_zh[:180], role_reason_en[:180])}</span>
         </div>
         <div class="card-authors">{authors}</div>
         <div class="card-meta">
           <span class="{venue_class}">{escape(venue_text)}</span>{tags_block}
         </div>
         <div class="summary-block">
-          <div class="summary-label">EN</div>
-          <div class="summary-en">{summary_en}</div>
-          <div class="summary-label" style="margin-top:6px;">中文</div>
-          <div class="summary-zh">{summary_zh}</div>
+          <div class="summary-label">{render_lang_inline("摘要", "Summary")}</div>
+          {render_lang_html(summary_zh, summary_en, tag="div", class_name="summary-copy")}
         </div>
         <div class="progress-row">
           <div class="progress-track"><div class="{fill_class}" style="width:{progress}%"></div></div>
-          <span class="{label_class}">{escape(label_text)}</span>
+          <span class="{label_class}">{label_html}</span>
         </div>
         <div class="card-actions">
-          <a href="{paper_url}" target="_blank" class="btn btn-view">🔗 View Paper</a>
+          <a href="{paper_url}" target="_blank" class="btn btn-view">{render_lang_inline("🔗 查看论文", "🔗 View Paper")}</a>
           {button_html}
         </div>
       </div>"""
@@ -725,17 +805,22 @@ def render_paper_card(idx, paper):
 def render_dashboard_html(active_topic, active_year_range, active_venues, engineering_link, papers):
     template = load_kanban_template()
     timeline_items = render_timeline_items(papers)
-    all_papers = "\n".join(
-        render_paper_card(idx, paper) for idx, paper in enumerate(papers, start=1)
-    )
+    counts, span, overview_zh, overview_en = build_timeline_overview(papers, active_venues)
     return (
         template.replace("{{LAST_UPDATED}}", escape(today_iso()))
         .replace("{{ACTIVE_TOPIC}}", escape(active_topic))
         .replace("{{ACTIVE_YEAR_RANGE}}", escape(active_year_range))
         .replace("{{ACTIVE_VENUES}}", escape(active_venues))
         .replace("{{ENGINEERING_LINK}}", engineering_link)
+        .replace("{{TOTAL_PAPERS}}", str(len(papers)))
+        .replace("{{TIMELINE_SPAN}}", escape(span))
+        .replace("{{SURVEY_COUNT}}", str(counts["survey"]))
+        .replace("{{BREAKTHROUGH_COUNT}}", str(counts["breakthrough"]))
+        .replace("{{CONSOLIDATION_COUNT}}", str(counts["consolidation"]))
+        .replace("{{FRONTIER_COUNT}}", str(counts["frontier"]))
+        .replace("{{OVERVIEW_ZH}}", escape(overview_zh))
+        .replace("{{OVERVIEW_EN}}", escape(overview_en))
         .replace("{{TIMELINE_ITEMS}}", timeline_items)
-        .replace("{{ALL_PAPERS}}", all_papers)
     )
 
 
@@ -811,6 +896,19 @@ body.light {{
   position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font-size:16px;
 }}
+.lang-toggle {{
+  position:fixed; top:64px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font:700 11px 'JetBrains Mono', monospace;
+}}
+.lang-block {{ display:block; }}
+.lang-inline {{ display:inline; }}
+.lang-en {{ display:none; }}
+body.lang-en .lang-zh {{ display:none !important; }}
+body.lang-en .lang-en.lang-block {{ display:block; }}
+body.lang-en .lang-en.lang-inline {{ display:inline; }}
+body:not(.lang-en) .lang-zh.lang-block {{ display:block; }}
+body:not(.lang-en) .lang-zh.lang-inline {{ display:inline; }}
+body:not(.lang-en) .lang-en {{ display:none !important; }}
 .hero {{
   border:1px solid var(--line); border-radius:28px; padding:30px 32px;
   background:linear-gradient(145deg, rgba(105,166,255,0.14), rgba(56,217,199,0.04));
@@ -843,11 +941,18 @@ body.light {{
 </head>
 <body>
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+  <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle language">中/EN</button>
   <div class="wrap">
     <section class="hero">
       <div class="hero-eyebrow">MyResearchClaw</div>
-      <h1>Topic Navigator</h1>
-      <p>所有主题页面现在都收纳在 <code>output/projects/&lt;topic-slug&gt;/</code> 下。先进入对应的 Papers 页面，再在页面顶部点击 Engineering View；精读笔记仍会按主题写入 <code>output/notes/&lt;topic-slug&gt;/</code>。</p>
+      <h1>
+        <span class="lang-zh lang-inline">Topic Navigator</span>
+        <span class="lang-en lang-inline">Topic Navigator</span>
+      </h1>
+      <p>
+        <span class="lang-zh lang-block">所有主题页面现在都收纳在 <code>output/projects/&lt;topic-slug&gt;/</code> 下。先进入对应的 Papers 页面，再在页面顶部点击 Engineering View；精读笔记仍会按主题写入 <code>output/notes/&lt;topic-slug&gt;/</code>。</span>
+        <span class="lang-en lang-block">All topic pages now live under <code>output/projects/&lt;topic-slug&gt;/</code>. Open the corresponding Papers page first, then use the Engineering View button at the top; reading notes are still stored under <code>output/notes/&lt;topic-slug&gt;/</code>.</span>
+      </p>
     </section>
     <section class="topics">
       {cards_html}
@@ -859,12 +964,22 @@ function applyTheme() {{
   document.body.classList.toggle('light', light);
   document.querySelector('.theme-toggle').textContent = light ? '☀️' : '🌙';
 }}
+function applyLanguage() {{
+  const isEn = localStorage.getItem('ui-lang') === 'en';
+  document.body.classList.toggle('lang-en', isEn);
+  document.querySelector('.lang-toggle').textContent = isEn ? 'EN' : '中';
+}}
+function toggleLanguage() {{
+  const isEn = !(localStorage.getItem('ui-lang') === 'en');
+  localStorage.setItem('ui-lang', isEn ? 'en' : 'zh');
+  applyLanguage();
+}}
 function toggleTheme() {{
   const light = !document.body.classList.contains('light');
   localStorage.setItem('theme', light ? 'light' : 'dark');
   applyTheme();
 }}
-window.addEventListener('load', applyTheme);
+window.addEventListener('load', () => {{ applyTheme(); applyLanguage(); }});
 </script>
 </body>
 </html>"""
@@ -945,8 +1060,8 @@ def ensure_engineering_page():
     year_range = latest_search.get("year_range") or "2022-current"
     template = load_engineering_template()
     placeholder = (
-        '<div class="takeaway">Engineering scout page has not been generated yet. '
-        'Run `engineering-scout` for this topic to populate GitHub projects, products, and deployment signals.</div>'
+        '<div class="lang-zh lang-block">当前还没有生成 engineering-scout 结果。运行 `engineering-scout` 后，这里会填入三层 ring 的工程实现、产品与部署信号。</div>'
+        '<div class="lang-en lang-block">Engineering-scout has not generated results for this topic yet. Once it runs, this page will be populated with ring-based implementations, products, and deployment signals.</div>'
     )
     html = (
         template.replace("{{TOPIC}}", escape(topic))
@@ -954,13 +1069,13 @@ def ensure_engineering_page():
         .replace("{{LAST_UPDATED}}", escape(data.get("last_updated") or today_iso()))
         .replace("{{BACK_TO_PAPERS_LINK}}", "/kanban.html")
         .replace("{{AUTO_GENERATE_ENGINEERING}}", "true")
-        .replace("{{OPEN_SOURCE_COUNT}}", "0")
-        .replace("{{PRODUCT_COUNT}}", "0")
-        .replace("{{NEWS_COUNT}}", "0")
-        .replace("{{KEY_TAKEAWAYS}}", placeholder)
-        .replace("{{OPEN_SOURCE_ITEMS}}", '<div class="item"><div class="summary">No engineering results generated yet.</div></div>')
-        .replace("{{PRODUCT_ITEMS}}", '<div class="item"><div class="summary">No product results generated yet.</div></div>')
-        .replace("{{NEWS_ITEMS}}", '<div class="item"><div class="summary">No news or deployment signals generated yet.</div></div>')
+        .replace("{{READINESS_LEVEL}}", "pending")
+        .replace("{{READINESS_EVIDENCE}}", placeholder)
+        .replace("{{KEY_TAKEAWAY}}", placeholder)
+        .replace("{{GAP_ANALYSIS}}", placeholder)
+        .replace("{{RING1_ITEMS}}", '<div class="item"><div class="summary">No ring-1 results yet.</div></div>')
+        .replace("{{RING2_ITEMS}}", '<div class="item"><div class="summary">No ring-2 results yet.</div></div>')
+        .replace("{{RING3_ITEMS}}", '<div class="item"><div class="summary">No ring-3 results yet.</div></div>')
     )
     with open(ENGINEERING_HTML, "w", encoding="utf-8") as f:
         f.write(html)

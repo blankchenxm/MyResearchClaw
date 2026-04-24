@@ -38,6 +38,19 @@ body.light {
   position:fixed; top:64px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:16px;
 }
+.lang-toggle {
+  position:fixed; top:112px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font:700 11px 'JetBrains Mono', monospace;
+}
+.lang-block { display:block; }
+.lang-inline { display:inline; }
+.lang-en { display:none; }
+body.lang-en .lang-zh { display:none !important; }
+body.lang-en .lang-en.lang-block { display:block; }
+body.lang-en .lang-en.lang-inline { display:inline; }
+body:not(.lang-en) .lang-zh.lang-block { display:block; }
+body:not(.lang-en) .lang-zh.lang-inline { display:inline; }
+body:not(.lang-en) .lang-en { display:none !important; }
 .server-banner {
   background:rgba(255,141,107,0.08); border:1px solid rgba(255,141,107,0.16);
   padding:10px 16px; border-radius:14px; font:12px 'JetBrains Mono', monospace; color:var(--accent3);
@@ -56,6 +69,12 @@ body.light {
 .hero-eyebrow { font:600 12px 'JetBrains Mono', monospace; color:var(--accent4); text-transform:uppercase; letter-spacing:.14em; margin-bottom:12px; }
 .hero-title { font-size:48px; line-height:1.04; font-weight:900; max-width:980px; }
 .hero-subtitle { margin-top:14px; color:var(--text-muted); font:500 12px 'JetBrains Mono', monospace; }
+.hero-summary { margin-top:18px; color:var(--text-dim); font-size:15px; line-height:1.85; max-width:980px; }
+.hero-metrics { margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; }
+.hero-metric {
+  border:1px solid var(--border); background:rgba(255,255,255,0.04); border-radius:999px; padding:8px 12px;
+  font:600 11px 'JetBrains Mono', monospace; color:var(--text-dim);
+}
 .hero-actions { display:flex; gap:10px; flex-wrap:wrap; }
 .hero-btn, .btn {
   display:inline-flex; align-items:center; gap:6px; cursor:pointer; text-decoration:none;
@@ -136,9 +155,9 @@ body.light {
 .tag-pink { color:#ff9ac2; border-color:rgba(255,154,194,0.18); background:rgba(255,154,194,0.06); }
 .summary-block { border-top:1px solid var(--border); padding-top:14px; margin-bottom:14px; }
 .summary-label { font:600 10px 'JetBrains Mono', monospace; color:var(--text-muted); margin-bottom:6px; letter-spacing:.08em; text-transform:uppercase; }
-.summary-en, .summary-zh { font-size:14px; line-height:1.82; }
-.summary-en { color:var(--text-dim); margin-bottom:12px; }
-.summary-zh { color:#c8d5e8; border-left:3px solid rgba(105,166,255,0.28); padding-left:12px; }
+.summary-copy { font-size:14px; line-height:1.82; }
+body:not(.lang-en) .summary-copy.lang-zh { color:#c8d5e8; border-left:3px solid rgba(105,166,255,0.28); padding-left:12px; }
+body.lang-en .summary-copy.lang-en { color:var(--text-dim); }
 .progress-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
 .progress-track { flex:1; height:6px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,0.06); }
 .progress-fill { height:100%; width:0%; background:linear-gradient(90deg, var(--accent), #94b8ff); transition:width 1.1s ease; }
@@ -247,6 +266,7 @@ body.light {
 <div class="page-wrap">
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
   <button class="chat-toggle" onclick="toggleChatDrawer()" title="Toggle project chat">💬</button>
+  <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle language">中/EN</button>
   <div id="server-banner" class="server-banner" style="display:none">
     本地自动精读服务未连接。启动 <code>python serve.py</code> 后可直接在页面中触发 `paper-reader`。
   </div>
@@ -254,19 +274,43 @@ body.light {
   <section class="hero">
     <div class="hero-top">
       <div>
-        <div class="hero-eyebrow">Research Theme</div>
+        <div class="hero-eyebrow">
+          <span class="lang-zh lang-inline">论文搜索</span>
+          <span class="lang-en lang-inline">Research Theme</span>
+        </div>
         <h1 class="hero-title">{{ACTIVE_TOPIC}}</h1>
-        <div class="hero-subtitle">Updated {{LAST_UPDATED}}</div>
+        <div class="hero-subtitle">
+          <span class="lang-zh lang-inline">更新于 {{LAST_UPDATED}}</span>
+          <span class="lang-en lang-inline">Updated {{LAST_UPDATED}}</span>
+        </div>
+        <div class="hero-summary">
+          <div class="lang-zh lang-block">{{OVERVIEW_ZH}}</div>
+          <div class="lang-en lang-block">{{OVERVIEW_EN}}</div>
+        </div>
+        <div class="hero-metrics">
+          <div class="hero-metric">Total {{TOTAL_PAPERS}}</div>
+          <div class="hero-metric">Survey {{SURVEY_COUNT}}</div>
+          <div class="hero-metric">Breakthrough {{BREAKTHROUGH_COUNT}}</div>
+          <div class="hero-metric">Consolidation {{CONSOLIDATION_COUNT}}</div>
+          <div class="hero-metric">Frontier {{FRONTIER_COUNT}}</div>
+          <div class="hero-metric">{{TIMELINE_SPAN}}</div>
+        </div>
       </div>
       <div class="hero-actions">
-        <button class="hero-btn engineering" onclick="openEngineeringView()">Engineering View →</button>
+        <button class="hero-btn engineering" onclick="openEngineeringView()">
+          <span class="lang-zh lang-inline">Engineering View →</span>
+          <span class="lang-en lang-inline">Engineering View →</span>
+        </button>
       </div>
     </div>
   </section>
 
   <section class="workflow-panel">
     <div class="panel-top">
-      <div class="panel-title">Agentic Search Workflow</div>
+      <div class="panel-title">
+        <span class="lang-zh lang-inline">Agentic 检索流程</span>
+        <span class="lang-en lang-inline">Agentic Search Workflow</span>
+      </div>
       <div class="panel-subtitle">{{ACTIVE_YEAR_RANGE}} · {{ACTIVE_VENUES}}</div>
     </div>
     <div class="workflow-steps">
@@ -280,14 +324,23 @@ body.light {
       <div class="workflow-arrow">→</div>
       <div class="workflow-step"><strong>R5</strong> Timeline Assembly</div>
     </div>
-    <div class="workflow-note">这套页面默认按“先找 survey / recent entry，再抽 anchors，再做 author / phrase / venue 精确搜索，最后按领域角色组装时间线”的方式来组织结果，而不是单轮 batch 排名。</div>
+    <div class="workflow-note">
+      <div class="lang-zh lang-block">这套页面默认按“先找 survey / recent entry，再抽 anchors，再做 author / phrase / venue 精确搜索，最后按领域角色组装时间线”的方式来组织结果，而不是单轮 batch 排名。</div>
+      <div class="lang-en lang-block">This page is organized as an iterative agentic workflow: discover surveys and entry papers, extract anchors, run precise author/phrase/venue searches, then assemble a role-aware timeline instead of a one-shot batch ranking.</div>
+    </div>
   </section>
 
   <div id="papers-view">
     <section class="timeline-panel">
       <div class="panel-top">
-        <div class="panel-title">Continuous Timeline</div>
-        <div class="panel-subtitle">Left = timeline, right = key papers</div>
+        <div class="panel-title">
+          <span class="lang-zh lang-inline">研究时间线</span>
+          <span class="lang-en lang-inline">Continuous Timeline</span>
+        </div>
+        <div class="panel-subtitle">
+          <span class="lang-zh lang-inline">左侧是时间线，右侧是对应论文</span>
+          <span class="lang-en lang-inline">Left = timeline, right = key papers</span>
+        </div>
       </div>
       <div class="timeline-rail">
         {{TIMELINE_ITEMS}}
@@ -300,27 +353,45 @@ body.light {
       <section class="notes-pane">
         <div class="notes-topbar">
           <div class="notes-title-wrap">
-            <div class="notes-kicker">Paper Reader</div>
+            <div class="notes-kicker">
+              <span class="lang-zh lang-inline">精读笔记</span>
+              <span class="lang-en lang-inline">Paper Reader</span>
+            </div>
             <div id="notes-title" class="notes-title"></div>
             <div id="notes-subtitle" class="notes-subtitle"></div>
           </div>
-          <button class="btn" onclick="navigateTo('papers')">← Back to Papers</button>
+          <button class="btn" onclick="navigateTo('papers')">
+            <span class="lang-zh lang-inline">← 返回论文页</span>
+            <span class="lang-en lang-inline">← Back to Papers</span>
+          </button>
         </div>
         <div id="notes-content" class="notes-content"></div>
       </section>
 
       <aside class="pdf-pane">
         <div class="pdf-topbar">
-          <div class="pdf-title">Paper PDF</div>
+          <div class="pdf-title">
+            <span class="lang-zh lang-inline">论文 PDF</span>
+            <span class="lang-en lang-inline">Paper PDF</span>
+          </div>
           <div class="pdf-links">
-            <a id="pdf-open-link" class="btn btn-view" href="#" target="_blank" style="display:none">Open PDF ↗</a>
-            <a id="paper-open-link" class="btn btn-view" href="#" target="_blank" style="display:none">Open Paper ↗</a>
+            <a id="pdf-open-link" class="btn btn-view" href="#" target="_blank" style="display:none">
+              <span class="lang-zh lang-inline">打开 PDF ↗</span>
+              <span class="lang-en lang-inline">Open PDF ↗</span>
+            </a>
+            <a id="paper-open-link" class="btn btn-view" href="#" target="_blank" style="display:none">
+              <span class="lang-zh lang-inline">打开论文页 ↗</span>
+              <span class="lang-en lang-inline">Open Paper ↗</span>
+            </a>
           </div>
         </div>
         <div class="pdf-body">
           <div class="pdf-viewer">
             <iframe id="pdf-frame" class="pdf-frame" title="Paper PDF Viewer"></iframe>
-            <div id="pdf-empty" class="pdf-empty">当前没有可直接预览的 PDF。若论文页面可访问，右上角可直接打开原文。</div>
+            <div id="pdf-empty" class="pdf-empty">
+              <div class="lang-zh lang-block">当前没有可直接预览的 PDF。若论文页面可访问，右上角可直接打开原文。</div>
+              <div class="lang-en lang-block">No inline PDF is available yet. If the paper page is reachable, use the top-right links to open the source directly.</div>
+            </div>
           </div>
         </div>
       </aside>
@@ -341,19 +412,31 @@ body.light {
 <aside id="chat-drawer" class="chat-drawer" aria-hidden="true">
   <div class="chat-header">
     <div>
-      <div class="chat-title">Project Chat</div>
+      <div class="chat-title">
+        <span class="lang-zh lang-inline">项目对话</span>
+        <span class="lang-en lang-inline">Project Chat</span>
+      </div>
       <div class="chat-subtitle">{{ACTIVE_TOPIC}} · papers</div>
     </div>
-    <button class="btn" onclick="toggleChatDrawer()">Close</button>
+    <button class="btn" onclick="toggleChatDrawer()">
+      <span class="lang-zh lang-inline">关闭</span>
+      <span class="lang-en lang-inline">Close</span>
+    </button>
   </div>
   <div id="chat-history" class="chat-history">
-    <div class="chat-empty">这里会保留当前项目的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>
+    <div class="chat-empty">
+      <div class="lang-zh lang-block">这里会保留当前项目的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>
+      <div class="lang-en lang-block">This drawer keeps a project-specific conversation history. It starts empty and persists across visits for the same project.</div>
+    </div>
   </div>
   <div class="chat-compose">
     <div id="chat-status" class="chat-status"></div>
     <textarea id="chat-input" class="chat-input" placeholder="直接提问。当前页面上下文和 Codex 网络搜索都会作为可用能力。"></textarea>
     <div class="chat-actions">
-      <button class="btn" onclick="submitChat()">Send</button>
+      <button class="btn" onclick="submitChat()">
+        <span class="lang-zh lang-inline">发送</span>
+        <span class="lang-en lang-inline">Send</span>
+      </button>
     </div>
   </div>
 </aside>
@@ -376,6 +459,7 @@ if (window.pdfjsLib) {
 
 async function init() {
   applyTheme();
+  applyLanguage();
   await checkServer();
   renderRoute();
   window.addEventListener('hashchange', renderRoute);
@@ -426,25 +510,25 @@ function updateCard(p) {
   }
   const lbl = card.querySelector('.progress-label');
   if (lbl) {
-    if (prog >= 100) { lbl.textContent = '✓ Complete'; lbl.className = 'progress-label done'; }
-    else if (prog > 0) { lbl.textContent = `Reading... ${prog}%`; lbl.className = 'progress-label'; }
-    else { lbl.textContent = ''; lbl.className = 'progress-label'; }
+    if (prog >= 100) { lbl.innerHTML = '<span class="lang-zh lang-inline">✓ 已完成</span><span class="lang-en lang-inline">✓ Complete</span>'; lbl.className = 'progress-label done'; }
+    else if (prog > 0) { lbl.innerHTML = `<span class="lang-zh lang-inline">精读中... ${prog}%</span><span class="lang-en lang-inline">Reading... ${prog}%</span>`; lbl.className = 'progress-label'; }
+    else { lbl.innerHTML = ''; lbl.className = 'progress-label'; }
   }
 
   const btn = card.querySelector('[data-role="read-btn"]');
   if (btn) {
     if (prog >= 100) {
       btn.disabled = false;
-      btn.textContent = '📄 View Notes';
+      btn.innerHTML = '<span class="lang-zh lang-inline">📄 查看笔记</span><span class="lang-en lang-inline">📄 View Notes</span>';
       btn.className = 'btn btn-notes';
       btn.onclick = () => navigateTo('notes', p.id);
     } else if (prog > 0) {
       btn.disabled = true;
-      btn.textContent = '⏳ Reading...';
+      btn.innerHTML = '<span class="lang-zh lang-inline">⏳ 精读中...</span><span class="lang-en lang-inline">⏳ Reading...</span>';
       btn.className = 'btn btn-read reading';
     } else {
       btn.disabled = false;
-      btn.textContent = '📖 Read Paper';
+      btn.innerHTML = '<span class="lang-zh lang-inline">📖 精读论文</span><span class="lang-en lang-inline">📖 Read Paper</span>';
       btn.className = 'btn btn-read';
       const url = card.getAttribute('data-url');
       const title = card.querySelector('.card-title').textContent.trim();
@@ -468,7 +552,7 @@ async function triggerRead(id, url, title) {
   const card = document.querySelector(`[data-id="${id}"]`);
   const btn = card.querySelector('[data-role="read-btn"]');
   btn.disabled = true;
-  btn.textContent = '⏳ Starting...';
+  btn.innerHTML = '<span class="lang-zh lang-inline">⏳ 正在启动...</span><span class="lang-en lang-inline">⏳ Starting...</span>';
   btn.className = 'btn btn-read reading';
 
   try {
@@ -481,7 +565,7 @@ async function triggerRead(id, url, title) {
   } catch (e) {
     activeReadId = null;
     btn.disabled = false;
-    btn.textContent = '📖 Read Paper';
+    btn.innerHTML = '<span class="lang-zh lang-inline">📖 精读论文</span><span class="lang-en lang-inline">📖 Read Paper</span>';
     btn.className = 'btn btn-read';
     btn.onclick = () => triggerRead(id, url, title);
     showToast(url);
@@ -517,7 +601,7 @@ async function showNotes(paperId) {
   document.getElementById('notes-subtitle').textContent = subtitle;
 
   const content = document.getElementById('notes-content');
-  content.innerHTML = '<p style="color:var(--text-muted)">Loading notes...</p>';
+  content.innerHTML = '<p style="color:var(--text-muted)"><span class="lang-zh lang-inline">正在加载笔记...</span><span class="lang-en lang-inline">Loading notes...</span></p>';
 
   try {
     const r = await fetch(`${API}/api/notes/${paperId}`);
@@ -678,6 +762,18 @@ function applyTheme() {
   const light = localStorage.getItem('theme') === 'light';
   document.body.classList.toggle('light', light);
   document.querySelector('.theme-toggle').textContent = light ? '☀️' : '🌙';
+}
+
+function applyLanguage() {
+  const isEn = localStorage.getItem('ui-lang') === 'en';
+  document.body.classList.toggle('lang-en', isEn);
+  document.querySelector('.lang-toggle').textContent = isEn ? 'EN' : '中';
+}
+
+function toggleLanguage() {
+  const isEn = !(localStorage.getItem('ui-lang') === 'en');
+  localStorage.setItem('ui-lang', isEn ? 'en' : 'zh');
+  applyLanguage();
 }
 
 function toggleTheme() {

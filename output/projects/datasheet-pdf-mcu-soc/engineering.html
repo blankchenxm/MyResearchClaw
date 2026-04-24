@@ -9,13 +9,22 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --bg:#0d1117; --panel:#151b24; --panel-2:#101620; --text:#e8eef8; --dim:#91a0b8;
-  --muted:#66748a; --line:rgba(255,255,255,0.08); --blue:#67a4ff; --cyan:#38d9c7; --amber:#ffd66e;
+  --muted:#66748a; --line:rgba(255,255,255,0.08); --blue:#67a4ff; --cyan:#38d9c7; --amber:#ffd66e; --rose:#ff8d6b;
 }
 body { font-family:'Noto Sans SC',sans-serif; background:radial-gradient(circle at top right, rgba(103,164,255,0.12), transparent 28%), var(--bg); color:var(--text); min-height:100vh; }
 body.light {
   --bg:#f4f7fb; --panel:#ffffff; --panel-2:#eef3f8; --text:#18202c; --dim:#516277;
-  --muted:#66768c; --line:rgba(15,23,42,0.10); --blue:#2364d2; --cyan:#0f9f90; --amber:#b98911;
+  --muted:#66768c; --line:rgba(15,23,42,0.10); --blue:#2364d2; --cyan:#0f9f90; --amber:#b98911; --rose:#d66033;
 }
+.lang-block { display:block; }
+.lang-inline { display:inline; }
+.lang-en { display:none; }
+body.lang-en .lang-zh { display:none !important; }
+body.lang-en .lang-en.lang-block { display:block; }
+body.lang-en .lang-en.lang-inline { display:inline; }
+body:not(.lang-en) .lang-zh.lang-block { display:block; }
+body:not(.lang-en) .lang-zh.lang-inline { display:inline; }
+body:not(.lang-en) .lang-en { display:none !important; }
 .wrap { max-width: 1320px; margin: 0 auto; padding: 28px 28px 80px; }
 .theme-toggle {
   position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
@@ -25,6 +34,10 @@ body.light {
   position:fixed; top:64px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font-size:16px;
 }
+.lang-toggle {
+  position:fixed; top:112px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font:700 11px 'JetBrains Mono', monospace;
+}
 .hero { background:linear-gradient(145deg, rgba(103,164,255,0.14), rgba(56,217,199,0.06)); border:1px solid var(--line); border-radius:24px; padding:28px 30px; margin-bottom:24px; }
 .eyebrow { font:600 12px 'JetBrains Mono',monospace; color:var(--amber); letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
 .hero h1 { font-size:42px; line-height:1.08; font-weight:900; max-width:980px; }
@@ -32,25 +45,27 @@ body.light {
 .meta { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
 .badge { border:1px solid var(--line); background:rgba(255,255,255,0.04); border-radius:999px; padding:8px 14px; font:500 12px 'JetBrains Mono',monospace; color:var(--dim); }
 .nav { display:flex; gap:10px; margin-bottom:22px; }
-.nav a { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; }
-.nav-btn { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; cursor:pointer; }
+.nav a, .nav-btn { color:var(--text); text-decoration:none; border:1px solid var(--line); background:var(--panel); padding:9px 14px; border-radius:999px; font-size:13px; cursor:pointer; }
 .grid { display:grid; grid-template-columns:1fr; gap:18px; }
 .section { background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:22px; }
 .section-title { display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:16px; }
 .section-title h2 { font-size:24px; font-weight:800; }
 .section-title span { color:var(--dim); font:500 12px 'JetBrains Mono',monospace; }
-.items { display:grid; gap:14px; }
-.item { background:var(--panel-2); border:1px solid var(--line); border-radius:16px; padding:18px; }
+.items, .takeaways, .evidence-stack { display:grid; gap:14px; }
+.item, .takeaway, .evidence-card {
+  background:var(--panel-2); border:1px solid var(--line); border-radius:16px; padding:18px;
+}
 .item-top { display:flex; justify-content:space-between; gap:12px; align-items:start; margin-bottom:10px; }
 .item h3 { font-size:18px; line-height:1.35; }
 .item h3 a { color:inherit; text-decoration:none; }
 .item h3 a:hover { color:var(--blue); }
 .tag { white-space:nowrap; border:1px solid var(--line); border-radius:999px; padding:5px 10px; font:600 11px 'JetBrains Mono',monospace; color:var(--blue); }
 .org { color:var(--dim); font-size:13px; margin-bottom:10px; }
-.summary { color:var(--text); font-size:14px; line-height:1.85; margin-bottom:10px; }
-.how { color:#b7c5da; font-size:14px; line-height:1.85; border-left:3px solid rgba(103,164,255,0.35); padding-left:12px; }
-.takeaways { display:grid; gap:12px; }
-.takeaway { background:var(--panel-2); border:1px solid var(--line); border-radius:14px; padding:16px 18px; color:var(--text); line-height:1.8; }
+.summary, .how, .evidence-card, .takeaway { font-size:14px; line-height:1.85; }
+.summary { color:var(--text); margin-bottom:10px; }
+.how { color:#b7c5da; border-left:3px solid rgba(103,164,255,0.35); padding-left:12px; }
+.readiness-chip { display:inline-flex; align-items:center; border-radius:999px; padding:6px 12px; font:700 11px 'JetBrains Mono', monospace; border:1px solid rgba(56,217,199,0.24); color:var(--cyan); background:rgba(56,217,199,0.08); }
+.gap-card { border-left:3px solid rgba(255,141,107,0.32); }
 .status-card { margin-bottom:18px; background:rgba(56,217,199,0.07); border:1px solid rgba(56,217,199,0.16); border-radius:16px; padding:14px 16px; color:var(--dim); }
 .status-card.error { background:rgba(255,141,107,0.08); border-color:rgba(255,141,107,0.18); }
 .chat-drawer {
@@ -84,64 +99,140 @@ body.light {
 <body>
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
   <button class="chat-toggle" onclick="toggleChatDrawer()" title="Toggle project chat">💬</button>
+  <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle language">中/EN</button>
   <div class="wrap">
     <div class="nav">
-      <a href="/projects/datasheet-pdf-mcu-soc/papers.html">← Back to Papers</a>
+      <a href="/projects/datasheet-pdf-mcu-soc/papers.html">
+        <span class="lang-zh lang-inline">← 返回论文页</span>
+        <span class="lang-en lang-inline">← Back to Papers</span>
+      </a>
     </div>
 
     <section class="hero">
-      <div class="eyebrow">Engineering Scout</div>
+      <div class="eyebrow">
+        <span class="lang-zh lang-inline">工程实现调研</span>
+        <span class="lang-en lang-inline">Engineering Scout</span>
+      </div>
       <h1>芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）</h1>
-      <p>这一页聚焦“论文之外”的工程落地信息：GitHub 开源实现、现实产品与功能、以及相关新闻与实际部署信号，帮助你判断一个研究主题距离工程可用还有多远。</p>
+      <p>
+        <span class="lang-zh lang-block">这一页聚焦“论文之外”的工程落地信息：直接由论文衍生的实现、独立工程方案，以及产业/生态信号。它对应 engineering-scout 的三层 ring 模型，而不是简单的开源列表。</span>
+        <span class="lang-en lang-block">This page focuses on engineering evidence beyond papers: paper-linked implementations, independent engineering solutions, and ecosystem signals. It follows the three-ring engineering-scout model instead of a flat project list.</span>
+      </p>
       <div class="meta">
-        <div class="badge">Range: 2021-2026</div>
-        <div class="badge">Updated: 2026-04-20</div>
-        <div class="badge">Open source: 4</div>
-        <div class="badge">Products: 3</div>
-        <div class="badge">News: 3</div>
+        <div class="badge">Range: 2018-2026</div>
+        <div class="badge">Updated: 2026-04-24</div>
+        <div class="badge">Readiness: active_development</div>
       </div>
     </section>
 
-    
+    <div id="status-card" class="status-card" style="display:none"></div>
 
     <div class="grid">
       <section class="section">
         <div class="section-title">
-          <h2>Key Takeaways</h2>
-          <span>High-level engineering readout</span>
+          <h2>
+            <span class="lang-zh lang-inline">Readiness Assessment</span>
+            <span class="lang-en lang-inline">Readiness Assessment</span>
+          </h2>
+          <span>active_development</span>
         </div>
-        <div class="takeaways">
-          <div class="takeaway">芯片 datasheet PDF 的难点不是单纯 OCR，而是要把长文档中的版面、表格、寄存器描述、时序图、性能曲线和结构示意图分流到不同处理模块。工程上最有效的方案是“layout routing + specialized parsers”，而不是一把梭地把整份 PDF 喂给一个模型。</div><div class="takeaway">对 MCU/SoC/传感器 datasheet 来说，最有价值的产物通常不是一份摘要，而是带页码和框坐标的结构化 JSON：寄存器表、引脚表、时序参数、图片/图表描述、曲线数字化结果，以及与代码或配置参数的可追踪链接。</div><div class="takeaway">时序图和物理/性能曲线图需要单独建模。前者更接近 diagram understanding / visual QA，后者更接近 chart digitization。现实里往往要把 Docling/MinerU 这类文档解析器，与 WebPlotDigitizer、VLM 图像描述、甚至专门的 diagram models 组合起来。</div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-title">
-          <h2>Open Source</h2>
-          <span>4 repos / projects</span>
-        </div>
-        <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://data.modm.io/" target="_blank">modm-data + pdf-data-extraction-jsys-artifact</a></h3><span class="tag">open_source</span></div><div class="org">modm-io · 2023-2026</div><div class="summary">目前最贴近 MCU datasheet 结构化抽取的开源工程路线之一，直接面向技术文档中的引脚、封装、寄存器、中断表等硬件描述数据。</div><div class="how">它的核心做法不是让模型自由阅读整份 PDF，而是建立可重复的数据管线，把 PDF 技术文档中的表格和结构化片段稳定抽取成知识图谱或中间表示。这非常适合 STM32 这类超长 datasheet。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/docling-project/docling" target="_blank">Docling</a></h3><span class="tag">open_source</span></div><div class="org">Docling Project · 2024-2026</div><div class="summary">一个面向高级 PDF understanding 的通用开源栈，支持 layout、reading order、table structure、OCR、formulas、图像理解以及结构化导出。</div><div class="how">在芯片 datasheet 场景里，Docling 更像底座：先把长 PDF 转成带结构的 Markdown/JSON，再把图片、图表、公式、表格送入专门处理模块。它本身已经开始支持图表理解，这是很关键的方向。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/opendatalab/PDF-Extract-Kit" target="_blank">PDF-Extract-Kit</a></h3><span class="tag">open_source</span></div><div class="org">OpenDataLab · 2024-2026</div><div class="summary">更偏模型工具箱，覆盖 layout detection、formula detection/recognition、OCR、table recognition 等文档解析底层能力。</div><div class="how">如果你的目标是做芯片 datasheet 专用 pipeline，它适合作为模块仓库来拼接：一层做版面，一层做公式，一层做表格，再把图表/时序图交给更细的专用模型。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/automeris-io/WebPlotDigitizer" target="_blank">WebPlotDigitizer</a></h3><span class="tag">open_source</span></div><div class="org">automeris-io · 2010-2026</div><div class="summary">图表数值数字化的经典开源工具，适合把 datasheet 中的性能曲线、功耗曲线、温漂曲线重新提成可计算数据。</div><div class="how">它不是整份 PDF parser，但对于传感器和模拟芯片 datasheet 中大量“图上有关键数值、表里没有”的情况非常实用。很多工程系统会把它作为 chart extraction 子模块接到主流程后面。</div></div>
+        <div class="evidence-stack">
+          <div class="evidence-card">
+            <div class="readiness-chip">active_development</div>
+            <div style="margin-top:12px;"><div class="lang-zh lang-block">这条路线已经形成比较清晰的工程拆分：图表/曲线抽取、时序图理解、表格与技术规格抽取、以及最终的 datasheet-to-code / traceability 映射。Ring 1 有 ChartOCR 这类 paper-linked 代码；Ring 2 开始出现面向 spec sheet 的产品化抽取；但对于 RK3588 或 STM32 这种超长 datasheet，跨页表格、图文对齐和 vendor-specific 图例仍然是主要难点。</div><div class="lang-en lang-block">This route has already decomposed into recognizable engineering stages: chart/curve extraction, timing-diagram understanding, table/spec extraction, and final datasheet-to-code or traceability mapping. Ring 1 includes paper-linked code such as ChartOCR; Ring 2 shows spec-sheet-oriented extraction products; but for long vendor datasheets like RK3588 or STM32, cross-page tables, figure-text alignment, and vendor-specific diagram conventions remain the main bottlenecks.</div></div>
+          </div>
+          <div class="takeaway"><div class="lang-zh lang-block">最可行的落地方案不是单模型端到端读懂整份 datasheet，而是多阶段 pipeline：版面分解 -&gt; OCR/表格 -&gt; 图表/时序专用解析 -&gt; 规格 schema 化 -&gt; 检索与问答。</div><div class="lang-en lang-block">The most viable deployment path is not one giant model that reads the whole datasheet end to end, but a multi-stage pipeline: layout decomposition -&gt; OCR/tables -&gt; specialized chart/timing parsing -&gt; schema normalization -&gt; retrieval and QA.</div></div>
+          <div class="takeaway gap-card"><div class="lang-zh lang-block">当前的主要缺口是：芯片物理结构图、性能曲线和时序图通常没有统一标注标准；同一 datasheet 里还会混有跨页表、脚注条件和图中嵌字，这些都让通用 PDF parser 很难稳定工作。</div><div class="lang-en lang-block">The main gaps are that physical structure diagrams, performance curves, and timing diagrams rarely follow one annotation standard; the same datasheet also mixes cross-page tables, footnote conditions, and embedded figure text, all of which make generic PDF parsers unstable.</div></div>
         </div>
       </section>
 
       <section class="section">
         <div class="section-title">
-          <h2>Products</h2>
-          <span>3 products / features</span>
+          <h2>Ring 1</h2>
+          <span>
+            <span class="lang-zh lang-inline">Paper-linked implementations</span>
+            <span class="lang-en lang-inline">Paper-linked implementations</span>
+          </span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://github.com/opendatalab/MinerU" target="_blank">MinerU</a></h3><span class="tag">product</span></div><div class="org">OpenDataLab · 2024-2026</div><div class="summary">一个更接近生产使用的文档解析引擎，强调把复杂 PDF 直接转换成 LLM-ready Markdown/JSON，并支持 VLM+OCR 双引擎。</div><div class="how">它对芯片 datasheet 的价值在于工程完整性：支持复杂布局、跨页表格、图像/图表解析、公式以及多语言 OCR，更适合在大批量 PDF ingestion 场景里作为入口解析器。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/opendataloader-project/opendataloader-pdf" target="_blank">OpenDataLoader PDF</a></h3><span class="tag">product</span></div><div class="org">OpenDataLoader Project · 2026</div><div class="summary">一个很强调结构与坐标输出的 PDF parser，能输出 Markdown/JSON/HTML，并保留 element-level bounding boxes。</div><div class="how">对 datasheet 场景特别重要的是它把“reading order + bounding boxes + charts/formulas descriptions”放在一起；这意味着后续问答和代码生成可以准确回指 PDF 中的具体页码和区域。</div></div><div class="item"><div class="item-top"><h3><a href="https://research.ibm.com/projects/diagram-understanding" target="_blank">IBM Diagram Understanding</a></h3><span class="tag">product</span></div><div class="org">IBM Research · ongoing</div><div class="summary">专门针对技术图和图表理解的研究项目，关注如何从图中恢复数据和语义，而不是只做文本 OCR。</div><div class="how">这类系统对 datasheet 非常关键，因为芯片物理结构图、框图和某些复杂 timing 图都属于“图像里有关系和语义”，而不是纯表格或段落文字。</div></div>
+          <div class="item">
+  <div class="item-top">
+    <h3><a href="https://github.com/zmykevin/ChartOCR" target="_blank">ChartOCR / DeepRule</a></h3>
+    <div class="tag">paper-linked</div>
+  </div>
+  <div class="org">Chart data extraction code</div>
+  <div class="summary"><div class="lang-zh lang-block">ChartOCR 提供了从图表图像恢复结构化数值表的公开代码，是 datasheet 曲线图抽取最直接可复用的 paper-linked 资产之一。</div><div class="lang-en lang-block">ChartOCR provides public code for recovering structured numeric tables from chart images, making it one of the most directly reusable paper-linked assets for datasheet curve extraction.</div></div>
+  <div class="how"><div class="lang-zh lang-block">它的实现逻辑是把 OCR、关键点检测和图表类型特定解码组合起来，适合拿来做 datasheet 性能曲线的专用解析器。</div><div class="lang-en lang-block">Its implementation combines OCR, keypoint detection, and chart-type-specific decoding, making it a good building block for a dedicated datasheet-curve parser.</div></div>
+</div>
         </div>
       </section>
 
       <section class="section">
         <div class="section-title">
-          <h2>News & Deployment Signals</h2>
-          <span>3 recent signals</span>
+          <h2>Ring 2</h2>
+          <span>
+            <span class="lang-zh lang-inline">Independent engineering solutions</span>
+            <span class="lang-en lang-inline">Independent engineering solutions</span>
+          </span>
         </div>
         <div class="items">
-          <div class="item"><div class="item-top"><h3><a href="https://github.com/docling-project/docling" target="_blank">Docling adds chart understanding</a></h3><span class="tag">news</span></div><div class="org">Docling Project · 2026</div><div class="summary">Docling 在近期能力说明中把 chart understanding 单列出来，说明开源 PDF 栈已经把图表理解视为核心增量，而不是附属特性。</div><div class="how">这对芯片 datasheet 很有现实意义，因为时序图和性能曲线恰恰是传统 parser 最弱的部分。开源主流栈开始正面补这块，意味着这个方向正在从研究走向可用工程能力。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/opendatalab/MinerU" target="_blank">MinerU 3.1.0 release emphasizes image/chart parsing</a></h3><span class="tag">news</span></div><div class="org">OpenDataLab · 2026</div><div class="summary">MinerU 最近版本明确强调 image and chart parsing、cross-page table merging 和复杂布局处理。</div><div class="how">这说明现实工程需求已经不是“把 PDF 转成纯文本”这么简单，而是要求 parser 直接交付对图表、图片和长文档结构都更友好的语义输出。</div></div><div class="item"><div class="item-top"><h3><a href="https://github.com/opendataloader-project/opendataloader-pdf" target="_blank">OpenDataLoader PDF exposes hybrid chart/image description and bbox JSON</a></h3><span class="tag">news</span></div><div class="org">OpenDataLoader Project · 2026</div><div class="summary">OpenDataLoader 把 chart/image description、formula extraction 和 element bbox 输出一起纳入主 README，说明“图文混合理解 + 可追踪坐标”已经是 parser 产品化的卖点。</div><div class="how">对于芯片 datasheet 自动读取，这一点尤其重要：如果回答不能回到具体页码和区域，就很难信任；如果图表不能先描述或定位，就很难做高质量二次提取。</div></div>
+          <div class="item">
+  <div class="item-top">
+    <h3><a href="https://lks-chart.github.io/CHARTextract-docs/" target="_blank">CHARTextract</a></h3>
+    <div class="tag">tool</div>
+  </div>
+  <div class="org">Rule-based chart extraction</div>
+  <div class="summary"><div class="lang-zh lang-block">CHARTextract 代表了一条更偏工程的路线：用可调规则快速逼近图表抽取需求，而不是完全依赖大模型。</div><div class="lang-en lang-block">CHARTextract represents a more engineering-oriented route: quickly refining chart extraction behavior with adjustable rules instead of relying entirely on a large model.</div></div>
+  <div class="how"><div class="lang-zh lang-block">对于 datasheet 场景，这种方法的价值在于你可以针对某家芯片厂商的固定图例和版式做定制，而不是追求全领域通用。</div><div class="lang-en lang-block">In datasheet settings, this matters because you can customize for a vendor’s recurring legends and layouts instead of chasing universal generalization.</div></div>
+</div>
+<div class="item">
+  <div class="item-top">
+    <h3><a href="https://www.specmake.com/blog/extract-data-from-spec-sheets" target="_blank">Specmake spec-sheet extraction</a></h3>
+    <div class="tag">product</div>
+  </div>
+  <div class="org">Spec-sheet to structured output</div>
+  <div class="summary"><div class="lang-zh lang-block">Specmake 直接把 spec sheet 解析定位到 PDF -&gt; JSON / Excel 的产品问题，这和芯片 datasheet 抽取的落地方向非常接近。</div><div class="lang-en lang-block">Specmake frames spec-sheet parsing directly as a PDF-to-JSON/Excel product problem, which is very close to the practical direction of chip-datasheet extraction.</div></div>
+  <div class="how"><div class="lang-zh lang-block">它说明真正工程化时，用户要的往往不是“理解论文意义”，而是稳定拿到结构化规格表和可追溯来源。</div><div class="lang-en lang-block">It highlights that in real deployments, users often want stable structured specs with source traceability rather than abstract document understanding.</div></div>
+</div>
+<div class="item">
+  <div class="item-top">
+    <h3><a href="https://www.ai4europe.eu/research/ai-catalog/information-extraction-technical-specification-pdfs" target="_blank">AI-on-Demand technical spec extraction</a></h3>
+    <div class="tag">prototype</div>
+  </div>
+  <div class="org">Engineering PDF extraction prototypes</div>
+  <div class="summary"><div class="lang-zh lang-block">这个项目把技术规格 PDF 的信息抽取拆成多种方法组合，说明工业文档抽取通常不是单一路径。</div><div class="lang-en lang-block">This project breaks technical-spec PDF extraction into multiple methods, showing that industrial document extraction is usually not a single-method problem.</div></div>
+  <div class="how"><div class="lang-zh lang-block">对于芯片 datasheet，这种组合式思路尤其合理，因为文本、表格、图表和 timing diagram 本来就需要不同模型和后处理。</div><div class="lang-en lang-block">For chip datasheets, this combinational approach is especially appropriate because text, tables, charts, and timing diagrams naturally require different models and post-processing.</div></div>
+</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title">
+          <h2>Ring 3</h2>
+          <span>
+            <span class="lang-zh lang-inline">Ecosystem and deployment signals</span>
+            <span class="lang-en lang-inline">Ecosystem and deployment signals</span>
+          </span>
+        </div>
+        <div class="items">
+          <div class="item">
+  <div class="item-top">
+    <h3><a href="https://difinitydigital.com/ai-powered-document/" target="_blank">Difinity Digital case study</a></h3>
+    <div class="tag">deployment</div>
+  </div>
+  <div class="org">Electronics manufacturing PDF extraction</div>
+  <div class="summary"><div class="lang-zh lang-block">这个案例说明电子制造场景已经在为大量 datasheet/spec sheet 的结构化抽取付费，需求是真实存在的。</div><div class="lang-en lang-block">This case study shows that electronics-manufacturing teams are already paying for structured extraction from large volumes of datasheets/spec sheets, so the demand is real.</div></div>
+  <div class="how"><div class="lang-zh lang-block">它也侧面证明：真正商业化的关键不只是抽取准确率，而是可追溯性、批量处理和和下游系统对接。</div><div class="lang-en lang-block">It also suggests that the real commercialization bottleneck is not only extraction accuracy, but traceability, batch processing, and downstream system integration.</div></div>
+</div>
+<div class="item">
+  <div class="item-top">
+    <h3><a href="https://arxiv.org/abs/2507.16844" target="_blank">TD-Interpreter paper signal</a></h3>
+    <div class="tag">signal</div>
+  </div>
+  <div class="org">Timing-diagram specialization</div>
+  <div class="summary"><div class="lang-zh lang-block">TD-Interpreter 这种专门面向 timing diagram 的工作，说明文档抽取已经开始从“泛 PDF OCR”转向“领域专用解析器”。</div><div class="lang-en lang-block">Work like TD-Interpreter shows the field is moving from generic PDF OCR toward domain-specialized parsers for timing diagrams.</div></div>
+  <div class="how"><div class="lang-zh lang-block">对芯片 datasheet 场景来说，这是很强的前沿信号，因为 timing diagram 正是最难交给通用 parser 的部分。</div><div class="lang-en lang-block">For chip datasheets, this is a strong frontier signal because timing diagrams are exactly the part generic parsers handle worst.</div></div>
+</div>
         </div>
       </section>
     </div>
@@ -149,19 +240,31 @@ body.light {
 <aside id="chat-drawer" class="chat-drawer" aria-hidden="true">
   <div class="chat-header">
     <div>
-      <div class="chat-title">Project Chat</div>
+      <div class="chat-title">
+        <span class="lang-zh lang-inline">项目对话</span>
+        <span class="lang-en lang-inline">Project Chat</span>
+      </div>
       <div class="chat-subtitle">芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图） · engineering</div>
     </div>
-    <button class="nav-btn" onclick="toggleChatDrawer()">Close</button>
+    <button class="nav-btn" onclick="toggleChatDrawer()">
+      <span class="lang-zh lang-inline">关闭</span>
+      <span class="lang-en lang-inline">Close</span>
+    </button>
   </div>
   <div id="chat-history" class="chat-history">
-    <div class="chat-empty">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>
+    <div class="chat-empty">
+      <div class="lang-zh lang-block">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>
+      <div class="lang-en lang-block">This drawer keeps an engineering-page-specific chat history. It starts empty and persists for the same project.</div>
+    </div>
   </div>
   <div class="chat-compose">
     <div id="chat-status" class="chat-status"></div>
     <textarea id="chat-input" class="chat-input" placeholder="直接提问。当前工程页内容和 Codex 网络搜索都会作为可用能力。"></textarea>
     <div class="chat-actions">
-      <button class="nav-btn" onclick="submitChat()">Send</button>
+      <button class="nav-btn" onclick="submitChat()">
+        <span class="lang-zh lang-inline">发送</span>
+        <span class="lang-en lang-inline">Send</span>
+      </button>
     </div>
   </div>
 </aside>
@@ -169,11 +272,16 @@ body.light {
 const API = 'http://localhost:5678';
 const PROJECT_TOPIC = '芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）';
 const PROJECT_PAGE_TYPE = 'engineering';
+const AUTO_GENERATE_ENGINEERING = false;
 let chatLoaded = false;
 let chatPending = false;
 
 async function init() {
   applyTheme();
+  applyLanguage();
+  if (AUTO_GENERATE_ENGINEERING) {
+    await ensureEngineeringReady();
+  }
 }
 
 async function ensureEngineeringReady() {
@@ -181,7 +289,7 @@ async function ensureEngineeringReady() {
     const status = await fetchStatus();
     const shouldStart = !status.page_ready || status.status === 'idle' || status.status === 'error' || status.topic !== status.expected_topic;
     if (shouldStart) {
-      showStatus('正在生成 Engineering View：自动收集 GitHub 开源实现、产品与新闻信号。');
+      showStatus('正在生成 Engineering View：自动收集实现、产品与部署信号。');
       await fetch(`${API}/api/generate-engineering`, { method:'POST' });
       pollStatus();
     } else if (status.status === 'running') {
@@ -233,24 +341,26 @@ function escapeHtml(text) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+function renderChatHistory(messages) {
+  const el = document.getElementById('chat-history');
+  if (!messages.length) {
+    el.innerHTML = '<div class="chat-empty"><div class="lang-zh lang-block">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div><div class="lang-en lang-block">This drawer keeps an engineering-page-specific chat history. It starts empty and persists for the same project.</div></div>';
+    return;
+  }
+  el.innerHTML = messages.map(msg => `<div class="chat-msg ${msg.role}">${escapeHtml(msg.content || '')}</div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
 async function readJsonResponse(r) {
   const raw = await r.text();
-  if (!raw.trim()) throw new Error(`Empty response (${r.status})`);
+  if (!raw.trim()) {
+    throw new Error(`Empty response (${r.status})`);
+  }
   try {
     return JSON.parse(raw);
   } catch (err) {
     throw new Error(`Invalid JSON response (${r.status})`);
   }
-}
-
-function renderChatHistory(messages) {
-  const el = document.getElementById('chat-history');
-  if (!messages.length) {
-    el.innerHTML = '<div class="chat-empty">这里会保留当前工程页的独立对话历史。第一次打开时为空；之后会按项目持续保存。</div>';
-    return;
-  }
-  el.innerHTML = messages.map(msg => `<div class="chat-msg ${msg.role}">${escapeHtml(msg.content || '')}</div>`).join('');
-  el.scrollTop = el.scrollHeight;
 }
 
 async function loadChatHistory() {
@@ -307,6 +417,18 @@ function applyTheme() {
   const light = localStorage.getItem('theme') === 'light';
   document.body.classList.toggle('light', light);
   document.querySelector('.theme-toggle').textContent = light ? '☀️' : '🌙';
+}
+
+function applyLanguage() {
+  const isEn = localStorage.getItem('ui-lang') === 'en';
+  document.body.classList.toggle('lang-en', isEn);
+  document.querySelector('.lang-toggle').textContent = isEn ? 'EN' : '中';
+}
+
+function toggleLanguage() {
+  const isEn = !(localStorage.getItem('ui-lang') === 'en');
+  localStorage.setItem('ui-lang', isEn ? 'en' : 'zh');
+  applyLanguage();
 }
 
 function toggleTheme() {

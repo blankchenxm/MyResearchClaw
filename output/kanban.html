@@ -26,6 +26,19 @@ body.light {
   position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font-size:16px;
 }
+.lang-toggle {
+  position:fixed; top:64px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font:700 11px 'JetBrains Mono', monospace;
+}
+.lang-block { display:block; }
+.lang-inline { display:inline; }
+.lang-en { display:none; }
+body.lang-en .lang-zh { display:none !important; }
+body.lang-en .lang-en.lang-block { display:block; }
+body.lang-en .lang-en.lang-inline { display:inline; }
+body:not(.lang-en) .lang-zh.lang-block { display:block; }
+body:not(.lang-en) .lang-zh.lang-inline { display:inline; }
+body:not(.lang-en) .lang-en { display:none !important; }
 .hero {
   border:1px solid var(--line); border-radius:28px; padding:30px 32px;
   background:linear-gradient(145deg, rgba(105,166,255,0.14), rgba(56,217,199,0.04));
@@ -58,11 +71,18 @@ body.light {
 </head>
 <body>
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+  <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle language">中/EN</button>
   <div class="wrap">
     <section class="hero">
       <div class="hero-eyebrow">MyResearchClaw</div>
-      <h1>Topic Navigator</h1>
-      <p>所有主题页面现在都收纳在 <code>output/projects/&lt;topic-slug&gt;/</code> 下。先进入对应的 Papers 页面，再在页面顶部点击 Engineering View；精读笔记仍会按主题写入 <code>output/notes/&lt;topic-slug&gt;/</code>。</p>
+      <h1>
+        <span class="lang-zh lang-inline">Topic Navigator</span>
+        <span class="lang-en lang-inline">Topic Navigator</span>
+      </h1>
+      <p>
+        <span class="lang-zh lang-block">所有主题页面现在都收纳在 <code>output/projects/&lt;topic-slug&gt;/</code> 下。先进入对应的 Papers 页面，再在页面顶部点击 Engineering View；精读笔记仍会按主题写入 <code>output/notes/&lt;topic-slug&gt;/</code>。</span>
+        <span class="lang-en lang-block">All topic pages now live under <code>output/projects/&lt;topic-slug&gt;/</code>. Open the corresponding Papers page first, then use the Engineering View button at the top; reading notes are still stored under <code>output/notes/&lt;topic-slug&gt;/</code>.</span>
+      </p>
     </section>
     <section class="topics">
       
@@ -149,12 +169,22 @@ function applyTheme() {
   document.body.classList.toggle('light', light);
   document.querySelector('.theme-toggle').textContent = light ? '☀️' : '🌙';
 }
+function applyLanguage() {
+  const isEn = localStorage.getItem('ui-lang') === 'en';
+  document.body.classList.toggle('lang-en', isEn);
+  document.querySelector('.lang-toggle').textContent = isEn ? 'EN' : '中';
+}
+function toggleLanguage() {
+  const isEn = !(localStorage.getItem('ui-lang') === 'en');
+  localStorage.setItem('ui-lang', isEn ? 'en' : 'zh');
+  applyLanguage();
+}
 function toggleTheme() {
   const light = !document.body.classList.contains('light');
   localStorage.setItem('theme', light ? 'light' : 'dark');
   applyTheme();
 }
-window.addEventListener('load', applyTheme);
+window.addEventListener('load', () => { applyTheme(); applyLanguage(); });
 </script>
 </body>
 </html>
