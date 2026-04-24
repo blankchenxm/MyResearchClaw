@@ -896,19 +896,11 @@ body.light {{
   position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font-size:16px;
 }}
-.lang-toggle {{
-  position:fixed; top:64px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
-  border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font:700 11px 'JetBrains Mono', monospace;
-}}
 .lang-block {{ display:block; }}
 .lang-inline {{ display:inline; }}
-.lang-en {{ display:none; }}
-body.lang-en .lang-zh {{ display:none !important; }}
-body.lang-en .lang-en.lang-block {{ display:block; }}
-body.lang-en .lang-en.lang-inline {{ display:inline; }}
-body:not(.lang-en) .lang-zh.lang-block {{ display:block; }}
-body:not(.lang-en) .lang-zh.lang-inline {{ display:inline; }}
-body:not(.lang-en) .lang-en {{ display:none !important; }}
+.lang-en {{ display:none !important; }}
+.lang-zh.lang-block {{ display:block; }}
+.lang-zh.lang-inline {{ display:inline; }}
 .hero {{
   border:1px solid var(--line); border-radius:28px; padding:30px 32px;
   background:linear-gradient(145deg, rgba(105,166,255,0.14), rgba(56,217,199,0.04));
@@ -941,7 +933,6 @@ body:not(.lang-en) .lang-en {{ display:none !important; }}
 </head>
 <body>
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
-  <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle language">中/EN</button>
   <div class="wrap">
     <section class="hero">
       <div class="hero-eyebrow">MyResearchClaw</div>
@@ -964,22 +955,12 @@ function applyTheme() {{
   document.body.classList.toggle('light', light);
   document.querySelector('.theme-toggle').textContent = light ? '☀️' : '🌙';
 }}
-function applyLanguage() {{
-  const isEn = localStorage.getItem('ui-lang') === 'en';
-  document.body.classList.toggle('lang-en', isEn);
-  document.querySelector('.lang-toggle').textContent = isEn ? 'EN' : '中';
-}}
-function toggleLanguage() {{
-  const isEn = !(localStorage.getItem('ui-lang') === 'en');
-  localStorage.setItem('ui-lang', isEn ? 'en' : 'zh');
-  applyLanguage();
-}}
 function toggleTheme() {{
   const light = !document.body.classList.contains('light');
   localStorage.setItem('theme', light ? 'light' : 'dark');
   applyTheme();
 }}
-window.addEventListener('load', () => {{ applyTheme(); applyLanguage(); }});
+window.addEventListener('load', applyTheme);
 </script>
 </body>
 </html>"""

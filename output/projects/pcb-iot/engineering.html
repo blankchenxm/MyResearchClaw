@@ -19,12 +19,11 @@ body.light {
 .lang-block { display:block; }
 .lang-inline { display:inline; }
 .lang-en { display:none; }
-body.lang-en .lang-zh { display:none !important; }
-body.lang-en .lang-en.lang-block { display:block; }
-body.lang-en .lang-en.lang-inline { display:inline; }
-body:not(.lang-en) .lang-zh.lang-block { display:block; }
-body:not(.lang-en) .lang-zh.lang-inline { display:inline; }
-body:not(.lang-en) .lang-en { display:none !important; }
+.lang-block { display:block; }
+.lang-inline { display:inline; }
+.lang-en { display:none !important; }
+.lang-zh.lang-block { display:block; }
+.lang-zh.lang-inline { display:inline; }
 .wrap { max-width: 1320px; margin: 0 auto; padding: 28px 28px 80px; }
 .theme-toggle {
   position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
@@ -33,10 +32,6 @@ body:not(.lang-en) .lang-en { display:none !important; }
 .chat-toggle {
   position:fixed; top:64px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font-size:16px;
-}
-.lang-toggle {
-  position:fixed; top:112px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
-  border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font:700 11px 'JetBrains Mono', monospace;
 }
 .hero { background:linear-gradient(145deg, rgba(103,164,255,0.14), rgba(56,217,199,0.06)); border:1px solid var(--line); border-radius:24px; padding:28px 30px; margin-bottom:24px; }
 .eyebrow { font:600 12px 'JetBrains Mono',monospace; color:var(--amber); letter-spacing:.12em; text-transform:uppercase; margin-bottom:10px; }
@@ -99,7 +94,6 @@ body:not(.lang-en) .lang-en { display:none !important; }
 <body>
   <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
   <button class="chat-toggle" onclick="toggleChatDrawer()" title="Toggle project chat">💬</button>
-  <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle language">中/EN</button>
   <div class="wrap">
     <div class="nav">
       <a href="/projects/pcb-iot/papers.html">
@@ -287,7 +281,6 @@ let chatPending = false;
 
 async function init() {
   applyTheme();
-  applyLanguage();
   if (AUTO_GENERATE_ENGINEERING) {
     await ensureEngineeringReady();
   }
@@ -428,17 +421,7 @@ function applyTheme() {
   document.querySelector('.theme-toggle').textContent = light ? '☀️' : '🌙';
 }
 
-function applyLanguage() {
-  const isEn = localStorage.getItem('ui-lang') === 'en';
-  document.body.classList.toggle('lang-en', isEn);
-  document.querySelector('.lang-toggle').textContent = isEn ? 'EN' : '中';
-}
 
-function toggleLanguage() {
-  const isEn = !(localStorage.getItem('ui-lang') === 'en');
-  localStorage.setItem('ui-lang', isEn ? 'en' : 'zh');
-  applyLanguage();
-}
 
 function toggleTheme() {
   const light = !document.body.classList.contains('light');
