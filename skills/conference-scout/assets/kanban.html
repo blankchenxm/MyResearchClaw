@@ -8,6 +8,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 :root {
@@ -29,7 +32,7 @@ body.light {
 }
 ::-webkit-scrollbar { width:8px; height:8px; }
 ::-webkit-scrollbar-thumb { background:rgba(105,166,255,0.35); border-radius:99px; }
-.page-wrap { max-width:1440px; margin:0 auto; padding:24px 28px 80px; }
+.page-wrap { max-width:96vw; margin:0 auto; padding:24px 28px 80px; }
 .theme-toggle {
   position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:16px;
@@ -38,6 +41,23 @@ body.light {
   position:fixed; top:64px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--border); background:var(--bg-card); color:var(--text); cursor:pointer; font-size:16px;
 }
+.token-badge {
+  position:fixed; bottom:16px; left:16px; z-index:9990;
+  background:var(--bg-card); border:1px solid var(--border); border-radius:14px;
+  padding:8px 12px; font:600 11px 'JetBrains Mono',monospace; color:var(--text-muted);
+  cursor:pointer; transition:all .15s; max-width:320px;
+  display:none;
+}
+.token-badge:hover { border-color:var(--border-hover); color:var(--text); }
+.token-badge-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.token-badge .tb-label { color:var(--accent4); }
+.token-badge .tb-cost { color:var(--accent2); }
+.token-detail {
+  display:none; margin-top:8px; border-top:1px solid var(--border); padding-top:8px;
+  font:500 11px 'JetBrains Mono',monospace; color:var(--text-muted); line-height:2;
+}
+.token-badge.expanded .token-detail { display:block; }
+.token-badge.expanded { max-width:360px; }
 .lang-block { display:block; }
 .lang-inline { display:inline; }
 .lang-en { display:none !important; }
@@ -59,9 +79,9 @@ body.light {
 }
 .hero-top { display:flex; justify-content:space-between; gap:16px; align-items:start; }
 .hero-eyebrow { font:600 12px 'JetBrains Mono', monospace; color:var(--accent4); text-transform:uppercase; letter-spacing:.14em; margin-bottom:12px; }
-.hero-title { font-size:48px; line-height:1.04; font-weight:900; max-width:980px; }
+.hero-title { font-size:48px; line-height:1.04; font-weight:900; max-width:1400px; }
 .hero-subtitle { margin-top:14px; color:var(--text-muted); font:500 12px 'JetBrains Mono', monospace; }
-.hero-summary { margin-top:18px; color:var(--text-dim); font-size:15px; line-height:1.85; max-width:980px; }
+.hero-summary { margin-top:18px; color:var(--text-dim); font-size:15px; line-height:1.85; max-width:1400px; }
 .hero-metrics { margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; }
 .hero-metric {
   border:1px solid var(--border); background:rgba(255,255,255,0.04); border-radius:999px; padding:8px 12px;
@@ -116,7 +136,7 @@ body.light {
 .role-consolidation { color:#c0b6ff; border-color:rgba(162,155,254,0.22); background:rgba(162,155,254,0.09); }
 .role-frontier { color:var(--accent2); border-color:rgba(56,217,199,0.22); background:rgba(56,217,199,0.09); }
 .role-timeline { color:var(--text-dim); border-color:var(--border); background:rgba(255,255,255,0.03); }
-.timeline-note { color:var(--text-dim); line-height:1.8; font-size:14px; }
+.timeline-note { color:var(--text-dim); line-height:1.8; font-size:16px; }
 .timeline-card-wrap { min-width:0; }
 .paper-card {
   background:var(--bg-card); border:1px solid var(--border); border-radius:22px; padding:22px 24px;
@@ -128,7 +148,7 @@ body.light {
 .paper-card.is-reading { border-left:4px solid var(--accent4); }
 .paper-card.is-done { border-left:4px solid var(--accent2); }
 .card-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px; }
-.card-title { font-size:20px; font-weight:800; line-height:1.42; flex:1; }
+.card-title { font-size:26px; font-weight:800; line-height:1.38; flex:1; }
 .card-title a { color:inherit; text-decoration:none; }
 .card-title a:hover { color:var(--accent); }
 .card-role-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
@@ -137,7 +157,7 @@ body.light {
 .cite-high { color:var(--accent2); background:rgba(56,217,199,0.1); border:1px solid rgba(56,217,199,0.18); }
 .cite-mid { color:#c0b6ff; background:rgba(162,155,254,0.12); border:1px solid rgba(162,155,254,0.2); }
 .cite-low, .cite-none { color:var(--text-muted); background:rgba(255,255,255,0.04); border:1px solid var(--border); }
-.card-authors { font-size:13px; color:var(--text-muted); margin-bottom:12px; }
+.card-authors { font-size:15px; color:var(--text-muted); margin-bottom:12px; }
 .card-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
 .venue-badge { font-size:11px; padding:4px 10px; border-radius:999px; font-weight:700; color:var(--accent); border:1px solid rgba(105,166,255,0.24); background:rgba(105,166,255,0.1); }
 .venue-badge.arxiv { color:#f7c978; border-color:rgba(247,201,120,0.24); background:rgba(247,201,120,0.1); }
@@ -146,10 +166,13 @@ body.light {
 .tag-purple { color:#c0b6ff; border-color:rgba(162,155,254,0.18); background:rgba(162,155,254,0.06); }
 .tag-pink { color:#ff9ac2; border-color:rgba(255,154,194,0.18); background:rgba(255,154,194,0.06); }
 .summary-block { border-top:1px solid var(--border); padding-top:14px; margin-bottom:14px; }
-.summary-label { font:600 10px 'JetBrains Mono', monospace; color:var(--text-muted); margin-bottom:6px; letter-spacing:.08em; text-transform:uppercase; }
-.summary-copy { font-size:14px; line-height:1.82; }
-body:not(.lang-en) .summary-copy.lang-zh { color:#c8d5e8; border-left:3px solid rgba(105,166,255,0.28); padding-left:12px; }
-body.lang-en .summary-copy.lang-en { color:var(--text-dim); }
+.summary-copy { font-size:15px; line-height:1.85; }
+body:not(.lang-en) .summary-copy.lang-zh { color:var(--text); border-left:3px solid rgba(105,166,255,0.28); padding-left:12px; }
+body.lang-en .summary-copy.lang-en { color:var(--text); }
+.card-role-reason-main { margin:4px 0 14px; }
+.role-reason-copy { font-size:16px; line-height:1.75; color:var(--text-dim); border-left:3px solid rgba(105,166,255,0.28); padding-left:12px; }
+body.lang-en .role-reason-copy.lang-zh { display:none; }
+body:not(.lang-en) .role-reason-copy.lang-en { display:none; }
 .progress-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
 .progress-track { flex:1; height:6px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,0.06); }
 .progress-fill { height:100%; width:0%; background:linear-gradient(90deg, var(--accent), #94b8ff); transition:width 1.1s ease; }
@@ -157,7 +180,20 @@ body.lang-en .summary-copy.lang-en { color:var(--text-dim); }
 .progress-fill.done { background:var(--accent2); animation:none; }
 .progress-label { font:500 11px 'JetBrains Mono', monospace; color:var(--text-muted); min-width:115px; text-align:right; }
 .progress-label.done { color:var(--accent2); }
+.progress-label.failed { color:#ff8d6b; }
 @keyframes progPulse { 0%,100% { opacity:1; } 50% { opacity:.55; } }
+.pdf-upload-zone { margin-bottom:12px; }
+.pdf-upload-hint { font-size:12px; color:#ff8d6b; margin-bottom:6px; }
+.pdf-drop-area {
+  border:1.5px dashed rgba(255,141,107,0.4); border-radius:10px;
+  padding:12px 16px; text-align:center; cursor:pointer; font-size:13px;
+  color:var(--text-muted); transition:all .15s; background:rgba(255,141,107,0.04);
+}
+.pdf-drop-area:hover, .pdf-drop-area.dragging {
+  border-color:rgba(255,141,107,0.75); background:rgba(255,141,107,0.10); color:var(--text);
+}
+.pdf-drop-area.uploading { color:var(--accent4); border-color:rgba(255,214,110,0.4); animation:progPulse 1.5s infinite; }
+.pdf-drop-area.upload-ok { color:var(--accent2); border-color:rgba(56,217,199,0.4); animation:none; }
 .card-actions { display:flex; gap:10px; flex-wrap:wrap; }
 .btn-view { color:var(--accent); background:rgba(105,166,255,0.08); border-color:rgba(105,166,255,0.18); }
 .btn-read { color:#c0b6ff; background:rgba(162,155,254,0.08); border-color:rgba(162,155,254,0.18); }
@@ -176,17 +212,17 @@ body.lang-en .summary-copy.lang-en { color:var(--text-dim); }
 .notes-kicker { font:600 11px 'JetBrains Mono', monospace; color:var(--accent4); text-transform:uppercase; letter-spacing:.12em; }
 .notes-title { font-size:22px; line-height:1.35; font-weight:800; }
 .notes-subtitle { color:var(--text-muted); font-size:13px; }
-.notes-content { font-size:15px; line-height:1.9; color:var(--text-dim); overflow:auto; padding-right:8px; flex:1; min-height:0; }
-.notes-content h1 { font-size:28px; font-weight:900; margin:28px 0 16px; color:var(--text); }
-.notes-content h2 { font-size:20px; font-weight:800; color:var(--accent); margin:26px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
-.notes-content h3 { font-size:16px; font-weight:800; color:#bfd1f7; margin:18px 0 8px; }
-.notes-content h4 { font-size:14px; font-weight:700; color:var(--text); margin:14px 0 6px; }
+.notes-content { font-size:17px; line-height:1.9; color:var(--text-dim); overflow:auto; padding-right:8px; flex:1; min-height:0; }
+.notes-content h1 { font-size:30px; font-weight:900; margin:28px 0 16px; color:var(--text); }
+.notes-content h2 { font-size:22px; font-weight:800; color:var(--accent); margin:26px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+.notes-content h3 { font-size:18px; font-weight:800; color:#bfd1f7; margin:18px 0 8px; }
+.notes-content h4 { font-size:16px; font-weight:700; color:var(--text); margin:14px 0 6px; }
 .notes-content p { margin:12px 0; }
 .notes-content strong { color:var(--text); }
-.notes-content code { background:rgba(255,255,255,0.06); border:1px solid var(--border); padding:2px 6px; border-radius:6px; font-family:'JetBrains Mono',monospace; font-size:13px; }
+.notes-content code { background:rgba(255,255,255,0.06); border:1px solid var(--border); padding:2px 6px; border-radius:6px; font-family:'JetBrains Mono',monospace; font-size:14px; }
 .notes-content pre { background:var(--bg-soft); border:1px solid var(--border); border-radius:14px; padding:16px; overflow:auto; margin:16px 0; }
 .notes-content pre code { background:none; border:none; padding:0; }
-.notes-content table { width:100%; border-collapse:collapse; margin:18px 0; font-size:14px; }
+.notes-content table { width:100%; border-collapse:collapse; margin:18px 0; font-size:15px; }
 .notes-content th, .notes-content td { border:1px solid var(--border); padding:10px 12px; text-align:left; }
 .notes-content th { background:rgba(105,166,255,0.08); color:var(--accent); }
 .notes-content blockquote { border-left:3px solid var(--accent); background:rgba(105,166,255,0.05); color:var(--text-muted); margin:16px 0; padding:10px 14px; border-radius:0 10px 10px 0; }
@@ -204,26 +240,39 @@ body.lang-en .summary-copy.lang-en { color:var(--text-dim); }
   padding:24px; color:var(--text-dim); line-height:1.8; display:flex; align-items:center; justify-content:center; min-height:70vh;
 }
 .chat-drawer {
-  position:fixed; top:0; right:-420px; width:400px; max-width:calc(100vw - 24px); height:100vh; z-index:9998;
-  background:var(--bg-card); border-left:1px solid var(--border); box-shadow:-12px 0 36px rgba(0,0,0,0.28);
-  transition:right .2s ease; display:flex; flex-direction:column;
+  position:fixed; left:50%; bottom:-520px; transform:translateX(-50%);
+  width:min(1200px, 92vw); height:480px; max-height:62vh; z-index:9998;
+  background:var(--bg-card); border:1px solid var(--border); border-bottom:none;
+  border-radius:18px 18px 0 0; box-shadow:0 -12px 36px rgba(0,0,0,0.28);
+  transition:bottom .25s ease; display:flex; flex-direction:column;
 }
-.chat-drawer.open { right:0; }
-.chat-header { padding:16px 18px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
-.chat-title { font-size:16px; font-weight:800; }
-.chat-subtitle { font:500 11px 'JetBrains Mono', monospace; color:var(--text-muted); margin-top:4px; }
-.chat-history { flex:1; overflow:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
-.chat-msg { border:1px solid var(--border); border-radius:16px; padding:12px 14px; line-height:1.75; font-size:14px; white-space:pre-wrap; }
-.chat-msg.user { background:rgba(105,166,255,0.08); border-color:rgba(105,166,255,0.18); }
-.chat-msg.assistant { background:rgba(56,217,199,0.06); border-color:rgba(56,217,199,0.16); }
+.chat-drawer.open { bottom:0; }
+.chat-header {
+  padding:12px 18px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  cursor:default;
+}
+.chat-title { font-size:15px; font-weight:800; }
+.chat-subtitle { font:500 11px 'JetBrains Mono', monospace; color:var(--text-muted); margin-top:3px; }
+.chat-history { flex:1; overflow-y:auto; padding:14px 18px; display:flex; flex-direction:column; gap:12px; }
+.chat-msg {
+  border:1px solid var(--border); border-radius:14px; padding:10px 14px;
+  line-height:1.75; font-size:15px; white-space:pre-wrap; max-width:78%;
+}
+.chat-msg.user { background:rgba(105,166,255,0.08); border-color:rgba(105,166,255,0.18); align-self:flex-end; }
+.chat-msg.assistant { background:rgba(56,217,199,0.06); border-color:rgba(56,217,199,0.16); align-self:flex-start; }
 .chat-empty { color:var(--text-muted); line-height:1.8; font-size:14px; padding:6px 4px; }
-.chat-compose { border-top:1px solid var(--border); padding:14px 16px 16px; display:flex; flex-direction:column; gap:10px; }
-.chat-input {
-  width:100%; min-height:92px; resize:vertical; border-radius:14px; border:1px solid var(--border);
-  background:var(--bg-soft); color:var(--text); padding:12px 14px; font:inherit;
+.chat-compose {
+  border-top:1px solid var(--border); padding:10px 14px 12px;
+  display:flex; gap:10px; align-items:flex-end;
 }
-.chat-actions { display:flex; justify-content:flex-end; gap:10px; }
-.chat-status { color:var(--text-muted); font-size:12px; min-height:18px; }
+.chat-input {
+  flex:1; min-height:44px; max-height:140px; resize:none; border-radius:12px;
+  border:1px solid var(--border); background:var(--bg-soft); color:var(--text);
+  padding:10px 12px; font:inherit; line-height:1.5;
+}
+.chat-actions { display:flex; gap:8px; }
+.chat-status { color:var(--text-muted); font-size:12px; min-height:0; padding:0 14px; }
 .toast {
   position:fixed; bottom:24px; right:24px; z-index:9999; max-width:520px; display:none;
   border:1px solid rgba(162,155,254,0.35); border-radius:16px; background:#1b2230; padding:16px 18px; box-shadow:0 12px 42px rgba(0,0,0,0.38);
@@ -250,7 +299,7 @@ body.lang-en .summary-copy.lang-en { color:var(--text-dim); }
   .timeline-year { font-size:18px; }
   .notes-shell { height:auto; }
   .notes-pane, .pdf-pane { height:auto; min-height:50vh; }
-  .chat-drawer { width:100vw; max-width:100vw; }
+  .chat-drawer { width:100vw; max-width:100vw; border-radius:0; }
 }
 </style>
 </head>
@@ -296,41 +345,12 @@ body.lang-en .summary-copy.lang-en { color:var(--text-dim); }
     </div>
   </section>
 
-  <section class="workflow-panel">
-    <div class="panel-top">
-      <div class="panel-title">
-        <span class="lang-zh lang-inline">Agentic 检索流程</span>
-        <span class="lang-en lang-inline">Agentic Search Workflow</span>
-      </div>
-      <div class="panel-subtitle">{{ACTIVE_YEAR_RANGE}} · {{ACTIVE_VENUES}}</div>
-    </div>
-    <div class="workflow-steps">
-      <div class="workflow-step"><strong>R1</strong> Discovery</div>
-      <div class="workflow-arrow">→</div>
-      <div class="workflow-step"><strong>R2</strong> Anchor Extraction</div>
-      <div class="workflow-arrow">→</div>
-      <div class="workflow-step"><strong>R3</strong> Precision Search</div>
-      <div class="workflow-arrow">→</div>
-      <div class="workflow-step"><strong>R4</strong> Citation Expansion</div>
-      <div class="workflow-arrow">→</div>
-      <div class="workflow-step"><strong>R5</strong> Timeline Assembly</div>
-    </div>
-    <div class="workflow-note">
-      <div class="lang-zh lang-block">这套页面默认按“先找 survey / recent entry，再抽 anchors，再做 author / phrase / venue 精确搜索，最后按领域角色组装时间线”的方式来组织结果，而不是单轮 batch 排名。</div>
-      <div class="lang-en lang-block">This page is organized as an iterative agentic workflow: discover surveys and entry papers, extract anchors, run precise author/phrase/venue searches, then assemble a role-aware timeline instead of a one-shot batch ranking.</div>
-    </div>
-  </section>
-
   <div id="papers-view">
     <section class="timeline-panel">
       <div class="panel-top">
         <div class="panel-title">
           <span class="lang-zh lang-inline">研究时间线</span>
           <span class="lang-en lang-inline">Continuous Timeline</span>
-        </div>
-        <div class="panel-subtitle">
-          <span class="lang-zh lang-inline">左侧是时间线，右侧是对应论文</span>
-          <span class="lang-en lang-inline">Left = timeline, right = key papers</span>
         </div>
       </div>
       <div class="timeline-rail">
@@ -390,7 +410,7 @@ body.lang-en .summary-copy.lang-en { color:var(--text-dim); }
   </div>
 
   <div class="toast" id="toast">
-    <div class="toast-title">Paste into Codex</div>
+    <div class="toast-title">Paste into Claude Code</div>
     <div class="toast-cmd" id="toast-cmd"></div>
   </div>
 
@@ -398,6 +418,15 @@ body.lang-en .summary-copy.lang-en { color:var(--text-dim); }
     <span>Powered by MyResearchClaw</span>
     <span>{{LAST_UPDATED}}</span>
   </footer>
+</div>
+
+<div id="token-badge" class="token-badge" onclick="toggleTokenDetail()" title="点击展开详情">
+  <div class="token-badge-row">
+    <span class="tb-label">⚡ Tokens</span>
+    <span id="tb-total">—</span>
+    <span class="tb-cost" id="tb-cost">$—</span>
+  </div>
+  <div class="token-detail" id="tb-detail"></div>
 </div>
 
 <aside id="chat-drawer" class="chat-drawer" aria-hidden="true">
@@ -409,10 +438,16 @@ body.lang-en .summary-copy.lang-en { color:var(--text-dim); }
       </div>
       <div class="chat-subtitle">{{ACTIVE_TOPIC}} · papers</div>
     </div>
-    <button class="btn" onclick="toggleChatDrawer()">
-      <span class="lang-zh lang-inline">关闭</span>
-      <span class="lang-en lang-inline">Close</span>
-    </button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn" onclick="clearChat()" title="清除对话历史" style="color:var(--text-muted);font-size:12px;padding:6px 10px;">
+        <span class="lang-zh lang-inline">🗑 清除历史</span>
+        <span class="lang-en lang-inline">🗑 Clear</span>
+      </button>
+      <button class="btn" onclick="toggleChatDrawer()">
+        <span class="lang-zh lang-inline">关闭</span>
+        <span class="lang-en lang-inline">Close</span>
+      </button>
+    </div>
   </div>
   <div id="chat-history" class="chat-history">
     <div class="chat-empty">
@@ -420,9 +455,9 @@ body.lang-en .summary-copy.lang-en { color:var(--text-dim); }
       <div class="lang-en lang-block">This drawer keeps a project-specific conversation history. It starts empty and persists across visits for the same project.</div>
     </div>
   </div>
+  <div id="chat-status" class="chat-status"></div>
   <div class="chat-compose">
-    <div id="chat-status" class="chat-status"></div>
-    <textarea id="chat-input" class="chat-input" placeholder="直接提问。当前页面上下文和 Codex 网络搜索都会作为可用能力。"></textarea>
+    <textarea id="chat-input" class="chat-input" placeholder="直接提问，按 Enter 发送（Shift+Enter 换行）"></textarea>
     <div class="chat-actions">
       <button class="btn" onclick="submitChat()">
         <span class="lang-zh lang-inline">发送</span>
@@ -453,6 +488,10 @@ async function init() {
   await checkServer();
   renderRoute();
   window.addEventListener('hashchange', renderRoute);
+  if (serverOk) {
+    loadTokenStats();
+    setInterval(loadTokenStats, 60000);
+  }
 }
 
 async function openEngineeringView() {
@@ -493,21 +532,46 @@ function updateCard(p) {
   const card = document.querySelector(`[data-id="${p.id}"]`);
   if (!card) return;
   const prog = p.progress || 0;
+  const pdfFailed = p.pipeline_status === 'pdf_fetch_failed';
+
   const fill = card.querySelector('.progress-fill');
   if (fill) {
     fill.style.width = prog + '%';
-    fill.className = 'progress-fill' + (prog >= 100 ? ' done' : prog > 0 ? ' active' : '');
+    fill.className = 'progress-fill' + (prog >= 100 ? ' done' : (prog > 0 && !pdfFailed) ? ' active' : '');
   }
   const lbl = card.querySelector('.progress-label');
   if (lbl) {
-    if (prog >= 100) { lbl.innerHTML = '<span class="lang-zh lang-inline">✓ 已完成</span><span class="lang-en lang-inline">✓ Complete</span>'; lbl.className = 'progress-label done'; }
-    else if (prog > 0) { lbl.innerHTML = `<span class="lang-zh lang-inline">精读中... ${prog}%</span><span class="lang-en lang-inline">Reading... ${prog}%</span>`; lbl.className = 'progress-label'; }
-    else { lbl.innerHTML = ''; lbl.className = 'progress-label'; }
+    if (pdfFailed) {
+      lbl.innerHTML = '<span class="lang-zh lang-inline">PDF 获取失败</span><span class="lang-en lang-inline">PDF fetch failed</span>';
+      lbl.className = 'progress-label failed';
+    } else if (prog >= 100) {
+      lbl.innerHTML = '<span class="lang-zh lang-inline">✓ 已完成</span><span class="lang-en lang-inline">✓ Complete</span>';
+      lbl.className = 'progress-label done';
+    } else if (prog > 0) {
+      const stepParts = (p.pipeline_step || '').split('|');
+      const stepZh = stepParts[0] || '精读中...';
+      const stepEn = stepParts[1] || 'Reading...';
+      lbl.innerHTML = `<span class="lang-zh lang-inline">${stepZh} ${prog}%</span><span class="lang-en lang-inline">${stepEn} ${prog}%</span>`;
+      lbl.className = 'progress-label';
+    } else {
+      lbl.innerHTML = ''; lbl.className = 'progress-label';
+    }
+  }
+
+  // Show/hide upload zone
+  const uploadZone = card.querySelector('.pdf-upload-zone');
+  if (uploadZone) {
+    uploadZone.style.display = pdfFailed ? '' : 'none';
+    if (pdfFailed) setupUploadZone(card);
   }
 
   const btn = card.querySelector('[data-role="read-btn"]');
   if (btn) {
-    if (prog >= 100) {
+    if (pdfFailed) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="lang-zh lang-inline">📎 等待 PDF 上传</span><span class="lang-en lang-inline">📎 Awaiting PDF</span>';
+      btn.className = 'btn btn-read';
+    } else if (prog >= 100) {
       btn.disabled = false;
       btn.innerHTML = '<span class="lang-zh lang-inline">📄 查看笔记</span><span class="lang-en lang-inline">📄 View Notes</span>';
       btn.className = 'btn btn-notes';
@@ -533,6 +597,64 @@ function updateCard(p) {
   if (prog >= 100 && p.id === activeReadId) {
     activeReadId = null;
     setTimeout(() => navigateTo('notes', p.id), 800);
+  }
+}
+
+function setupUploadZone(card) {
+  const zone = card.querySelector('.pdf-drop-area');
+  if (!zone || zone.dataset.uploadSetup) return;
+  zone.dataset.uploadSetup = '1';
+  const paperId = card.querySelector('.pdf-upload-zone').dataset.paperId;
+  const fileInput = zone.querySelector('input[type=file]');
+
+  zone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) uploadPdf(paperId, file, card);
+    fileInput.value = '';
+  });
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragging'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragging'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragging');
+    const file = e.dataTransfer.files[0];
+    if (file) uploadPdf(paperId, file, card);
+  });
+}
+
+async function uploadPdf(paperId, file, card) {
+  const zone = card.querySelector('.pdf-drop-area');
+  if (file.type && file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    showToast('请上传 PDF 文件');
+    return;
+  }
+  if (zone) {
+    zone.className = 'pdf-drop-area uploading';
+    zone.innerHTML = '<span class="lang-zh lang-inline">上传中...</span><span class="lang-en lang-inline">Uploading...</span>';
+  }
+  try {
+    const r = await fetch(`${API}/api/upload-pdf?paper_id=${encodeURIComponent(paperId)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/pdf' },
+      body: file,
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || 'upload failed');
+    if (zone) {
+      zone.className = 'pdf-drop-area upload-ok';
+      zone.innerHTML = '<span class="lang-zh lang-inline">✓ 上传成功，即将开始精读...</span><span class="lang-en lang-inline">✓ Uploaded — starting read...</span>';
+    }
+    // Auto-trigger re-read
+    const url = card.getAttribute('data-url') || '';
+    const title = card.querySelector('.card-title')?.textContent.trim() || '';
+    setTimeout(() => triggerRead(paperId, url, title), 800);
+  } catch (e) {
+    if (zone) {
+      zone.className = 'pdf-drop-area';
+      zone.innerHTML = `<span style="color:#ff8d6b">上传失败：${e.message}</span><br><span class="lang-zh lang-block" style="margin-top:4px">点击重试</span>`;
+      zone.dataset.uploadSetup = '';  // allow re-setup
+    }
   }
 }
 
@@ -598,6 +720,15 @@ async function showNotes(paperId) {
     if (!r.ok) throw new Error('not-ready');
     const md = await r.text();
     content.innerHTML = renderMd(md);
+    if (typeof renderMathInElement !== 'undefined') {
+      renderMathInElement(content, {
+        delimiters: [
+          {left:'$$', right:'$$', display:true},
+          {left:'$', right:'$', display:false}
+        ],
+        throwOnError: false
+      });
+    }
     const resources = extractPaperResources(md, card?.getAttribute('data-url') || '', card?.getAttribute('data-pdf-url') || '');
     currentPdfUrl = resources.pdfUrl;
     currentPaperUrl = resources.paperUrl;
@@ -611,7 +742,16 @@ async function showNotes(paperId) {
 function renderMd(md) {
   if (typeof marked !== 'undefined') {
     marked.setOptions({ breaks:true, gfm:true });
-    return marked.parse(md);
+    // Protect math blocks from marked so it doesn't mangle _ and \ inside them
+    const maths = [];
+    const protect = s => { maths.push(s); return `\x00MATH${maths.length-1}\x00`; };
+    const safe = md
+      .replace(/\$\$[\s\S]+?\$\$/g, protect)
+      .replace(/\$[^\n$]+?\$/g, protect);
+    let html = marked.parse(safe);
+    // Restore raw math strings for KaTeX to render
+    html = html.replace(/\x00MATH(\d+)\x00/g, (_, i) => maths[+i]);
+    return html;
   }
   return '<pre style="white-space:pre-wrap">' + md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</pre>';
 }
@@ -741,6 +881,25 @@ async function submitChat() {
   }
 }
 
+async function clearChat() {
+  if (!serverOk) { document.getElementById('chat-status').textContent = 'Server unavailable.'; return; }
+  if (!confirm('清除当前项目的对话历史？下次对话仍能访问论文信息和精读笔记。')) return;
+  try {
+    const r = await fetch(`${API}/api/clear-chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic: PROJECT_TOPIC, page_type: PROJECT_PAGE_TYPE })
+    });
+    const data = await readJsonResponse(r);
+    if (!r.ok || !data.ok) throw new Error(data.error || 'clear failed');
+    renderChatHistory([]);
+    chatLoaded = true;
+    document.getElementById('chat-status').textContent = '';
+  } catch (err) {
+    document.getElementById('chat-status').textContent = err.message || 'Clear failed.';
+  }
+}
+
 function showToast(url) {
   const cmd = `Use paper-reader to read this paper: ${url}`;
   document.getElementById('toast-cmd').textContent = cmd;
@@ -761,15 +920,69 @@ function toggleTheme() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.getElementById('toast').classList.remove('show');
   if (e.key === 'Escape') {
+    document.getElementById('toast').classList.remove('show');
     const drawer = document.getElementById('chat-drawer');
     drawer.classList.remove('open');
     drawer.setAttribute('aria-hidden', 'true');
   }
 });
 
-window.addEventListener('load', init);
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('chat-input');
+  if (input) {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        submitChat();
+      }
+    });
+  }
+});
+
+function fmtK(n) {
+  if (!n) return '0';
+  return n >= 1000 ? (n/1000).toFixed(1)+'K' : String(n);
+}
+
+async function loadTokenStats() {
+  try {
+    const r = await fetch(`${API}/api/token-usage`);
+    if (!r.ok) return;
+    const d = await r.json();
+    const t = d.totals || {};
+    if (!t.op_count) return;
+    const badge = document.getElementById('token-badge');
+    if (!badge) return;
+    badge.style.display = 'block';
+    document.getElementById('tb-total').textContent =
+      `in ${fmtK(t.input_tokens)} / out ${fmtK(t.output_tokens)}`;
+    document.getElementById('tb-cost').textContent =
+      t.cost_usd ? `$${t.cost_usd.toFixed(4)}` : '$—';
+    const ops = (d.operations || []).slice().reverse().slice(0, 8);
+    const rows = ops.map(o => {
+      const typeIcon = o.type === 'paper-reader' ? '📖' : o.type === 'engineering-scout' ? '🛠️' : '🔍';
+      const tok = `in ${fmtK(o.input_tokens)}/out ${fmtK(o.output_tokens)}`;
+      const cost = o.cost_usd ? ` · $${Number(o.cost_usd).toFixed(4)}` : '';
+      return `<div>${typeIcon} <b>${(o.title||o.entity_id||'').slice(0,30)}</b><br>&nbsp;&nbsp;${tok}${cost} · ${o.date||''}</div>`;
+    }).join('');
+    document.getElementById('tb-detail').innerHTML = rows || '<div>暂无记录</div>';
+  } catch(_) {}
+}
+
+function toggleTokenDetail() {
+  const badge = document.getElementById('token-badge');
+  if (badge) badge.classList.toggle('expanded');
+}
+
+window.addEventListener('load', () => {
+  init();
+  // Initialize upload zones for cards already in pdf_fetch_failed state on page load
+  document.querySelectorAll('.pdf-upload-zone[style=""],.pdf-upload-zone:not([style])').forEach(zone => {
+    const card = zone.closest('.paper-card');
+    if (card) setupUploadZone(card);
+  });
+});
 </script>
 </body>
 </html>

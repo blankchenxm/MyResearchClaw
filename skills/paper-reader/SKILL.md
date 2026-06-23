@@ -1,368 +1,230 @@
 ---
 name: paper-reader
-description: >
-  Deep-read one academic paper from an arXiv URL, DOI, ACM URL, or bare arXiv ID, then generate
-  structured reading notes and update the persistent kanban state. Optimized for IoT, systems,
-  and wearable sensing papers but works for all venues. Use when the user wants to read, analyze,
-  summarize, or extract research insights from a specific paper, especially with phrases such as
-  精读, 帮我读, read this paper, paper notes, or when a paper link is given with reading intent.
+description: Deep-read one academic paper from an arXiv URL, DOI, ACM URL, bare arXiv ID, or local PDF, and produce a 12-section Chinese reading note grounded in PDF evidence. Evidence-first 15-step pipeline — scripts extract text/evidence/figures, the model writes a note_plan JSON then the final note, lint gates style + grounding. Optimized for IoT/wearable/systems papers (systems_iot type), also supports AI_method / benchmark_or_dataset / survey_or_review. Use when the user wants to精读 a specific paper, asks for paper notes, or gives a paper link with reading intent; triggers include 精读, 帮我读, read this paper, paper notes, 深度笔记. Not for searching multiple papers — that's conference-scout.
 ---
 
 # Paper Reader
 
-Goal: analyze one paper using a three-pass reading strategy, write structured notes to
-`output/notes/`, update `output/papers.json`, and regenerate `output/kanban.html`.
+Turns one paper into a 12-section Chinese deep-reading note at
+`output/notes/{topic_slug}/{paper_id}/note.md` with figures in `figures/`.
 
-Important language requirement:
-- write note body primarily in Chinese
-- preserve paper titles, author names, venue names, metric names, and system names in original language
-- all explanatory prose, analysis, and section content should be Chinese-first
+Scripts structure the evidence. The model owns understanding, planning, drafting, and final review.
 
----
+## Required interpreter
 
-## Supported Inputs
-
-- `https://arxiv.org/abs/XXXX.XXXXX`
-- `https://arxiv.org/pdf/XXXX.XXXXX`
-- `https://doi.org/...`
-- `https://dl.acm.org/doi/...`
-- bare arXiv ID such as `2401.12345`
-
----
-
-## Fetch Workflow
-
-### arXiv papers
-
-Fetch in order:
-1. `https://arxiv.org/abs/{ARXIV_ID}` — title, authors, abstract, subjects, date
-2. `https://arxiv.org/html/{ARXIV_ID}v1` — full text, figures, section structure
-
-If HTML is unavailable, continue with abstract-only analysis and state the limitation explicitly.
-
-### DOI / ACM / other
-
-Fetch the landing page. Extract title, authors, venue, year, abstract.
-Use Semantic Scholar to fill missing bibliographic fields.
-Do not fabricate unavailable full text; state what is and is not available.
-
----
-
-## Three-Pass Reading Strategy
-
-Reading happens in three passes. Do not skip to later passes before completing earlier ones.
-
-### Pass 1 — Orientation (abstract, intro, section headings, conclusion)
-
-Answer these questions before reading further:
-
-- What is the one-sentence problem this paper solves?
-- What is the research vision — if this system fully worked, what would change in the world?
-- What are the claimed contributions (usually bulleted in the intro)?
-- Is this primarily a systems paper, an algorithm paper, or a measurement paper?
-- Based on section headings: how many challenge/design subsections are there?
-
-If the paper is clearly off-topic or unreadable, stop here and report.
-
-### Pass 2 — Structure (figures, tables, section-level reading without proof details)
-
-Focus on:
-- The overview/architecture figure (usually Figure 1 or 2): what are the main components?
-- All tables: what metrics, baselines, and results are reported?
-- Section structure: map out which section handles which challenge
-
-Answer:
-- What are the key results in one sentence each?
-- What is the most surprising or strongest result?
-- What do the authors not compare against, and why might that be?
-
-### Pass 3 — Deep Read (full text, design rationale, implementation, evaluation)
-
-Read every section with attention to:
-- The *why* behind each design decision, not just the *what*
-- Where the authors made a trade-off and what they sacrificed
-- Implementation constraints (hardware, latency budget, memory, power)
-- Whether the experimental setup genuinely supports the claimed contribution
-
----
-
-## Note Structure
-
-Generate all seven sections. Do not omit sections; use "信息不足，仅从摘要分析" when full
-text is unavailable.
-
-```markdown
-# 精读笔记 — {ALIAS}
-
-## 0) Metadata
-- **Title:** {FULL_TITLE}
-- **Alias:** {ALIAS}
-- **Authors / Org:** {AUTHORS}
-- **Venue / Year:** {VENUE} {YEAR}
-- **Links:**
-  - Abstract: {URL}
-  - HTML: https://arxiv.org/html/{ARXIV_ID}v1  ← omit if not arXiv
-  - PDF: https://arxiv.org/pdf/{ARXIV_ID}       ← omit if not available
-- **Tags:** {TAGS}
-- **My rating:** {N}/5
-- **Paper type:** systems | algorithm | measurement | survey
-
----
-
-## 1) 科研图景与 Vision
-
-> 这篇论文描绘的研究图景是什么？如果系统真的 work，它改变了什么？
-
-{VISION_PARAGRAPH}
-
-作者为什么认为这个问题"现在"值得解决？
-{TIMELINESS_PARAGRAPH}
-
-核心 claim（通常是 intro 里的 bullet list）：
-- {CLAIM_1}
-- {CLAIM_2}
-- {CLAIM_3}
-
----
-
-## 2) 问题定义与 Challenge 分析
-
-**问题的正式定义：**
-{FORMAL_PROBLEM_STATEMENT}
-
-**作者列举的 Challenges：**
-
-| # | Challenge | 根因 | 对应的系统模块 |
-|---|-----------|------|----------------|
-| C1 | {challenge} | {root cause} | {module} |
-| C2 | ... | ... | ... |
-
-根因分类（选择适用的）：
-- [ ] 物理约束（信号、硬件、能量）
-- [ ] 系统约束（延迟、内存、算力）
-- [ ] 数据约束（标注、分布、泛化）
-- [ ] 场景约束（用户行为、环境变化）
-
----
-
-## 3) 系统设计与架构
-
-**Overview（用文字重现 Figure 1 或架构图）：**
-{ARCHITECTURE_DESCRIPTION}
-
-**各模块拆解：**
-
-### {MODULE_NAME_1}
-- 功能：{FUNCTION}
-- 解决的 Challenge：{WHICH_CHALLENGE}
-- 关键设计决策：{DESIGN_DECISION}
-- 为什么这样而不是另一个方案：{RATIONALE}
-
-### {MODULE_NAME_2}
-（重复上述结构）
-
-**关键 Trade-off 记录：**
-
-| 决策点 | 选择了 | 放弃了 | 原因 |
-|--------|--------|--------|------|
-| {decision} | {chosen} | {alternative} | {why} |
-
-这一节是 IoT/Systems 论文精读的核心。每个 trade-off 都应有明确的 rationale，
-而不只是描述系统做了什么。
-
----
-
-## 4) 实现细节
-
-**硬件平台：**
-{HARDWARE}
-
-**软件栈：**
-{SOFTWARE_STACK}
-
-**工程约束（填写适用的）：**
-- 延迟 budget：{LATENCY}
-- 功耗限制：{POWER}
-- 内存限制：{MEMORY}
-- 采样率 / 精度：{SAMPLING}
-
-**值得记录的 engineering tricks：**
-- {TRICK_1}
-- {TRICK_2}
-
-如果全文不可访问，此节写"实现细节不可获取，仅分析摘要和图表"。
-
----
-
-## 5) 实验与评估
-
-**Baselines：**
-
-| Baseline | 是否公平 | 备注 |
-|----------|----------|------|
-| {baseline_name} | 是 / 存疑 | {note} |
-
-评估 baseline 是否公平：是否有明显更强的对比系统被遗漏？
-
-**核心 Metrics 及选择理由：**
-{METRIC_RATIONALE}
-
-**实验场景覆盖：**
-- [ ] lab/controlled setting
-- [ ] in-the-wild / real users
-- [ ] edge cases / failure modes tested
-
-**最强结果：**
-{BEST_RESULT}
-
-**最弱结果 / 明显局限：**
-{WEAKEST_RESULT}
-
-**如果让我设计实验，我会额外测试：**
-{ADDITIONAL_EXPERIMENTS}
-
----
-
-## 6) Related Work 定位
-
-> 利用已有的 papers.json，将这篇与已读论文对比。
-
-**与已知工作的对比：**
-
-| 已读论文 | 与本文关系 | 本文的 novelty 边界 |
-|----------|------------|---------------------|
-| {paper_alias} | {relation} | {novelty_claim} |
-
-**本文在领域时间线中的位置：**
-{TIMELINE_POSITION}
-
-（参考 conference-scout 生成的 timeline_role：这篇更像 foundation / consolidation / frontier？）
-
-**有没有作者未引用但应该讨论的工作：**
-{MISSING_RELATED_WORK}
-
----
-
-## 7) 个人 Synthesis
-
-**最值得借鉴的一个 idea：**
-{TOP_IDEA}
-
-**最让我存疑的一个假设：**
-{QUESTIONABLE_ASSUMPTION}
-
-**如果我来做下一步，我会：**
-{NEXT_STEPS}
-
-**与我自己研究的连接点：**
-{PERSONAL_CONNECTION}
-
----
-
-## 8) 评分
-
-评分维度：
-- **论文质量（0–2）**：问题重要性、方法严谨性、实验充分性
-- **个人收获（0–2）**：对我的研究方向有多大启发
-- **Base**：1
-
-Total = 1 + 质量分 + 收获分，满分 5。
-
-质量分：{Q}/2 — {Q_REASON}
-收获分：{O}/2 — {O_REASON}
-**Total: {TOTAL}/5**
+```
+/home/wangmingke/anaconda3/envs/derm-vlm/bin/python
 ```
 
----
+This env has PyMuPDF. The system default `python` (3.8) does not — `extract_source_text.py` fails immediately. `run_pipeline.py` auto-switches if invoked with the wrong interpreter, but use the right one to skip the round trip.
 
-## Paper Type Adaptation
+## Language requirement
 
-The depth of each section varies by paper type. Adjust emphasis accordingly:
+- Note body in Chinese
+- Preserve original-language titles, author names, venue names, metric names, system names
+- No mixed Chinese-English clauses (lint will reject)
 
-**Systems / IoT paper** (MobiCom, SenSys, IMWUT, MobiSys):
-- Section 3 (Architecture) and Section 4 (Implementation) should be the most detailed
-- Section 2 (Challenges) should map each challenge to a concrete system component
-- Section 5 (Evaluation) should scrutinize whether real-world conditions were tested
+## Inputs
 
-**Algorithm / ML paper** (NeurIPS, ICLR, CVPR):
-- Section 3 should focus on the model architecture and the key loss / training trick
-- Section 4 can be brief (dataset, framework, compute budget)
-- Section 5 should focus on ablations and what each component contributes
+| Form | Example |
+|---|---|
+| arXiv URL | `https://arxiv.org/abs/2401.12345` |
+| arXiv ID | `2401.12345` |
+| DOI URL | `https://doi.org/10.1145/...` |
+| ACM URL | `https://dl.acm.org/doi/...` |
+| Local PDF path | `output/pdfs/{topic_slug}/{paper_id}.pdf` |
+| Paper ID in `papers.json` | `silentwear-...-2026` |
 
-**Measurement / Empirical paper** (IMC, UbiComp measurement tracks):
-- Section 2 should capture the measurement methodology and dataset scope
-- Section 3 is not about system design but about analysis methodology
-- Section 5 should record the most surprising empirical finding
+## PDF acquisition
 
-**Survey paper**:
-- Replace Sections 2–4 with a taxonomy summary
-- Section 6 becomes the primary output: how does this survey periodize the field?
+Run `scripts/fetch_pdf.py` with `--papers-json --paper-id --local-pdf-dir output/pdfs/{topic_slug}`. The script walks `../../references/pdf-cascade.md` Step 1-5:
 
----
+1. Local PDF at `output/pdfs/{topic_slug}/{paper_id}.pdf`
+2. arXiv `https://arxiv.org/pdf/{arxiv_id}`
+3. S2 `openAccessPdf.url`
+4. OpenAlex `best_oa_location.pdf_url` (DOI-driven)
+5. Unpaywall `best_oa_location.url_for_pdf` (DOI-driven)
 
-## Match Existing State
+The script writes `full_text_status` into `{prefix}_fetch.json`. Branch on it:
 
-Load `output/papers.json` and find the paper by:
-1. exact `url`
-2. matching `arxiv_id`
-3. normalized title match only as a last resort
+| `full_text_status` | Action |
+|---|---|
+| `open_pdf` | proceed to extract_source_text |
+| `needs_institution` / `no_open_pdf` | **fail closed** — do NOT write a degraded title/abstract-only note |
+| `anti_bot_blocked` | Try Google Scholar CDP fallback once (`../../references/api-cookbook.md` § Google Scholar; pre-check `bash ../../scripts/check-deps.sh`). Still blocked → fail closed. |
+| `html_not_pdf` | Try one alternative source. Still HTML → fail closed. |
+| `unknown` | Rerun cascade with debug logging. Still unknown → fail closed. |
 
-If absent, create a new entry during the save step.
+## Pipeline (15 steps)
 
----
+Steps 1-9 batch in one shot:
 
-## Persistent State Update
+```bash
+/home/wangmingke/anaconda3/envs/derm-vlm/bin/python \
+  skills/paper-reader/scripts/run_pipeline.py \
+  --input "{url_or_paper_id}" \
+  --paper-id "{paper_id}" \
+  --topic-slug "{topic_slug}" \
+  --papers-json output/papers.json \
+  --prefix {short_prefix}
+```
 
-### `output/papers.json`
+Then Steps 10-15 are model + lint:
 
-If the paper already exists:
-- set `status` to `"reading"`
-- set `note_path` to the saved note file
-- update `last_updated`
-- set `pdf_url` if a reliable direct PDF link is available
-- set `paper_type` to one of `systems`, `algorithm`, `measurement`, `survey`
+| # | Step | Actor | Output |
+|---|---|---|---|
+| 1 | resolve paper identity | `resolve_paper.py` | `{prefix}_resolve.json` |
+| 2 | collect metadata | `collect_metadata.py` | `{prefix}_metadata.json` |
+| 3 | acquire PDF | `fetch_pdf.py` | `{prefix}_fetch.json` |
+| 4 | extract source text | `extract_source_text.py` | `{prefix}_raw_sections.jsonl` + `{prefix}_source_manifest.json` |
+| 5 | extract evidence | `extract_evidence.py` | `{prefix}_evidence.json` |
+| 6 | extract figure assets | `extract_pdf_assets.py` | `{prefix}_assets.json` (+ candidate crops in `figures/`) |
+| 7 | plan figure placement | `plan_figures.py` | `{prefix}_figures.json` |
+| 8 | build figure/table decisions | `plan_figure_table_decisions.py` | `{prefix}_figure_table_decisions.json` |
+| 9 | build synthesis bundle | `build_synthesis_bundle.py` | `{prefix}_bundle.json` |
+| 10 | write `note_plan.json` | **model** | `{prefix}_note.plan.json` |
+| 11 | grounding lint | `lint_grounding.py` | pass / fail |
+| 12 | draft note Markdown | **model** | `{prefix}_note.md` |
+| 13 | style + structure lint | `lint_note.py --plan-file ...` | `passes_style_gate: true` required |
+| 14 | quality + readability review (7-question self-check) | **model** | revised note |
+| 15 | persist | `write_note.py --topic-slug ... --paper-id ... --papers-json ...` | writes `output/notes/{topic_slug}/{paper_id}/note.md`, copies figures, updates `papers.json` |
 
-If the paper does not exist:
-- create a new entry with all available metadata
-- set `status` to `"reading"`
-- set `note_path`, `tags`, `paper_type`
+All artifacts live in `output/tmp/{paper_id}/`.
 
-### `output/kanban.html`
+## Stop rules
 
-Load from `assets/kanban.html`. Regenerate with updated paper state.
+**Don't skip required steps**, don't merge Step 10 with Step 12, don't declare success while Step 13-15 are pending.
 
----
+If a step fails: retry → fall back via the allowed path → or stop and name the blocked step. Don't improvise a shortcut.
 
-## Response Format
+**Completion language:**
+
+| Phrase | When you may say it |
+|---|---|
+| `笔记已完成` | Steps 1-15 all done, lint passed, write_note.py succeeded |
+| `已生成草稿` | Step 12 done, Step 13-15 not done |
+| `已通过校验` | `lint_note.py` actually ran and printed `passes_style_gate: true` |
+| early stop | name the current step + still-pending required steps |
+
+## Note plan (Step 10)
+
+Save `output/tmp/{paper_id}/{prefix}_note.plan.json` before drafting. Required fields:
+
+- `paper_type`: `AI_method` / `benchmark_or_dataset` / `survey_or_review` / `systems_iot`
+- `paper_type_rationale`: one sentence justifying
+- `section_plan`: per-section `###` plan referencing valid `section_id`s from `source_manifest`
+- `central_claims[]`: each with `claim` / `evidence` / `proves` / `does_not_prove`
+- `claim_boundaries[]`
+- `negative_or_limiting_results[]`
+- `mechanism_result_map[]`: connect mechanism / design choice → result pattern
+- `comparative_positioning[]`: how the paper differs from baselines / prior routes
+- `reuse_takeaways[]`
+- `followup_questions[]`
+
+Examples + full contract: `references/evidence-first.md`.
+
+Run `lint_grounding.py` before drafting. Every substantive section must cite a valid `section_id` or page range.
+
+## Note template
+
+12 top-level sections, fixed order. Full skeleton: `assets/note_template.md`.
+
+```
+## 核心信息            (fixed metadata block, no prose)
+## 原文摘要翻译        (faithful Chinese translation, not a rewrite)
+## 创新点              (immediately after 原文摘要翻译)
+## 一句话总结
+## 研究问题
+## 数据与任务定义
+## 方法主线
+   ### 机制流程        (3-4 step numbered flow for method/system/framework papers)
+## 关键结果
+## 深度分析
+## 局限
+## 我的笔记
+## 引用
+```
+
+Required:
+- Non-trivial papers → meaningful `###` subheadings in `数据与任务定义` / `方法主线` / `关键结果` / `深度分析`
+- Figure placeholders use `> [!figure]` callout
+- Materialized images at `output/notes/{topic_slug}/{paper_id}/figures/`, referenced as `figures/fig1.png` (relative)
+- Math as `$...$` or `$$...$$`, never code blocks
+
+## Paper type adaptation
+
+12 sections stay identical; typed semantics + `###` subsections differ per type. Full contract: `references/paper-types.md`.
+
+| Type | For | Emphasis |
+|---|---|---|
+| `AI_method` | NeurIPS / ICLR / CVPR / ICML | model architecture, training objective, ablation interpretation |
+| `benchmark_or_dataset` | new benchmarks / datasets / eval protocols | dataset scope, baseline coverage, difficulty distribution |
+| `survey_or_review` | tutorials / surveys | taxonomy, periodization, open problems |
+| `systems_iot` | SenSys / MobiSys / IMWUT / IPSN / MobiCom | system architecture, module ↔ Challenge mapping, trade-offs, deployment constraints |
+
+Coarse `paper_type` field in `papers.json` maps as: `algorithm → AI_method`, `survey → survey_or_review`, `systems → systems_iot`, `measurement → benchmark_or_dataset`.
+
+## Quality gate
+
+**Fail closed** (do not write) if:
+- `full_text_status != open_pdf` and CDP fallback also failed
+- `note_plan` did not pass `lint_grounding.py`
+- Final note still contains mixed Chinese-English prose (`passes_style_gate: false`)
+- Final note misses any of the 12 required sections
+
+**Minimum bar** a note must satisfy:
+- Not a paraphrase of the abstract
+- Distinguishes 作者声称 from 论文证明
+- ≥ 1 real limitation grounded in evidence
+- ≥ 1 paper-specific subsection (not just top-level `##`)
+- For method-heavy papers: ≥ 1 mechanism `###` subsection detailed enough that an engineer could re-explain the pipeline without reopening the PDF
+- Key numbers + central comparison present
+- ≥ 1 reusable takeaway
+
+Full checklist: `references/note-quality.md`.
+
+## papers.json schema (relevant fields)
+
+`write_note.py --papers-json --paper-id ...` sets these at Step 15:
+
+```json
+{
+  "full_text_status": "open_pdf",
+  "open_access_status": "green",
+  "pdf_url": "https://arxiv.org/pdf/...",
+  "pipeline_status": "complete",
+  "note_path": "output/notes/{topic_slug}/{paper_id}/note.md",
+  "figures_dir": "output/notes/{topic_slug}/{paper_id}/figures",
+  "status": "done",
+  "progress": 100
+}
+```
+
+`pipeline_status` enum: `null` → `pdf_ready` → `extracted` → `drafted` → `linted` → `complete`.
+
+## References (load on demand, not by default)
+
+- `references/evidence-first.md` — note_plan structure + evidence-first contract
+- `references/paper-types.md` — section semantics per paper type (incl. systems_iot)
+- `references/note-quality.md` — minimum bar + quality gate checklist
+- `references/workflow.md` — full data contracts per pipeline stage
+- `references/figure-placement.md` — placeholder-first figure decisions
+- `../../references/pdf-cascade.md` — repo-wide 5-step PDF cascade
+- `../../references/api-cookbook.md` — arXiv / S2 / DBLP / OpenAlex / Unpaywall / Google Scholar templates
+
+## Response
 
 ```
 精读完成 — {ALIAS}
 {FULL_TITLE}
-{AUTHORS} | {VENUE} {YEAR} | {TOTAL}/5
+{AUTHORS} | {VENUE} {YEAR} | paper_type: {TYPE}
 
-Paper type: {PAPER_TYPE}
+Pipeline:    Step 1-15 all complete
+PDF source:  {pdf_source} ({full_text_status})
+Lint:        passes_style_gate=true, passes_plan_gate=true
 
-Vision:      {ONE_LINE_VISION}
-Top result:  {BEST_RESULT}
-Key insight: {TOP_IDEA}
-Top concern: {QUESTIONABLE_ASSUMPTION}
-
-Challenges:  {N} identified, all mapped to system modules
-Trade-offs:  {N} recorded with rationale
-
-Notes: output/notes/{TOPIC_SLUG}/{PAPER_ID}.md
-Dashboard: output/kanban.html
+Note:    output/notes/{topic_slug}/{paper_id}/note.md
+Figures: output/notes/{topic_slug}/{paper_id}/figures/
 ```
 
----
-
-## Error Handling
-
-| Error | Action |
-|---|---|
-| arXiv HTML unavailable | continue with abstract; mark Sections 3 and 4 as "不可获取" |
-| non-arXiv paper lacks full text | use abstract + metadata; state limitation explicitly |
-| paper absent from papers.json | create new entry |
-| malformed papers.json | recreate carefully and warn |
-| no figures available | omit figure references; do not fabricate |
-| paper is very long (>15 pages) | prioritize Sections 1, 2, 3, 5; note that Section 4 may be incomplete |
+Stopped early → replace `精读完成` with `已生成草稿` / `PDF 获取失败` / `在 Step N 暂停` and name the pending steps.

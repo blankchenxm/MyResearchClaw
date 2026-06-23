@@ -21,7 +21,7 @@ body.light {
   --bg:#f4f7fb; --panel:#ffffff; --panel-soft:#edf2f8; --text:#18202c; --dim:#506176;
   --muted:#68778b; --line:rgba(15,23,42,0.10); --blue:#2364d2; --cyan:#0f9f90; --amber:#b98911;
 }
-.wrap { max-width:1320px; margin:0 auto; padding:28px 28px 80px; }
+.wrap { max-width:96vw; margin:0 auto; padding:28px 28px 80px; }
 .theme-toggle {
   position:fixed; top:16px; right:16px; z-index:9999; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font-size:16px;
@@ -42,23 +42,184 @@ body.light {
 .topics { display:grid; gap:18px; }
 .topic-card { background:var(--panel); border:1px solid var(--line); border-radius:22px; padding:22px 24px; }
 .topic-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; }
-.topic-eyebrow { font:600 11px 'JetBrains Mono', monospace; color:var(--cyan); text-transform:uppercase; letter-spacing:.12em; margin-bottom:8px; }
-.topic-card h2 { font-size:26px; line-height:1.28; font-weight:900; }
-.topic-count { white-space:nowrap; border:1px solid var(--line); border-radius:999px; padding:6px 10px; font:600 11px 'JetBrains Mono', monospace; color:var(--blue); }
-.topic-meta { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; color:var(--muted); font:500 11px 'JetBrains Mono', monospace; }
-.topic-venues { color:var(--dim); line-height:1.8; margin-bottom:16px; }
-.topic-actions { display:flex; gap:10px; flex-wrap:wrap; }
-.topic-actions a {
-  display:inline-flex; align-items:center; gap:6px; text-decoration:none; border:1px solid var(--line);
-  border-radius:999px; padding:10px 14px; font-size:13px; color:var(--text); background:rgba(255,255,255,0.04);
+.topic-title-wrap { flex:1; min-width:0; }
+.topic-top-right { display:flex; gap:10px; align-items:center; flex-shrink:0; }
+.topic-eyebrow { font:600 13px 'JetBrains Mono', monospace; color:var(--cyan); text-transform:uppercase; letter-spacing:.12em; margin-bottom:10px; }
+.topic-card h2 { font-size:36px; line-height:1.22; font-weight:900; }
+.topic-count { white-space:nowrap; border:1px solid var(--line); border-radius:999px; padding:7px 14px; font:600 14px 'JetBrains Mono', monospace; color:var(--blue); }
+.topic-delete {
+  width:40px; height:40px; border-radius:10px; border:1px solid var(--line);
+  background:rgba(255,255,255,0.04); color:var(--muted); cursor:pointer;
+  font-size:18px; display:inline-flex; align-items:center; justify-content:center;
+  transition:all .15s;
 }
-.topic-actions a:last-child { color:var(--cyan); border-color:rgba(56,217,199,0.18); background:rgba(56,217,199,0.08); }
+.topic-delete:hover { color:#ff8d6b; border-color:rgba(255,141,107,0.4); background:rgba(255,141,107,0.08); }
+.topic-meta { display:flex; gap:18px; flex-wrap:wrap; margin-bottom:14px; color:var(--dim); font-size:16px; }
+.topic-meta .meta-label { font:600 12px 'JetBrains Mono', monospace; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-right:6px; }
+.topic-venues { color:var(--dim); line-height:1.8; margin-bottom:18px; font-size:16px; }
+.topic-actions { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; }
+.topic-actions a {
+  display:flex; align-items:center; gap:16px; text-decoration:none; border:1px solid var(--line);
+  border-radius:16px; padding:18px 20px; color:var(--text); background:rgba(255,255,255,0.04);
+  transition:all .15s;
+}
+.topic-actions a:hover { transform:translateY(-1px); }
+.action-icon { font-size:30px; line-height:1; }
+.action-text { display:flex; flex-direction:column; gap:5px; min-width:0; }
+.action-title { font-weight:700; font-size:18px; }
+.action-desc { font-size:15px; color:var(--dim); }
+.topic-actions .action-papers { border-color:rgba(105,166,255,0.18); background:rgba(105,166,255,0.06); }
+.topic-actions .action-papers:hover { border-color:rgba(105,166,255,0.35); }
+.topic-actions .action-papers .action-title { color:var(--blue); }
+.topic-actions .action-engineering { border-color:rgba(56,217,199,0.18); background:rgba(56,217,199,0.06); }
+.topic-actions .action-engineering:hover { border-color:rgba(56,217,199,0.35); }
+.topic-actions .action-engineering .action-title { color:var(--cyan); }
 @media (max-width: 720px) {
   .wrap { padding:16px 16px 60px; }
   .hero { padding:22px 20px; }
   .hero h1 { font-size:30px; }
   .topic-top { flex-direction:column; }
 }
+
+/* ── Scout: add-button card ── */
+.scout-add-btn {
+  display:flex; align-items:center; gap:14px; cursor:pointer;
+  background:var(--panel); border:1.5px dashed rgba(105,166,255,0.3);
+  border-radius:22px; padding:22px 26px; color:var(--blue);
+  transition:all .15s; user-select:none;
+}
+.scout-add-btn:hover { border-color:rgba(105,166,255,0.6); background:rgba(105,166,255,0.07); }
+.scout-add-icon { font-size:26px; line-height:1; font-weight:300; }
+.scout-add-label { font-weight:700; font-size:17px; }
+.scout-add-sub { font-size:13px; color:var(--dim); margin-top:2px; }
+
+/* ── Scout: form panel ── */
+.scout-form-panel {
+  background:var(--panel); border:1px solid rgba(105,166,255,0.18);
+  border-radius:22px; padding:28px 28px 22px;
+}
+.scout-form-title { font-weight:800; font-size:20px; margin-bottom:20px; color:var(--text); }
+.scout-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px 20px; }
+.scout-form-full { grid-column:1 / -1; }
+.scout-field { display:flex; flex-direction:column; gap:6px; }
+.scout-field label { font:600 11px 'JetBrains Mono', monospace; color:var(--muted); text-transform:uppercase; letter-spacing:.09em; }
+.scout-field input, .scout-field select, .scout-field textarea {
+  background:var(--panel-soft); border:1px solid var(--line); border-radius:10px;
+  color:var(--text); font-size:14px; padding:9px 13px; outline:none;
+  font-family:inherit; resize:none; transition:border-color .15s;
+}
+.scout-field input:focus, .scout-field select:focus, .scout-field textarea:focus {
+  border-color:rgba(105,166,255,0.5);
+}
+.scout-field textarea { min-height:72px; line-height:1.6; }
+.scout-year-row { display:flex; gap:8px; align-items:center; }
+.scout-year-row select { flex:1; }
+.scout-year-sep { color:var(--muted); font-size:13px; }
+
+/* Venue chips */
+.venue-chip-input-row { display:flex; gap:8px; }
+.venue-chip-input-row input { flex:1; }
+.venue-chip-add-btn {
+  background:rgba(105,166,255,0.12); border:1px solid rgba(105,166,255,0.25);
+  border-radius:8px; color:var(--blue); cursor:pointer; font-size:14px;
+  padding:0 14px; white-space:nowrap; transition:all .15s;
+}
+.venue-chip-add-btn:hover { background:rgba(105,166,255,0.22); }
+.venue-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; min-height:10px; }
+.v-chip {
+  display:inline-flex; align-items:center; gap:5px; background:rgba(56,217,199,0.12);
+  border:1px solid rgba(56,217,199,0.25); border-radius:999px;
+  padding:3px 10px 3px 12px; font-size:13px; color:var(--cyan);
+}
+.v-chip-del { cursor:pointer; opacity:.6; font-size:12px; line-height:1; }
+.v-chip-del:hover { opacity:1; }
+
+.scout-form-actions { display:flex; gap:10px; margin-top:18px; }
+.scout-submit-btn {
+  background:rgba(105,166,255,0.15); border:1px solid rgba(105,166,255,0.35);
+  border-radius:10px; color:var(--blue); cursor:pointer; font:600 14px inherit;
+  padding:10px 24px; transition:all .15s;
+}
+.scout-submit-btn:hover { background:rgba(105,166,255,0.28); }
+.scout-cancel-btn {
+  background:transparent; border:1px solid var(--line); border-radius:10px;
+  color:var(--muted); cursor:pointer; font:500 14px inherit; padding:10px 18px;
+  transition:all .15s;
+}
+.scout-cancel-btn:hover { color:var(--text); border-color:rgba(255,255,255,0.2); }
+
+/* ── Scout: progress panel ── */
+.scout-progress-panel {
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:22px; padding:24px 28px;
+}
+.scout-progress-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.scout-progress-title { font-weight:700; font-size:17px; }
+.scout-phase-badge {
+  font:600 11px 'JetBrains Mono', monospace; text-transform:uppercase;
+  letter-spacing:.09em; padding:4px 10px; border-radius:999px;
+  background:rgba(105,166,255,0.12); color:var(--blue); border:1px solid rgba(105,166,255,0.2);
+}
+.scout-track {
+  height:6px; border-radius:3px; background:rgba(255,255,255,0.07);
+  overflow:hidden; margin-bottom:10px;
+}
+.scout-fill {
+  height:100%; border-radius:3px;
+  background:linear-gradient(90deg, var(--blue), var(--cyan));
+  transition:width 1s ease;
+}
+.scout-progress-msg { font-size:13px; color:var(--dim); }
+.scout-error-msg { color:#ff8d6b; font-size:13px; margin-top:8px; }
+
+/* ── Scout: candidates confirmation panel ── */
+.scout-confirm-panel {
+  background:var(--panel); border:1px solid rgba(255,214,110,0.2);
+  border-radius:22px; padding:24px 28px;
+}
+.scout-confirm-title { font-weight:700; font-size:18px; margin-bottom:6px; }
+.scout-confirm-sub { font-size:13px; color:var(--dim); margin-bottom:18px; }
+.scout-tbl-wrap { overflow-x:auto; margin-bottom:16px; }
+.scout-tbl {
+  width:100%; border-collapse:collapse; font-size:13px;
+}
+.scout-tbl th {
+  text-align:left; font:600 11px 'JetBrains Mono',monospace;
+  text-transform:uppercase; letter-spacing:.08em;
+  color:var(--blue); padding:7px 10px; border-bottom:1px solid var(--line);
+  white-space:nowrap;
+}
+.scout-tbl td { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:top; }
+.scout-tbl tr:hover td { background:rgba(255,255,255,0.03); }
+.scout-tbl .td-check { width:32px; }
+.scout-tbl .td-title { max-width:320px; }
+.scout-tbl .td-title a { color:var(--text); text-decoration:none; }
+.scout-tbl .td-title a:hover { color:var(--blue); }
+.scout-tbl .td-num { color:var(--dim); text-align:right; }
+.scout-tbl .pdf-ok { color:var(--cyan); }
+.scout-tbl .pdf-no { color:var(--muted); }
+.scout-sel-all { font-size:12px; color:var(--muted); cursor:pointer; margin-bottom:10px; }
+.scout-sel-all:hover { color:var(--text); }
+
+.scout-adjust-row { margin-bottom:16px; }
+.scout-adjust-row label { font:600 11px 'JetBrains Mono',monospace; color:var(--muted); text-transform:uppercase; letter-spacing:.09em; display:block; margin-bottom:6px; }
+.scout-adjust-row input {
+  width:100%; background:var(--panel-soft); border:1px solid var(--line);
+  border-radius:8px; color:var(--text); font-size:13px; padding:8px 12px; outline:none; font-family:inherit;
+}
+.scout-confirm-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.scout-confirm-btn {
+  background:rgba(56,217,199,0.14); border:1px solid rgba(56,217,199,0.3);
+  border-radius:10px; color:var(--cyan); cursor:pointer; font:600 14px inherit;
+  padding:10px 22px; transition:all .15s;
+}
+.scout-confirm-btn:hover { background:rgba(56,217,199,0.25); }
+.scout-readjust-btn {
+  background:transparent; border:1px solid var(--line); border-radius:10px;
+  color:var(--muted); cursor:pointer; font:500 14px inherit; padding:10px 18px;
+  transition:all .15s;
+}
+.scout-readjust-btn:hover { color:var(--text); }
 </style>
 </head>
 <body>
@@ -71,85 +232,179 @@ body.light {
         <span class="lang-en lang-inline">Topic Navigator</span>
       </h1>
       <p>
-        <span class="lang-zh lang-block">所有主题页面现在都收纳在 <code>output/projects/&lt;topic-slug&gt;/</code> 下。先进入对应的 Papers 页面，再在页面顶部点击 Engineering View；精读笔记仍会按主题写入 <code>output/notes/&lt;topic-slug&gt;/</code>。</span>
-        <span class="lang-en lang-block">All topic pages now live under <code>output/projects/&lt;topic-slug&gt;/</code>. Open the corresponding Papers page first, then use the Engineering View button at the top; reading notes are still stored under <code>output/notes/&lt;topic-slug&gt;/</code>.</span>
+        <span class="lang-zh lang-block">每个方框对应一个研究主题（Research Theme）。点击 <strong>Open Papers</strong> 进入论文时间线 + 精读笔记，点击 <strong>Engineering View</strong> 查看开源实现 + 工程信号，点击右上角 <strong>🗑️</strong> 可清除该主题的全部内容（论文、笔记、PDF、项目对话）。</span>
+        <span class="lang-en lang-block">Each card is one Research Theme. <strong>Open Papers</strong> → paper timeline + deep-reading notes. <strong>Engineering View</strong> → open-source repos + engineering signals. <strong>🗑️</strong> in the top-right deletes everything for that theme (papers, notes, PDFs, project chat).</span>
       </p>
     </section>
     <section class="topics">
+
+      <!-- ── Add New Theme Button ── -->
+      <div class="scout-add-btn" id="scoutAddBtn" onclick="toggleScoutForm()">
+        <span class="scout-add-icon">＋</span>
+        <div>
+          <div class="scout-add-label">新增研究主题 / New Research Theme</div>
+          <div class="scout-add-sub">输入 Topic 描述，自动触发 Conference Scout 调研</div>
+        </div>
+      </div>
+
+      <!-- ── New Theme Form Panel ── -->
+      <div class="scout-form-panel" id="scoutFormPanel" style="display:none">
+        <div class="scout-form-title">新建调研主题</div>
+        <div class="scout-form-grid">
+          <div class="scout-field scout-form-full">
+            <label>Topic 名称（简短关键词）</label>
+            <input type="text" id="sfTopic" placeholder="e.g. Silent Speech Recognition" />
+          </div>
+          <div class="scout-field scout-form-full">
+            <label>详细描述（自然语言，可多句）</label>
+            <textarea id="sfDescription" placeholder="描述研究方向、应用场景、你希望找到的论文类型…"></textarea>
+          </div>
+          <div class="scout-field">
+            <label>年份范围</label>
+            <div class="scout-year-row">
+              <select id="sfYearStart"><option value="2010">2010</option>
+<option value="2011">2011</option>
+<option value="2012">2012</option>
+<option value="2013">2013</option>
+<option value="2014">2014</option>
+<option value="2015">2015</option>
+<option value="2016">2016</option>
+<option value="2017">2017</option>
+<option value="2018">2018</option>
+<option value="2019">2019</option>
+<option value="2020">2020</option>
+<option value="2021" selected>2021</option>
+<option value="2022">2022</option>
+<option value="2023">2023</option>
+<option value="2024">2024</option>
+<option value="2025">2025</option>
+<option value="2026">2026</option></select>
+              <span class="scout-year-sep">–</span>
+              <select id="sfYearEnd"><option value="2010">2010</option>
+<option value="2011">2011</option>
+<option value="2012">2012</option>
+<option value="2013">2013</option>
+<option value="2014">2014</option>
+<option value="2015">2015</option>
+<option value="2016">2016</option>
+<option value="2017">2017</option>
+<option value="2018">2018</option>
+<option value="2019">2019</option>
+<option value="2020">2020</option>
+<option value="2021">2021</option>
+<option value="2022">2022</option>
+<option value="2023">2023</option>
+<option value="2024">2024</option>
+<option value="2025">2025</option>
+<option value="2026" selected>2026</option></select>
+            </div>
+          </div>
+          <div class="scout-field">
+            <label>领域 / 会议组</label>
+            <select id="sfVenueGroup">
+              <option value="wearable_sensing">穿戴传感 (wearable_sensing)</option>
+              <option value="ai_ml">AI / 机器学习 (ai_ml)</option>
+              <option value="iot_systems">IoT 系统 (iot_systems)</option>
+              <option value="eda_hardware">EDA / 硬件 (eda_hardware)</option>
+              <option value="security">安全 (security)</option>
+              <option value="systems">系统 (systems)</option>
+              <option value="hci">人机交互 (hci)</option>
+            </select>
+          </div>
+          <div class="scout-field scout-form-full">
+            <label>指定会议（可选，输入后按 Enter 添加）</label>
+            <div class="venue-chip-input-row">
+              <input type="text" id="sfVenueInput" placeholder="e.g. SenSys, IMWUT …" onkeydown="venueInputKey(event)" />
+              <button class="venue-chip-add-btn" onclick="addVenueChip()">添加</button>
+            </div>
+            <div class="venue-chips" id="sfVenueChips"></div>
+          </div>
+        </div>
+        <div class="scout-form-actions">
+          <button class="scout-submit-btn" onclick="submitScout()">🔍 开始调研</button>
+          <button class="scout-cancel-btn" onclick="toggleScoutForm()">取消</button>
+        </div>
+      </div>
+
+      <!-- ── Progress Panel ── -->
+      <div class="scout-progress-panel" id="scoutProgressPanel" style="display:none">
+        <div class="scout-progress-header">
+          <div class="scout-progress-title" id="scoutProgressTitle">Conference Scout 运行中…</div>
+          <span class="scout-phase-badge" id="scoutPhaseBadge">Phase 1</span>
+        </div>
+        <div class="scout-track"><div class="scout-fill" id="scoutFill" style="width:0%"></div></div>
+        <div class="scout-progress-msg" id="scoutProgressMsg">初始化…</div>
+        <div class="scout-error-msg" id="scoutErrorMsg" style="display:none"></div>
+      </div>
+
+      <!-- ── Round 4.5 Confirmation Panel ── -->
+      <div class="scout-confirm-panel" id="scoutConfirmPanel" style="display:none">
+        <div class="scout-confirm-title">Round 4.5 — 候选论文确认</div>
+        <div class="scout-confirm-sub" id="scoutConfirmSub">请勾选要保留的论文，然后继续 Round 5-7。</div>
+        <div class="scout-sel-all" onclick="toggleSelectAll()">全选 / 全不选</div>
+        <div class="scout-tbl-wrap">
+          <table class="scout-tbl" id="scoutCandidatesTbl">
+            <thead>
+              <tr>
+                <th class="td-check"></th>
+                <th>#</th>
+                <th>标题</th>
+                <th>Venue</th>
+                <th>年份</th>
+                <th>引用</th>
+                <th>Influential</th>
+                <th>PDF</th>
+              </tr>
+            </thead>
+            <tbody id="scoutCandidatesTbody"></tbody>
+          </table>
+        </div>
+        <div class="scout-adjust-row">
+          <label>追加 Negative Patterns（逗号分隔，可留空）</label>
+          <input type="text" id="sfNegPatterns" placeholder="e.g. wrist-based, review, survey" />
+        </div>
+        <div class="scout-adjust-row">
+          <label>调整 Constraint Terms（逗号分隔，可留空）</label>
+          <input type="text" id="sfConstraintTerms" placeholder="e.g. real-time, on-device" />
+        </div>
+        <div class="scout-confirm-actions">
+          <button class="scout-confirm-btn" onclick="confirmScout()">✅ 确认，继续 Round 5-7</button>
+          <button class="scout-readjust-btn" onclick="readjustRound4()">↩ 重新调整条件，重跑 Round 4</button>
+        </div>
+      </div>
+
       
         <article class="topic-card">
           <div class="topic-top">
-            <div>
+            <div class="topic-title-wrap">
               <div class="topic-eyebrow">Research Theme</div>
-              <h2>Silent Speech Recognition（骨传导 + EMG + LLM）</h2>
+              <h2>LLM Agent for Automated PCB Design</h2>
             </div>
-            <div class="topic-count">7 papers</div>
+            <div class="topic-top-right">
+              <div class="topic-count">14 papers</div>
+              <button class="topic-delete" title="Delete this theme" onclick="deleteTopic('LLM Agent for Automated PCB Design', 'llm-agent-for-automated-pcb-design', 14)">🗑️</button>
+            </div>
           </div>
           <div class="topic-meta">
-            <span>2018-2026</span>
-            <span>2026-04-21</span>
+            <span><span class="meta-label">检索范围</span>2023-2026</span>
+            <span><span class="meta-label">创建于</span>2026-06-22</span>
           </div>
-          <p class="topic-venues">IUI, Interspeech, Sensors, arXiv, wearable SSI / HCI / speech interfaces</p>
+          <p class="topic-venues">Unknown Venues</p>
           <div class="topic-actions">
-            <a href="/projects/silent-speech-recognition-emg-llm/papers.html">Open Papers →</a>
-            <a href="/projects/silent-speech-recognition-emg-llm/engineering.html">Engineering View →</a>
-          </div>
-        </article>
-
-        <article class="topic-card">
-          <div class="topic-top">
-            <div>
-              <div class="topic-eyebrow">Research Theme</div>
-              <h2>芯片 DataSheet PDF 信息提取（MCU/SoC/传感器，含时序图与结构图）</h2>
-            </div>
-            <div class="topic-count">6 papers</div>
-          </div>
-          <div class="topic-meta">
-            <span>2018-2026</span>
-            <span>2026-04-20</span>
-          </div>
-          <p class="topic-venues">arXiv, JSys, WACV, JCDL, document understanding / systems engineering</p>
-          <div class="topic-actions">
-            <a href="/projects/datasheet-pdf-mcu-soc/papers.html">Open Papers →</a>
-            <a href="/projects/datasheet-pdf-mcu-soc/engineering.html">Engineering View →</a>
-          </div>
-        </article>
-
-        <article class="topic-card">
-          <div class="topic-top">
-            <div>
-              <div class="topic-eyebrow">Research Theme</div>
-              <h2>PCB硬件自动化流程(面向 IoT传感器板)</h2>
-            </div>
-            <div class="topic-count">6 papers</div>
-          </div>
-          <div class="topic-meta">
-            <span>2020-2026</span>
-            <span>2026-04-19</span>
-          </div>
-          <p class="topic-venues">UIST, arXiv, board-level EDA / schematic automation</p>
-          <div class="topic-actions">
-            <a href="/projects/pcb-iot/papers.html">Open Papers →</a>
-            <a href="/projects/pcb-iot/engineering.html">Engineering View →</a>
-          </div>
-        </article>
-
-        <article class="topic-card">
-          <div class="topic-top">
-            <div>
-              <div class="topic-eyebrow">Research Theme</div>
-              <h2>MCU 固件生成与自动烧录流程(跨 ESP32/STM32/nRF)</h2>
-            </div>
-            <div class="topic-count">10 papers</div>
-          </div>
-          <div class="topic-meta">
-            <span>2008-2026</span>
-            <span>2026-04-19</span>
-          </div>
-          <p class="topic-venues">RTSS, ASP-DAC, USENIX Security, NDSS, MILCOM, SECON, ISLPED, SenSys, arXiv</p>
-          <div class="topic-actions">
-            <a href="/projects/mcu-esp32-stm32-nrf/papers.html">Open Papers →</a>
-            <a href="/projects/mcu-esp32-stm32-nrf/engineering.html">Engineering View →</a>
+            <a href="/projects/llm-agent-for-automated-pcb-design/papers.html" class="action-papers">
+              <span class="action-icon">📚</span>
+              <span class="action-text">
+                <span class="action-title">Open Papers</span>
+                <span class="action-desc">论文时间线 · 精读笔记</span>
+              </span>
+            </a>
+            <a href="/projects/llm-agent-for-automated-pcb-design/engineering.html" class="action-engineering">
+              <span class="action-icon">🛠️</span>
+              <span class="action-text">
+                <span class="action-title">Engineering View</span>
+                <span class="action-desc">开源仓库 · 工程实现</span>
+              </span>
+            </a>
           </div>
         </article>
     </section>
@@ -165,7 +420,248 @@ function toggleTheme() {
   localStorage.setItem('theme', light ? 'light' : 'dark');
   applyTheme();
 }
-window.addEventListener('load', applyTheme);
+async function deleteTopic(topic, slug, paperCount) {
+  const confirmMsg = `确认删除主题「${topic}」吗？\n\n将清除：\n  · ${paperCount} 篇论文记录（papers.json）\n  · 全部精读笔记和图表 (output/notes/${slug}/)\n  · 下载的 PDF (output/pdfs/${slug}/)\n  · 项目对话历史和日志\n  · 主题专属页面 (output/projects/${slug}/)\n\n此操作不可撤销。`;
+  if (!confirm(confirmMsg)) return;
+  try {
+    const r = await fetch('/api/delete-topic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic, slug })
+    });
+    const data = await r.json();
+    if (data.ok) {
+      window.location.reload();
+    } else {
+      alert('删除失败：' + (data.error || '未知错误'));
+    }
+  } catch (e) {
+    alert('删除失败：' + e.message);
+  }
+}
+
+// ── Scout UI ─────────────────────────────────────────────────────────────
+let _scoutFormOpen = false;
+let _scoutPollTimer = null;
+let _scoutCandidates = [];
+
+function toggleScoutForm() {
+  _scoutFormOpen = !_scoutFormOpen;
+  document.getElementById('scoutFormPanel').style.display = _scoutFormOpen ? '' : 'none';
+  if (_scoutFormOpen) document.getElementById('sfTopic').focus();
+}
+
+function venueInputKey(e) {
+  if (e.key === 'Enter') { e.preventDefault(); addVenueChip(); }
+}
+
+function addVenueChip() {
+  const inp = document.getElementById('sfVenueInput');
+  const val = inp.value.trim();
+  if (!val) return;
+  inp.value = '';
+  const chips = document.getElementById('sfVenueChips');
+  const chip = document.createElement('span');
+  chip.className = 'v-chip';
+  chip.dataset.value = val;
+  chip.innerHTML = `${val} <span class="v-chip-del" onclick="this.parentElement.remove()">×</span>`;
+  chips.appendChild(chip);
+}
+
+function _getVenues() {
+  return Array.from(document.querySelectorAll('#sfVenueChips .v-chip'))
+              .map(c => c.dataset.value).filter(Boolean);
+}
+
+async function submitScout() {
+  const topic = document.getElementById('sfTopic').value.trim();
+  const description = document.getElementById('sfDescription').value.trim();
+  const yearStart = parseInt(document.getElementById('sfYearStart').value);
+  const yearEnd   = parseInt(document.getElementById('sfYearEnd').value);
+  const venueGroup = document.getElementById('sfVenueGroup').value;
+  const specificVenues = _getVenues();
+
+  if (!topic) { alert('请填写 Topic 名称'); return; }
+  if (yearStart > yearEnd) { alert('年份起始不能大于结束'); return; }
+
+  try {
+    const r = await fetch('/api/start-scout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic, description, year_start: yearStart, year_end: yearEnd, venue_group: venueGroup, specific_venues: specificVenues })
+    });
+    const data = await r.json();
+    if (!data.ok) { alert('启动失败：' + (data.error || '')); return; }
+    document.getElementById('scoutFormPanel').style.display = 'none';
+    _scoutFormOpen = false;
+    _showProgressPanel('Phase 1', '初始化…', 0);
+    _startPoll();
+  } catch (e) {
+    alert('启动失败：' + e.message);
+  }
+}
+
+function _showProgressPanel(phase, msg, pct) {
+  document.getElementById('scoutProgressPanel').style.display = '';
+  document.getElementById('scoutConfirmPanel').style.display = 'none';
+  document.getElementById('scoutPhaseBadge').textContent = phase;
+  document.getElementById('scoutProgressMsg').textContent = msg;
+  document.getElementById('scoutFill').style.width = pct + '%';
+  document.getElementById('scoutErrorMsg').style.display = 'none';
+}
+
+function _showConfirmPanel(data) {
+  document.getElementById('scoutProgressPanel').style.display = 'none';
+  document.getElementById('scoutConfirmPanel').style.display = '';
+  _scoutCandidates = data.candidates || [];
+  const n = _scoutCandidates.length;
+  document.getElementById('scoutConfirmSub').textContent =
+    `共 ${n} 篇通过 Round 4，勾选要保留的论文，然后继续 Round 5-7。或追加条件后重跑 Round 4。`;
+  if (data.negative_patterns && data.negative_patterns.length)
+    document.getElementById('sfNegPatterns').value = data.negative_patterns.join(', ');
+  if (data.constraint_terms && data.constraint_terms.length)
+    document.getElementById('sfConstraintTerms').value = data.constraint_terms.join(', ');
+  _renderCandidatesTable();
+}
+
+function _renderCandidatesTable() {
+  const tbody = document.getElementById('scoutCandidatesTbody');
+  tbody.innerHTML = '';
+  _scoutCandidates.forEach((p, i) => {
+    const pdfCell = p.pdf_available === 'none' || !p.pdf_available
+      ? '<span class="pdf-no">✗</span>'
+      : `<span class="pdf-ok">✓ ${p.pdf_available}</span>`;
+    const titleLink = p.url
+      ? `<a href="${p.url}" target="_blank">${_esc(p.title)}</a>`
+      : _esc(p.title);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="td-check"><input type="checkbox" checked data-idx="${i}" /></td>
+      <td>${i+1}</td>
+      <td class="td-title">${titleLink}<div style="font-size:11px;color:var(--muted);margin-top:2px">${_esc(p.authors||'')}</div></td>
+      <td>${_esc(p.venue||'')}</td>
+      <td>${p.year||''}</td>
+      <td class="td-num">${p.citations||0}</td>
+      <td class="td-num">${p.influential_citations||0}</td>
+      <td>${pdfCell}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function _esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleSelectAll() {
+  const boxes = document.querySelectorAll('#scoutCandidatesTbody input[type=checkbox]');
+  const anyUnchecked = Array.from(boxes).some(b => !b.checked);
+  boxes.forEach(b => b.checked = anyUnchecked);
+}
+
+async function confirmScout() {
+  const boxes = document.querySelectorAll('#scoutCandidatesTbody input[type=checkbox]');
+  const confirmed = _scoutCandidates.filter((_, i) => boxes[i] && boxes[i].checked);
+  if (!confirmed.length) { alert('请至少选择一篇论文'); return; }
+
+  const negRaw = document.getElementById('sfNegPatterns').value.trim();
+  const constRaw = document.getElementById('sfConstraintTerms').value.trim();
+  const negPatterns = negRaw ? negRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const constraintTerms = constRaw ? constRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  try {
+    const r = await fetch('/api/confirm-scout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirmed_papers: confirmed, negative_patterns: negPatterns, constraint_terms: constraintTerms })
+    });
+    const data = await r.json();
+    if (!data.ok) { alert('确认失败：' + (data.error || '')); return; }
+    _showProgressPanel('Phase 2', 'Round 5: 引用扩展中…', 60);
+    _startPoll();
+  } catch (e) {
+    alert('确认失败：' + e.message);
+  }
+}
+
+async function readjustRound4() {
+  const negRaw = document.getElementById('sfNegPatterns').value.trim();
+  const constRaw = document.getElementById('sfConstraintTerms').value.trim();
+  const negPatterns = negRaw ? negRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const constraintTerms = constRaw ? constRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  try {
+    const r = await fetch('/api/readjust-scout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ negative_patterns: negPatterns, constraint_terms: constraintTerms })
+    });
+    const data = await r.json();
+    if (!data.ok) { alert('重调失败：' + (data.error || '')); return; }
+    _showProgressPanel('Phase 1 (重跑 Round 4)', 'Round 4: 重新过滤候选论文…', 45);
+    _startPoll();
+  } catch (e) {
+    alert('重调失败：' + e.message);
+  }
+}
+
+function _roundToPct(round, phase) {
+  if (phase === 1) {
+    const map = {0:5,1:15,2:30,3:50,4:70,4.5:90};
+    return map[round] || Math.min(5 + round * 15, 90);
+  } else {
+    const map = {5:65,6:80,6.5:90,7:98};
+    return map[round] || Math.min(60 + round * 8, 98);
+  }
+}
+
+function _startPoll() {
+  if (_scoutPollTimer) clearInterval(_scoutPollTimer);
+  _scoutPollTimer = setInterval(_pollScoutStatus, 3000);
+  _pollScoutStatus();
+}
+
+async function _pollScoutStatus() {
+  try {
+    const r = await fetch('/api/scout-status');
+    if (!r.ok) return;
+    const data = await r.json();
+    const st = data.status;
+
+    if (st === 'idle') {
+      if (_scoutPollTimer) { clearInterval(_scoutPollTimer); _scoutPollTimer = null; }
+      return;
+    }
+    if (st === 'running_phase1' || st === 'running_phase2') {
+      const phase = st === 'running_phase1' ? 1 : 2;
+      const pct = _roundToPct(data.current_round || 0, phase);
+      _showProgressPanel(`Phase ${phase}`, data.message || '处理中…', pct);
+      document.getElementById('scoutProgressTitle').textContent =
+        `Conference Scout — ${data.topic || ''}`;
+    }
+    if (st === 'awaiting_confirmation') {
+      if (_scoutPollTimer) { clearInterval(_scoutPollTimer); _scoutPollTimer = null; }
+      _showConfirmPanel(data);
+    }
+    if (st === 'done') {
+      if (_scoutPollTimer) { clearInterval(_scoutPollTimer); _scoutPollTimer = null; }
+      _showProgressPanel('完成', data.message || '调研完成！', 100);
+      setTimeout(() => window.location.reload(), 2000);
+    }
+    if (st === 'error') {
+      if (_scoutPollTimer) { clearInterval(_scoutPollTimer); _scoutPollTimer = null; }
+      document.getElementById('scoutProgressPanel').style.display = '';
+      document.getElementById('scoutErrorMsg').style.display = '';
+      document.getElementById('scoutErrorMsg').textContent = '错误：' + (data.message || '未知错误');
+      document.getElementById('scoutFill').style.width = '0%';
+      document.getElementById('scoutProgressMsg').textContent = '调研失败，请检查日志';
+    }
+  } catch (_) {}
+}
+
+window.addEventListener('load', () => {
+  applyTheme();
+  _pollScoutStatus();  // check if a scout is already running from a previous session
+});
 </script>
 </body>
 </html>

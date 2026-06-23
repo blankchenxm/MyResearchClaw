@@ -1,83 +1,52 @@
 ---
 name: engineering-scout
-description: >
-  Search engineering implementations for a research topic across GitHub, products, startups,
-  and technical media. Organized into three distance rings: paper-linked implementations,
-  independent engineering solutions, and industry/ecosystem signals. Uses iterative query
-  refinement to avoid false positives. Use when the user wants to know whether a topic has
-  open-source implementations, commercial products, or real-world deployment signals, or says
-  phrases such as 工程实现, 开源项目, GitHub 搜索, 有没有产品, 行业动态, find implementations,
-  engineering scout, or "how is X implemented in practice".
+description: For one research topic, collect implementation evidence (GitHub repos, products, startups, technical posts) organized into three distance rings — paper-linked / independent / industry-ecosystem — and produce a Technology Readiness assessment with concrete gaps. Iterative search with false-positive extraction (e.g. don't return ESP-IDF docs when the user wants tools that automate ESP-IDF). Persist to output/projects/{slug}/engineering.html. Use when the user wants to know whether a topic has open-source implementations, commercial products, or real-world deployment signals; triggers include 工程实现, 开源项目, GitHub 搜索, 有没有产品, 行业动态, find implementations, engineering scout, "how is X implemented in practice". Not for paper search — that's conference-scout.
 ---
 
 # Engineering Scout
 
-Goal: for a research topic, collect implementation-oriented evidence organized into three
-distance rings, then generate `output/engineering.html`. Operates as an iterative search
-agent — never a single-shot batch query.
-
----
+Iterative search agent that turns a research topic into a three-ring implementation map plus a Technology Readiness assessment.
 
 ## Inputs
 
-| Field | Description | Default |
+| Field | Required | Default |
 |---|---|---|
-| `topic` | engineering topic or the same topic used in conference-scout | required |
-| `year_start` | start year for recency filtering | auto-inferred |
-| `year_end` | end year | current year |
-| `focus` | optional filter: `github`, `products`, `news`, `all` | `all` |
-| `paper_anchors` | system names / author names / arXiv IDs from a prior paper search | from context |
-| `output_html` | standalone HTML output path | optional |
+| `topic` | yes | (or inherit from last conference-scout run) |
+| `paper_anchors` | no | inherit system names / authors / arXiv IDs from last conference-scout run |
+| `year_start` | no | auto-inferred |
+| `year_end` | no | current year |
+| `focus` | no | `all`; can be `github` / `products` / `news` |
 
-If the user runs this immediately after conference-scout, automatically inherit:
-- `topic` from the last paper search
-- `paper_anchors` from any system names, author names, or arXiv IDs found in that search
+If `conference-scout` just ran on the same topic, inherit `topic` and `paper_anchors` automatically — don't ask.
 
----
+## Three rings
 
-## Three-Ring Search Model
+Search them in order, don't jump to Ring 3 before Ring 1+2 are reasonably covered.
 
-Organize all results into rings by distance from the core topic. Search rings in order.
-Do not jump to ring 3 before ring 1 and 2 are reasonably covered.
+| Ring | What | Quality signal |
+|---|---|---|
+| 1. Paper-linked | repos / artifacts directly produced by papers on this topic | paper authorship filters quality |
+| 2. Independent | GitHub projects / products solving the same problem independently | assess maturity, adoption, architecture |
+| 3. Ecosystem | news, startups, technical blogs, community, product launches | where the field sits on the research-to-deployment spectrum |
 
-```
-Ring 1 — Paper-Linked Implementations
-  Repos and artifacts directly produced by the research papers on this topic.
-  Highest quality signal: paper authorship is a quality filter.
+## Query decomposition (do this before any search)
 
-Ring 2 — Independent Engineering Solutions
-  GitHub projects and products solving the same problem independently.
-  Assess maturity, adoption, and architectural approach.
-
-Ring 3 — Ecosystem and Industry Signals
-  News, startup activity, technical blogs, community discussions,
-  product launches, and adoption stories.
-  Use to judge where the field sits on the research-to-deployment spectrum.
-```
-
----
-
-## Query Decomposition  *(do this before any search)*
-
-Before running any queries, decompose the topic into three dimensions:
+Decompose the topic into three dimensions, write them down, then build queries from combinations:
 
 ```
-problem:    what is being solved (noun phrase describing the challenge)
-action:     the automated/engineered operation being performed (verb phrase)
-artifact:   what the solution produces or consists of (tool / framework / system / pipeline)
+problem:   what is being solved          (noun phrase describing the challenge)
+action:    operation being performed     (verb phrase: automated / orchestrated / CI/CD / OTA)
+artifact:  what the solution produces    (tool / framework / pipeline / system)
 ```
 
-Then generate queries by combining dimensions, not by using the topic string directly.
+**Example** — topic `自动烧入PCB固件`:
 
-Example:
 ```
-topic: "自动烧入PCB固件"
+problem:   firmware flashing for embedded devices
+action:    automated / CI/CD / orchestrated / batch / OTA
+artifact:  tool / pipeline / framework / workflow
 
-problem:    firmware flashing for embedded devices
-action:     automated / CI/CD / orchestrated / batch / OTA
-artifact:   tool / pipeline / framework / workflow / system
-
-generated queries:
+queries:
   - "firmware flashing automation tool" github
   - "automated firmware deployment pipeline embedded"
   - "OTA firmware CI/CD embedded systems"
@@ -85,98 +54,60 @@ generated queries:
   - "auto flash" embedded microcontroller site:github.com
 ```
 
-This decomposition is the primary defense against false positives like returning
-ESP-IDF documentation when the user wants tools that automate ESP-IDF.
+This split is the **primary defense against false positives** like ESP-IDF docs when the user wants tools that automate ESP-IDF.
 
-The problem/action/artifact split must be written down before Round 1 begins.
+## Workflow
 
----
-
-## Search Workflow
-
-Engineering-scout is an iterative agent. Log which round you are in.
-Do not skip rounds. Never emit final results before Round 4.
-
----
+6 rounds. Log which round. Don't skip. Don't emit final results before Round 4.
 
 ### Round 1 — Broad Discovery
 
-Purpose: surface the vocabulary and false-positive landscape before committing to precise queries.
+**Ring 1 (paper-linked)** — if `paper_anchors` exist:
+- `"{system_name}" github` — one per system name
+- `"{paper_title}" implementation` — top 2-3 papers
+- `"{author_name}" {topic} code`
+- `site:github.com {arXiv_id}` — if arXiv IDs known
 
-**Ring 1 queries (paper-linked):**
+If no anchors, skip Ring 1 for now and note it as missing.
 
-If `paper_anchors` are available from a prior conference-scout run:
-- `"{system_name}" github` — one query per system name
-- `"{paper_title}" implementation` — for top 2-3 papers
-- `"{author_name}" {topic} code` — for known authors with public repos
-- `site:github.com {arXiv_id}` — if arXiv IDs are known
+**Ring 2 (independent)** — 3-4 queries from the `problem + action + artifact` decomposition. Don't run all permutations.
 
-If no paper anchors are available, skip Ring 1 for now and note it as incomplete.
-
-**Ring 2 queries (independent implementations):**
-
-Use the decomposed `problem + action + artifact` queries from Query Decomposition.
-Run 3-4 queries, not all permutations.
-
-**GitHub-specific tactics:**
-
-- Topic tags: `topic:{relevant-tag}` — e.g. `topic:firmware-update topic:ota`
-  (tag search targets author-labeled repos, far more precise than keyword search)
-- Stars filter: `stars:>50 pushed:>{YEAR_START}-01-01` to exclude abandoned projects
-- Awesome lists: search `awesome-{topic}` — curated lists exist for most active subfields
+**GitHub tactics:**
+- Topic tags: `topic:{relevant-tag}` (e.g. `topic:firmware-update topic:ota`) — author-labeled, much more precise than keyword search
+- Stars filter: `stars:>50 pushed:>{year}-01-01` to exclude abandoned
+- Awesome lists: `awesome-{topic}` — curated lists exist for most active subfields
 - HuggingFace: for AI/ML topics, search `huggingface.co/models` and `huggingface.co/spaces`
 
-**Ring 3 queries (ecosystem signals):**
-
+**Ring 3 (ecosystem):**
 - `{topic} startup funding`
 - `{topic} product launch site:techcrunch.com OR site:venturebeat.com`
 - `{topic} blog post technical implementation`
-- `{topic} site:producthunt.com` for small tools
-- `{topic} deployed real-world` or `{topic} production use`
+- `{topic} site:producthunt.com`
+- `{topic} deployed real-world` / `{topic} production use`
 
----
+### Round 2 — False-Positive Extraction *(LLM only, no API)*
 
-### Round 2 — False-Positive Extraction  *(LLM reasoning step — no API call)*
-
-Read Round 1 results and produce this JSON before proceeding:
+Produce this JSON before Round 3:
 
 ```json
 {
-  "false_positive_patterns": [],
-  "true_hit_signals": [],
-  "refined_constraint_terms": [],
-  "negative_terms": [],
+  "false_positive_patterns": [],     // recurring NON-target result types (e.g. "ESP-IDF documentation", "general embedded tutorials")
+  "true_hit_signals": [],            // vocabulary / repo names / orgs found in genuine hits
+  "refined_constraint_terms": [],    // 1-2 words distinguishing real targets from FPs
+  "negative_terms": [],              // exclusions for Round 3 queries
   "paper_repo_candidates": [],
   "independent_repo_candidates": [],
   "product_candidates": [],
-  "missing_rings": [],
+  "missing_rings": [],               // e.g. "Ring 1 incomplete — no paper anchors"
   "huggingface_relevant": false
 }
 ```
 
-Field guidance:
-
-- `false_positive_patterns`: recurring result types that are clearly not what the user wants
-  (e.g. "ESP-IDF documentation", "general embedded tutorials", "unrelated sensor papers")
-- `true_hit_signals`: vocabulary, repo names, organization names found in genuine hits
-- `refined_constraint_terms`: 1-2 words that distinguish the real target from false positives
-- `negative_terms`: words to add as exclusions in Round 3 queries
-- `paper_repo_candidates`: repos that appear to be directly linked to research papers
-- `independent_repo_candidates`: repos solving the problem independently
-- `product_candidates`: commercial or deployed products found so far
-- `missing_rings`: which rings had no coverage (e.g. "Ring 1 incomplete — no paper anchors")
-- `huggingface_relevant`: whether HuggingFace is a useful source for this topic
-
----
-
 ### Round 3 — Precision Search
 
-Use Round 2 outputs to run targeted queries. Explicitly apply `negative_terms` and
-`refined_constraint_terms`.
+Apply `negative_terms` and `refined_constraint_terms` explicitly. Query forms:
 
-Query construction rules:
-
-| Target | Query form |
+| Target | Query |
 |---|---|
 | Paper-linked repo | `"{system_name}" site:github.com` |
 | Paper-linked repo | `"{paper_title}" github implementation code` |
@@ -188,51 +119,31 @@ Query construction rules:
 | Startup | `{topic} startup OR company site:crunchbase.com` |
 | Tech blog | `{topic} {refined_constraint} engineering blog OR technical post` |
 
-For each query, note which ring and which false-positive pattern it is designed to avoid.
+For each query note: which ring, which FP pattern it's designed to avoid.
 
----
+### Round 4 — Relevance Gate *(LLM only, no API)*
 
-### Round 4 — Relevance Gate  *(LLM reasoning step — no API call)*
+Every candidate must pass all three:
 
-Every candidate result must pass this rubric before entering the final pool.
+1. Addresses the **actual problem** (not just shares keywords)? Apply `false_positive_patterns` as exclusion rules.
+2. Is an **implementation** (code / product / system / deployment), not a description (docs / tutorial / academic paper / marketing)?
+3. Adds **distinct information** vs. results already in the pool (reject near-duplicates).
 
-Questions (all must be yes):
-
-1. Does this result address the actual problem described in the topic, not just share keywords?
-   Apply `false_positive_patterns` from Round 2 as explicit exclusion rules.
-
-2. Is this an implementation (code, product, system, deployment) rather than a description
-   (documentation, tutorial, academic paper, marketing copy)?
-
-3. Does this result add distinct information relative to other results already in the pool?
-   Reject near-duplicates even if both pass the first two questions.
-
-Rejection rules:
-- reject if the result matches any `false_positive_patterns` from Round 2
-- reject if the result is the documentation or official tutorial for a tool that is itself
-  a dependency of what the user is looking for (e.g., ESP-IDF docs when searching for
-  tools that automate ESP-IDF)
-- reject if the repo has 0 stars and no recent commits and no paper linkage
-
----
+Hard rejects:
+- matches any `false_positive_patterns` from Round 2
+- is documentation / official tutorial for a tool that is itself a *dependency* of what the user wants
+- 0 stars + no recent commits + no paper linkage
 
 ### Round 5 — Depth Extraction
 
-For each result that passed Round 4, extract structured metadata.
+For each Round-4 survivor, extract structured metadata. Three schemas:
 
-**For GitHub repositories:**
-
+**GitHub repository:**
 ```json
 {
-  "name": "",
-  "url": "",
-  "ring": 1,
-  "stars": 0,
-  "last_commit": "",
-  "language_stack": [],
-  "architecture_summary": "",
-  "paper_linked": false,
-  "paper_reference": "",
+  "name": "", "url": "", "ring": 1, "stars": 0, "last_commit": "",
+  "language_stack": [], "architecture_summary": "",
+  "paper_linked": false, "paper_reference": "",
   "deployment_pattern": "",
   "maturity": "prototype | active | production-grade | abandoned",
   "why_relevant": ""
@@ -240,106 +151,65 @@ For each result that passed Round 4, extract structured metadata.
 ```
 
 Maturity heuristics:
-- `prototype`: stars < 50, no releases, README only
-- `active`: stars > 50, recent commits, some documentation
-- `production-grade`: stars > 500, releases, CI, used by other projects
+- `prototype`: < 50 stars, no releases, README only
+- `active`: > 50 stars, recent commits, some docs
+- `production-grade`: > 500 stars, releases, CI, used by other projects
 - `abandoned`: no commits in > 18 months
 
-**For products / startups:**
-
+**Product / startup:**
 ```json
 {
-  "name": "",
-  "url": "",
-  "ring": 2,
-  "organization": "",
-  "year_founded_or_launched": "",
-  "funding_stage": "",
-  "technical_approach": "",
-  "deployment_context": "",
+  "name": "", "url": "", "ring": 2, "organization": "",
+  "year_founded_or_launched": "", "funding_stage": "",
+  "technical_approach": "", "deployment_context": "",
   "why_relevant": ""
 }
 ```
 
-**For news / blog posts / ecosystem signals:**
-
+**News / blog / ecosystem:**
 ```json
 {
-  "title": "",
-  "url": "",
-  "ring": 3,
-  "source": "",
-  "date": "",
+  "title": "", "url": "", "ring": 3, "source": "", "date": "",
   "signal_type": "product_launch | funding | deployment | technical_writeup | community",
-  "engineering_takeaway": "",
-  "why_relevant": ""
+  "engineering_takeaway": "", "why_relevant": ""
 }
 ```
 
----
+### Round 6 — Readiness Assessment *(LLM only, no API)*
 
-### Round 6 — Readiness Assessment  *(LLM reasoning step — no API call)*
-
-After collecting all three rings, synthesize a Technology Readiness assessment:
+Synthesize a Technology Readiness assessment:
 
 ```
-Readiness Level:
-  research_only       — papers exist, no implementations found
-  early_prototype     — a few research repos, no production use signals
+Readiness Level (pick one):
+  research_only       — papers exist, no implementations
+  early_prototype     — a few research repos, no production signals
   active_development  — multiple independent implementations, active community
-  commercial_traction — products exist, startups funded, or big-tech adoption
-  mature_ecosystem    — standard tools exist, widely deployed, large community
+  commercial_traction — products exist / startups funded / big-tech adoption
+  mature_ecosystem    — standard tools, widely deployed, large community
 
 Evidence:
-  Ring 1 coverage:    {N} paper-linked repos found
-  Ring 2 coverage:    {N} independent implementations found
-  Ring 3 coverage:    {N} industry/deployment signals found
+  Ring 1: {N} paper-linked
+  Ring 2: {N} independent
+  Ring 3: {N} ecosystem signals
 
 Gap analysis:
-  - What's missing (e.g. "no production-grade library exists yet")
-  - What's surprising (e.g. "3 well-funded startups despite limited open-source")
+  - What's missing                  (e.g. "no production-grade library exists yet")
+  - What's surprising               (e.g. "3 well-funded startups despite limited OSS")
   - Best entry point for an engineer wanting to implement this today
 ```
 
----
+## Output
 
-## HTML Output
+Generate `output/projects/{topic_slug}/engineering.html` from `assets/engineering.html`. Do NOT overwrite shared `output/engineering.html`.
 
-Write a single generated page to:
-```
-output/engineering.html
-```
+Template placeholders (the layout handles them — just write the data):
+`{{TOPIC}}`, `{{YEAR_RANGE}}`, `{{LAST_UPDATED}}`, `{{READINESS_LEVEL}}`, `{{READINESS_EVIDENCE}}`, `{{KEY_TAKEAWAY}}`, `{{GAP_ANALYSIS}}`, `{{RING1_ITEMS}}`, `{{RING2_ITEMS}}`, `{{RING3_ITEMS}}`.
 
-Load the template from:
-```
-assets/engineering.html
-```
+Each rendered item: include both Chinese and English copies wrapped in `.lang-zh` / `.lang-en` so the page-level language toggle works.
 
-If the user requests standalone topic-specific output:
-- generate `output/projects/{topic_slug}/engineering.html`
-- do not overwrite the shared `output/engineering.html`
+Cross-link to the paper page; paper page should also link back.
 
-Fill:
-- `{{TOPIC}}`
-- `{{YEAR_RANGE}}`
-- `{{LAST_UPDATED}}`
-- `{{READINESS_LEVEL}}`
-- `{{READINESS_EVIDENCE}}`
-- `{{KEY_TAKEAWAY}}`
-- `{{GAP_ANALYSIS}}`
-- `{{RING1_ITEMS}}`
-- `{{RING2_ITEMS}}`
-- `{{RING3_ITEMS}}`
-
-The engineering page is separate from `output/kanban.html`.
-Paper page stays focused on papers; engineering page stays focused on implementations.
-The paper page should link to the engineering page and vice versa.
-For bilingual browsing, generated engineering blocks should include both Chinese and English
-copies using `.lang-zh` and `.lang-en` wrappers so the page-level language toggle can switch views.
-
----
-
-## Response Format
+## Response
 
 ```
 Engineering Scout — {TOPIC}
@@ -347,18 +217,18 @@ Rounds: Decomposition → Discovery → FP Extraction → Precision → Gate →
 
 Readiness: {READINESS_LEVEL}
 
-Ring 1 — Paper-Linked:   {N} results
-Ring 2 — Independent:    {N} results
-Ring 3 — Ecosystem:      {N} results
+Ring 1 — Paper-Linked:  {N}
+Ring 2 — Independent:   {N}
+Ring 3 — Ecosystem:     {N}
 
 Key findings:
 
 [Ring 1]
-1. {repo/product name} — {stars} ★ — {maturity}
+1. {name} — {stars}★ — {maturity}
    {why_relevant}
 
 [Ring 2]
-2. {repo/product name} — {organization}
+2. {name} — {organization}
    {technical_approach}
 
 [Ring 3]
@@ -368,22 +238,19 @@ Key findings:
 Gap analysis:
 {gap_analysis}
 
-Best entry point for implementation today:
-{one concrete recommendation}
+Best entry point today: {one concrete recommendation}
 
-Engineering page: output/engineering.html
+Page: output/projects/{topic_slug}/engineering.html
 ```
 
----
+## Failure signals
 
-## Error Handling
-
-| Error | Action |
-|---|---|
-| Ring 1 empty (no paper anchors) | note it explicitly; proceed with Ring 2 and 3 |
-| GitHub search returns only documentation | apply false-positive extraction; switch to topic-tag queries |
-| No products or startups found | assess as `research_only` or `early_prototype`; do not fabricate products |
-| HuggingFace not relevant | skip without comment |
-| Marketing-heavy sources | extract only technically defensible claims; mark the rest as unverified |
-| Round 4 rejects > 80% of candidates | warn user; report what the actual false-positive pattern is |
-| Crunchbase / funding data unavailable | note funding stage as unknown; use other signals |
+| 信号 | 含义 | 方向调整 |
+|---|---|---|
+| Ring 1 empty (no paper_anchors) | conference-scout 没跑过 / 该领域无 paper-linked 实现 | 标记缺失，继续 Ring 2/3，不要伪造 |
+| GitHub 搜索只返回 documentation | query 命中了 tool 本身而不是 tool 的用户 | Round 2 提 FP patterns，Round 3 用 topic-tag |
+| 找不到 products / startups | 还没到 commercial_traction | 评估为 `research_only` 或 `early_prototype`，不要编造 |
+| HuggingFace 不相关 | 该 topic 不在 ML/AI 范畴 | 跳过，不要解释 |
+| Marketing-heavy 来源 | startup / vendor 自吹 | 只抽取 technically defensible 的部分，其余标 unverified |
+| Round 4 拒绝 > 80% | query 太宽或 FP patterns 漏写 | 暂停告知用户；报具体的 FP pattern；放宽一个条件 |
+| Crunchbase 不可访问 | 数据源失败 | funding_stage 标 unknown，用其他信号兜底 |
