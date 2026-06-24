@@ -200,7 +200,7 @@ When the user asks for recent / latest:
 
 ## Summaries
 
-For each retained paper, generate `summary_en` and `summary_zh` (2-3 sentences each).
+For each retained paper, generate `summary_en` and `summary_zh` (4-6 sentences each).
 
 - Concrete technical detail > generic praise
 - Mention at least one of: mechanism / metric / architecture choice / benchmark result / deployment constraint
