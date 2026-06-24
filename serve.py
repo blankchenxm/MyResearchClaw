@@ -1304,7 +1304,8 @@ body.light {{
         <div class="scout-track"><div class="scout-fill" id="scoutFill" style="width:0%"></div></div>
         <div class="scout-progress-msg" id="scoutProgressMsg">初始化…</div>
         <div class="scout-error-msg" id="scoutErrorMsg" style="display:none"></div>
-        <div id="scoutDismissRow" style="display:none;margin-top:10px">
+        <div id="scoutDismissRow" style="display:none;margin-top:10px;gap:8px">
+          <button onclick="retryScout()" style="background:#2a4a2a;color:#7ec87e;border:1px solid #4a7a4a;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px">↩ 重试</button>
           <button onclick="dismissScout()" style="background:#333;color:#aaa;border:1px solid #555;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px">✕ 关闭</button>
         </div>
       </div>
@@ -1457,6 +1458,33 @@ async function dismissScout() {{
   document.getElementById('scoutProgressPanel').style.display = 'none';
 }}
 
+async function retryScout() {{
+  try {{
+    const r = await fetch('/api/scout-status');
+    const st = await r.json();
+    const body = {{
+      topic: st.topic || '',
+      description: st.description || '',
+      year_start: st.year_start || '',
+      year_end: st.year_end || '',
+      venue_group: st.venue_group || '',
+      specific_venues: st.specific_venues || '',
+    }};
+    const r2 = await fetch('/api/start-scout', {{
+      method: 'POST',
+      headers: {{ 'Content-Type': 'application/json' }},
+      body: JSON.stringify(body),
+    }});
+    const data = await r2.json();
+    if (!data.ok) {{ alert('重试失败：' + (data.error || '未知错误')); return; }}
+    document.getElementById('scoutDismissRow').style.display = 'none';
+    _showProgressPanel('Phase 1', '初始化…', 0);
+    _startPoll();
+  }} catch (e) {{
+    alert('重试失败：' + e.message);
+  }}
+}}
+
 function _showConfirmPanel(data) {{
   document.getElementById('scoutProgressPanel').style.display = 'none';
   document.getElementById('scoutConfirmPanel').style.display = '';
@@ -1601,7 +1629,7 @@ async function _pollScoutStatus() {{
       document.getElementById('scoutErrorMsg').textContent = '错误：' + (data.message || '未知错误');
       document.getElementById('scoutFill').style.width = '0%';
       document.getElementById('scoutProgressMsg').textContent = '调研失败，请检查日志';
-      document.getElementById('scoutDismissRow').style.display = '';
+      document.getElementById('scoutDismissRow').style.display = 'flex';
     }}
   }} catch (_) {{}}
 }}
