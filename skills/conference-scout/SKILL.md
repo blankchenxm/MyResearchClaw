@@ -89,9 +89,11 @@ Convert each anchor into a query:
 
 **Two mandatory checks — do not skip:**
 
-1. **DBLP venue scan**: For each target venue × latest 2 years, fetch `dblp.org/db/conf/{key}/{key}{year}.html` and scan all titles. Keyword search cannot discover papers with novel system names; venue scanning can. Also check companion/workshop tracks (`{key}{year}c.html`). If a year returns nothing, note it and move on.
+1. **DBLP venue scan**: For the top-3 most relevant venues × latest 2 years, fetch `dblp.org/db/conf/{key}/{key}{year}.html` and scan all titles. Keyword search cannot discover papers with novel system names; venue scanning can. Also check companion/workshop tracks (`{key}{year}c.html`). If a year returns nothing, note it and move on.
 
-2. **Author sweep**: For every anchor paper and every `series_clusters` entry, search its first 2 authors on DBLP (`site:dblp.org "{Author Name}"`). The same group routinely publishes sibling papers at different venues in the same cycle; author sweep finds what keyword search misses.
+2. **Author sweep**: For the top-3 anchor papers and every `series_clusters` entry (max 3), search the first author on DBLP (`site:dblp.org "{Author Name}"`). The same group routinely publishes sibling papers at different venues in the same cycle; author sweep finds what keyword search misses.
+
+**API budget for Round 3: max 8 WebFetch calls total.** Prioritize the venues most likely to have this topic; skip lower-priority venues if budget is reached. Note which venues were skipped.
 
 Don't trust S2's `venue` field alone for tier-1 confirmation.
 
@@ -124,11 +126,13 @@ Only proceed after the user confirms. If the user adjusts, re-run Round 4 with t
 
 ### Round 5 — Citation Expansion
 
-After confirmation, and only if Round 3 produced ≥ 3 anchor papers that passed Round 4:
+After confirmation, and only if Round 3 produced ≥ 6 anchor papers that passed Round 4. **Skip Round 5 entirely if fewer than 6 papers passed — the pool is too small for expansion to add value.**
 
-1. For top-3 frontier papers from Round 3 → fetch `references` via S2 → union → sort by co-occurrence frequency. Papers co-cited by ≥ 2 frontier papers → strong foundation / consolidation candidates.
-2. For each top-3 anchor → fetch `citations`, sort by year descending. Recent + tier-1 venue → new frontier candidates.
-3. For each `series_clusters` entry → fetch the group's full recent publication list from their DBLP author page and check for any on-topic paper not yet in the pool.
+**API budget for Round 5: max 6 S2 calls total.**
+
+1. For top-2 frontier papers → fetch `references` via S2 → union → sort by co-occurrence. Papers co-cited by both → foundation candidates.
+2. For top-2 anchors → fetch `citations`, sort by year descending. Recent + tier-1 venue → new frontier candidates.
+3. Skip `series_clusters` DBLP sweeps if already at API budget.
 
 Foundation elevation signals: high `influentialCitationCount / citationCount` ratio; described as "first" / "seminal" / "pioneering" in multiple frontier papers' related-work sections.
 
@@ -150,7 +154,7 @@ Sort chronologically within and across roles. Timeline is continuous; role is an
 
 ### Round 6.5 — Token Usage Record *(LLM only, no API)*
 
-After timeline is finalized, write one record to `output/token_usage.json`:
+After timeline is finalized, append one record to `output/token_usage.json`:
 
 ```python
 import json, os
@@ -158,34 +162,20 @@ from datetime import datetime
 
 path = "output/token_usage.json"
 data = json.load(open(path)) if os.path.exists(path) else {"operations": []}
-# Estimate: count WebSearch + WebFetch calls made across all rounds (each ~2K input tokens avg)
-# Count output: approximate by response length (~4 chars per token)
-api_calls = {TOTAL_API_CALLS}  # substitute actual count
-est_input = api_calls * 2000 + {CONTEXT_SIZE_ESTIMATE}
-est_output = len({RESPONSE_TEXT}) // 4
 data["operations"].append({
     "type": "conference-scout",
     "entity_id": "{TOPIC_SLUG}",
     "title": "{TOPIC}",
     "date": datetime.now().strftime("%Y-%m-%d"),
-    "input_tokens": est_input,
-    "output_tokens": est_output,
-    "cache_read_input_tokens": 0,
-    "cache_creation_input_tokens": 0,
-    "cost_usd": 0,
-    "duration_ms": 0,
-    "note": "estimated — conference-scout runs in main session"
+    "web_searches": {ACTUAL_WEBSEARCH_COUNT},
+    "web_fetches": {ACTUAL_WEBFETCH_COUNT},
+    "note": "conference-scout phase 2"
 })
 data["last_updated"] = datetime.now().strftime("%Y-%m-%d")
 json.dump(data, open(path, "w"), ensure_ascii=False, indent=2)
 ```
 
-Fill `{TOTAL_API_CALLS}` with actual WebSearch + WebFetch count from this run.
-Fill `{CONTEXT_SIZE_ESTIMATE}` with a rough estimate based on SKILL.md + papers.json size (~8000 for typical run).
-Fill `{TOPIC_SLUG}` and `{TOPIC}` from the run's inputs.
-Fill `{RESPONSE_TEXT}` with `repr(response_text)` or use `len(full_response_markdown)`.
-
-If write fails (e.g. file locked), skip silently — do not block the final response.
+If write fails, skip silently.
 
 ### Round 7 — Final Output
 
@@ -210,7 +200,7 @@ When the user asks for recent / latest:
 
 ## Summaries
 
-For each retained paper, generate `summary_en` and `summary_zh` (4-6 sentences each).
+For each retained paper, generate `summary_en` and `summary_zh` (2-3 sentences each).
 
 - Concrete technical detail > generic praise
 - Mention at least one of: mechanism / metric / architecture choice / benchmark result / deployment constraint

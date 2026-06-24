@@ -1934,7 +1934,7 @@ def build_conference_scout_phase1_prompt(topic, description, year_start, year_en
     today = today_iso()
     candidates_rel = f"output/tmp/scout_{slug}/candidates_r4.json"
     return (
-        "Use the project skill `conference-scout` to search for papers.\n\n"
+        "Read `skills/conference-scout/SKILL.md` and follow its instructions to search for papers.\n\n"
         "## Inputs\n"
         f"- topic: {topic}\n"
         f"- description: {description}\n"
