@@ -1305,7 +1305,7 @@ body.light {{
         <div class="scout-progress-msg" id="scoutProgressMsg">初始化…</div>
         <div class="scout-error-msg" id="scoutErrorMsg" style="display:none"></div>
         <div id="scoutDismissRow" style="display:none;margin-top:10px;gap:8px">
-          <button onclick="retryScout()" style="background:#2a4a2a;color:#7ec87e;border:1px solid #4a7a4a;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px">↩ 重试</button>
+          <button id="scoutRetryBtn" onclick="retryScout()" style="background:#2a4a2a;color:#7ec87e;border:1px solid #4a7a4a;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px">↩ 重试</button>
           <button onclick="dismissScout()" style="background:#333;color:#aaa;border:1px solid #555;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px">✕ 关闭</button>
         </div>
       </div>
@@ -1629,6 +1629,13 @@ async function _pollScoutStatus() {{
       document.getElementById('scoutErrorMsg').textContent = '错误：' + (data.message || '未知错误');
       document.getElementById('scoutFill').style.width = '0%';
       document.getElementById('scoutProgressMsg').textContent = '调研失败，请检查日志';
+      const cpRound = data.checkpoint_round;
+      const retryBtn = document.getElementById('scoutRetryBtn');
+      if (cpRound && cpRound >= 3) {{
+        retryBtn.textContent = `↩ 从 Round ${{cpRound + 1}} 继续`;
+      }} else {{
+        retryBtn.textContent = '↩ 重试 (从头)';
+      }}
       document.getElementById('scoutDismissRow').style.display = 'flex';
     }}
   }} catch (_) {{}}
@@ -1968,6 +1975,59 @@ def _load_candidates(slug):
     return load_json_file(_candidates_path(slug), {})
 
 
+def _checkpoint_path(slug):
+    return os.path.join(_scout_tmp_dir(slug), "scout_checkpoint_r3.json")
+
+
+def _load_scout_checkpoint(slug):
+    """Return checkpoint dict if a Round-3 checkpoint exists, else None."""
+    path = _checkpoint_path(slug)
+    if not os.path.exists(path):
+        return None
+    data = load_json_file(path, {})
+    return data if data.get("last_completed_round") else None
+
+
+def build_conference_scout_resume_prompt(checkpoint):
+    """Build a prompt to resume Phase 1 from Round 4 using a saved checkpoint."""
+    topic = checkpoint["topic"]
+    slug = checkpoint["slug"]
+    description = checkpoint.get("description", "")
+    year_start = checkpoint.get("year_start", "")
+    year_end = checkpoint.get("year_end", "")
+    venue_group = checkpoint.get("venue_group", "")
+    candidates_rel = f"output/tmp/scout_{slug}/candidates_r4.json"
+    today = today_iso()
+
+    anchors_json = json.dumps(checkpoint.get("anchors", {}), ensure_ascii=False, indent=2)
+    r3_candidates_json = json.dumps(checkpoint.get("r3_candidates", []), ensure_ascii=False, indent=2)
+    venues_checked = ", ".join(checkpoint.get("venues_checked", []))
+
+    return (
+        "A Conference Scout run was interrupted after Round 3. Resume from Round 4.\n\n"
+        "## Context\n"
+        f"- topic: {topic}\n"
+        f"- description: {description}\n"
+        f"- year_start: {year_start}\n"
+        f"- year_end: {year_end}\n"
+        f"- venue_group: {venue_group}\n"
+        f"- venues already checked in Round 3: {venues_checked}\n\n"
+        "## Round 2 anchor data (already completed)\n"
+        f"```json\n{anchors_json}\n```\n\n"
+        "## Round 3 candidates found (already completed)\n"
+        f"```json\n{r3_candidates_json}\n```\n\n"
+        "## Instructions\n"
+        "Do NOT re-run Rounds 0, 1, 2, or 3. The data above is authoritative.\n"
+        "Start directly at **Round 4 — Relevance Gate**: apply the gate to every candidate above.\n"
+        "Then run Round 4.5 (Candidate Confirmation pause) as specified in SKILL.md.\n"
+        "After Round 4.5, STOP. Do NOT begin Round 5.\n\n"
+        "## Required output before stopping\n"
+        f"Write the filtered candidate list to `{candidates_rel}` using the schema in SKILL.md.\n"
+        "After writing the file, display the Round 4.5 table.\n"
+        "Then output the line `SCOUT_PHASE1_COMPLETE` and STOP.\n"
+    )
+
+
 def build_conference_scout_phase1_prompt(topic, description, year_start, year_end, venue_group, specific_venues):
     slug = slugify_topic(topic)
     venues_str = ", ".join(specific_venues) if specific_venues else f"(auto-select from venue_group: {venue_group})"
@@ -2062,16 +2122,26 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
     os.makedirs(LOGS_DIR, exist_ok=True)
     log_path = os.path.join(LOGS_DIR, f"scout_{slug}_phase1.log")
 
+    checkpoint = _load_scout_checkpoint(slug)
+    resume_from = checkpoint.get("last_completed_round") if checkpoint else None
+
+    if resume_from and resume_from >= 3:
+        start_round = 4
+        start_msg = f"Round 4: 从断点继续 (Round 3 已完成)..."
+        prompt = build_conference_scout_resume_prompt(checkpoint)
+    else:
+        start_round = 0
+        start_msg = "Round 0: 查询扩展中..."
+        prompt = build_conference_scout_phase1_prompt(
+            topic, description, year_start, year_end, venue_group, specific_venues
+        )
+
     save_scout_status(
         topic=topic, slug=slug, description=description,
         year_start=year_start, year_end=year_end,
         venue_group=venue_group, specific_venues=specific_venues,
-        status="running_phase1", phase=1, current_round=0,
-        message="Round 0: 查询扩展中...", candidates=[],
-    )
-
-    prompt = build_conference_scout_phase1_prompt(
-        topic, description, year_start, year_end, venue_group, specific_venues
+        status="running_phase1", phase=1, current_round=start_round,
+        message=start_msg, candidates=[],
     )
     cmd = [
         RESOLVED_CLAUDE_BIN, "-p", prompt,
@@ -2140,6 +2210,10 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
             negative_patterns=cdata.get("negative_patterns", []),
             constraint_terms=cdata.get("constraint_terms", []),
         )
+        # Clear checkpoint — run reached confirmation, no longer needed for resume
+        cp = _checkpoint_path(slug)
+        if os.path.exists(cp):
+            os.remove(cp)
         print(f"[serve.py] Scout Phase 1 done: {topic}, {len(candidates)} candidates", flush=True)
     except Exception as exc:
         save_scout_status(status="error", message=str(exc))
@@ -2881,7 +2955,13 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(body)
 
         elif path == "/api/scout-status":
-            self.send_json(200, load_scout_status())
+            st = load_scout_status()
+            # Attach checkpoint round if one exists for this topic
+            slug = st.get("slug", "")
+            if slug:
+                cp = _load_scout_checkpoint(slug)
+                st["checkpoint_round"] = cp.get("last_completed_round") if cp else None
+            self.send_json(200, st)
 
         elif path == "/api/engineering-status":
             context = latest_search_context()

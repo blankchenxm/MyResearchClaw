@@ -97,6 +97,36 @@ Convert each anchor into a query:
 
 Don't trust S2's `venue` field alone for tier-1 confirmation.
 
+**After Round 3 completes, save a checkpoint** so that if the run is interrupted, it can resume from Round 4:
+
+```python
+import json, os
+from datetime import datetime
+
+slug = "{TOPIC_SLUG}"
+cp_path = f"output/tmp/scout_{slug}/scout_checkpoint_r3.json"
+os.makedirs(os.path.dirname(cp_path), exist_ok=True)
+json.dump({
+    "last_completed_round": 3,
+    "topic": "{TOPIC}",
+    "slug": slug,
+    "description": "{DESCRIPTION}",
+    "year_start": {YEAR_START},
+    "year_end": {YEAR_END},
+    "venue_group": "{VENUE_GROUP}",
+    "saved_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+    "venues_checked": ["{VENUE} {YEAR}", ...],   # list every venue+year checked
+    "anchors": { ...Round 2 anchor JSON verbatim... },
+    "r3_candidates": [
+        {"title": "...", "authors": "...", "venue": "...", "year": 2024,
+         "citations": 0, "influential_citations": 0,
+         "url": "https://...", "arxiv_id": null, "abstract": "..."}
+    ]
+}, open(cp_path, "w"), ensure_ascii=False, indent=2)
+```
+
+If the write fails, skip silently and continue.
+
 ### Round 4 — Relevance Gate *(LLM only, no API)*
 
 Every candidate must pass all three:
