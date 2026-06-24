@@ -1,7 +1,25 @@
-output/
+# Large binary files — never track
+output/pdfs/
+
+# Generated HTML (rebuilt from templates on every change)
+output/kanban.html
+output/projects/
+output/engineering.html
+
+# Runtime noise
+output/logs/
+output/tmp/
 __pycache__/
 *.pyc
 *.pyo
 tmp/
 skills/paper-reader/tmp/
+
+# Local machine config
 .env
+
+# Track everything else in output/:
+#   output/papers.json        ← paper database + reading status
+#   output/notes/             ← generated reading notes
+#   output/scout_status.json  ← conference scout state
+#   output/token_usage.json   ← usage log
