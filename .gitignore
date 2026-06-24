@@ -4,3 +4,4 @@ __pycache__/
 *.pyo
 tmp/
 skills/paper-reader/tmp/
+.env

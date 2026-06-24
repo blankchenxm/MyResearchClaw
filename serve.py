@@ -3,14 +3,16 @@
 MyResearchClaw local API server.
 
 Usage:
-  cd /home/meng/Agent/MyResearchClaw
+  cd /path/to/MyResearchClaw
   python serve.py
 
-Then open http://localhost:5678/kanban.html
+Then open http://localhost:5678
 
-Optional environment variables:
-  MYRESEARCHCLAW_MODEL       default: claude-sonnet-4-6
-  MYRESEARCHCLAW_CLAUDE_BIN  default: claude
+Optional environment variables (or set in .env file next to serve.py):
+  MYRESEARCHCLAW_MODEL                default: claude-sonnet-4-6
+  MYRESEARCHCLAW_CLAUDE_BIN           default: claude
+  MYRESEARCHCLAW_PORT                 default: 5678
+  MYRESEARCHCLAW_PAPER_READER_PYTHON  default: auto-detected
 """
 import json
 import os
@@ -18,6 +20,7 @@ import re
 import select
 import shutil
 import subprocess
+import sys
 import tempfile
 import threading
 import urllib.parse
@@ -28,8 +31,27 @@ from datetime import datetime
 from html import escape
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-PORT = 5678
 ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+def _load_dotenv():
+    """Load .env file from project root into os.environ (existing vars take priority)."""
+    env_path = os.path.join(ROOT, ".env")
+    if not os.path.exists(env_path):
+        return
+    with open(env_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, _, v = line.partition("=")
+            k = k.strip()
+            v = v.strip().strip('"').strip("'")
+            if k and k not in os.environ:
+                os.environ[k] = v
+
+
+_load_dotenv()
 OUTPUT_DIR = os.path.join(ROOT, "output")
 PROJECTS_DIR = os.path.join(OUTPUT_DIR, "projects")
 PAPERS_JSON = os.path.join(OUTPUT_DIR, "papers.json")
@@ -55,6 +77,7 @@ MODEL = (
 CLAUDE_BIN = (
     os.environ.get("MYRESEARCHCLAW_CLAUDE_BIN", "claude").strip() or "claude"
 )
+PORT = int(os.environ.get("MYRESEARCHCLAW_PORT", "5678"))
 
 
 def resolve_claude_bin():
@@ -2417,7 +2440,10 @@ def finalize_read_result(paper_id):
     return True
 
 
-PAPER_READER_PYTHON = "/home/wangmingke/anaconda3/envs/derm-vlm/bin/python"
+PAPER_READER_PYTHON = (
+    os.environ.get("MYRESEARCHCLAW_PAPER_READER_PYTHON", "").strip()
+    or "/home/wangmingke/anaconda3/envs/derm-vlm/bin/python"
+)
 
 
 def build_paper_reader_prompt(url, paper_id, title):
@@ -3154,7 +3180,7 @@ if __name__ == "__main__":
     print("  Provider: Claude CLI")
     print(f"  Model: {MODEL}")
     print(f"  Claude binary: {RESOLVED_CLAUDE_BIN}")
-    print("  Open http://localhost:5678/kanban.html")
+    print(f"  Open http://localhost:{PORT}")
     print("  Ctrl+C to stop\n")
     server = HTTPServer(("localhost", PORT), Handler)
     try:
