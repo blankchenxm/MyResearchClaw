@@ -1304,6 +1304,9 @@ body.light {{
         <div class="scout-track"><div class="scout-fill" id="scoutFill" style="width:0%"></div></div>
         <div class="scout-progress-msg" id="scoutProgressMsg">初始化…</div>
         <div class="scout-error-msg" id="scoutErrorMsg" style="display:none"></div>
+        <div id="scoutDismissRow" style="display:none;margin-top:10px">
+          <button onclick="dismissScout()" style="background:#333;color:#aaa;border:1px solid #555;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px">✕ 关闭</button>
+        </div>
       </div>
 
       <!-- ── Round 4.5 Confirmation Panel ── -->
@@ -1444,6 +1447,14 @@ function _showProgressPanel(phase, msg, pct) {{
   document.getElementById('scoutProgressMsg').textContent = msg;
   document.getElementById('scoutFill').style.width = pct + '%';
   document.getElementById('scoutErrorMsg').style.display = 'none';
+  document.getElementById('scoutDismissRow').style.display = 'none';
+}}
+
+async function dismissScout() {{
+  try {{
+    await fetch('/api/dismiss-scout', {{ method: 'POST' }});
+  }} catch (_) {{}}
+  document.getElementById('scoutProgressPanel').style.display = 'none';
 }}
 
 function _showConfirmPanel(data) {{
@@ -1590,6 +1601,7 @@ async function _pollScoutStatus() {{
       document.getElementById('scoutErrorMsg').textContent = '错误：' + (data.message || '未知错误');
       document.getElementById('scoutFill').style.width = '0%';
       document.getElementById('scoutProgressMsg').textContent = '调研失败，请检查日志';
+      document.getElementById('scoutDismissRow').style.display = '';
     }}
   }} catch (_) {{}}
 }}
@@ -3084,6 +3096,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(200, {"ok": True, **result})
             except Exception as exc:
                 self.send_json(500, {"ok": False, "error": str(exc)})
+
+        elif self.path == "/api/dismiss-scout":
+            save_scout_status(status="idle", message="")
+            self.send_json(200, {"ok": True})
 
         elif self.path == "/api/clear-chat":
             length = int(self.headers.get("Content-Length", 0))
