@@ -19,6 +19,7 @@ git add \
     output/notes/ \
     output/scout_status.json \
     output/token_usage.json \
+    output/run_stats/ \
     2>/dev/null || true
 
 if ! git diff --cached --quiet 2>/dev/null; then

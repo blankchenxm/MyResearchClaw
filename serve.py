@@ -62,6 +62,7 @@ CHATS_DIR = os.path.join(OUTPUT_DIR, "chats")
 ENGINEERING_STATUS_JSON = os.path.join(OUTPUT_DIR, "engineering_status.json")
 SCOUT_STATUS_JSON = os.path.join(OUTPUT_DIR, "scout_status.json")
 TOKEN_USAGE_JSON = os.path.join(OUTPUT_DIR, "token_usage.json")
+RUN_STATS_DIR = os.path.join(OUTPUT_DIR, "run_stats")
 
 _ROUND_RE = re.compile(r"\bRound\s+(\d+(?:\.\d+)?)\b", re.IGNORECASE)
 SKILLS_DIR = os.path.join(ROOT, "skills")
@@ -1963,6 +1964,94 @@ def save_scout_status(**kwargs):
     save_json_file(SCOUT_STATUS_JSON, current)
 
 
+def _accumulate_run_stats(all_lines):
+    """Parse stream-json lines into per-round token stats.
+
+    Returns a dict: {round_label -> {turns, output_tokens, cache_create, cache_read, input_tokens}}
+    Plus a 'total' key and 'result' key (from the final result line).
+    """
+    rounds = {}
+    current_round = "pre-start"
+    totals = {"turns": 0, "output_tokens": 0, "cache_create": 0, "cache_read": 0, "input_tokens": 0}
+
+    def _add(bucket, usage):
+        bucket["output_tokens"] += usage.get("output_tokens", 0)
+        bucket["cache_create"] += usage.get("cache_creation_input_tokens", 0)
+        bucket["cache_read"] += usage.get("cache_read_input_tokens", 0)
+        bucket["input_tokens"] += usage.get("input_tokens", 0)
+        bucket["turns"] = bucket.get("turns", 0) + 1
+
+    result_data = {}
+    for raw in all_lines:
+        try:
+            obj = json.loads(raw)
+        except Exception:
+            continue
+        t = obj.get("type", "")
+        if t == "result":
+            result_data = {
+                "total_cost_usd": obj.get("total_cost_usd"),
+                "num_turns": obj.get("num_turns"),
+                "duration_ms": obj.get("duration_ms"),
+            }
+            mu = obj.get("modelUsage", {})
+            result_data["model_usage"] = {
+                m: {
+                    "input": v.get("inputTokens", 0),
+                    "output": v.get("outputTokens", 0),
+                    "cache_read": v.get("cacheReadInputTokens", 0),
+                    "cache_create": v.get("cacheCreationInputTokens", 0),
+                    "cost_usd": v.get("costUSD", 0),
+                    "web_searches": v.get("webSearchRequests", 0),
+                }
+                for m, v in mu.items()
+            }
+        elif t == "assistant":
+            msg = obj.get("message", {})
+            usage = msg.get("usage", {})
+            if not usage:
+                continue
+            # detect round change from any text content in this message
+            for block in msg.get("content", []):
+                if block.get("type") == "text":
+                    m = _ROUND_RE.search(block.get("text", ""))
+                    if m:
+                        current_round = f"Round {m.group(1)}"
+            if current_round not in rounds:
+                rounds[current_round] = {"turns": 0, "output_tokens": 0,
+                                         "cache_create": 0, "cache_read": 0, "input_tokens": 0}
+            _add(rounds[current_round], usage)
+            _add(totals, usage)
+
+    return {"rounds": rounds, "totals": totals, "result": result_data}
+
+
+def _write_run_stats(slug, phase, operation, stats, started_at):
+    """Write per-round stats to output/run_stats/{slug}_{timestamp}.json."""
+    os.makedirs(RUN_STATS_DIR, exist_ok=True)
+    ts = started_at.strftime("%Y%m%dT%H%M%S")
+    path = os.path.join(RUN_STATS_DIR, f"{slug}_phase{phase}_{ts}.json")
+    result = stats.get("result", {})
+    out = {
+        "slug": slug,
+        "operation": operation,
+        "phase": phase,
+        "started_at": started_at.isoformat(timespec="seconds"),
+        "completed_at": datetime.now().isoformat(timespec="seconds"),
+        "duration_min": round((datetime.now() - started_at).total_seconds() / 60, 1),
+        "total_cost_usd": result.get("total_cost_usd"),
+        "num_turns": result.get("num_turns"),
+        "model_usage": result.get("model_usage", {}),
+        "per_round": stats.get("rounds", {}),
+        "totals": stats.get("totals", {}),
+    }
+    try:
+        save_json_file(path, out)
+        print(f"[serve.py] Run stats written: {path}", flush=True)
+    except Exception as e:
+        print(f"[serve.py] Run stats write failed: {e}", flush=True)
+
+
 def _scout_tmp_dir(slug):
     return os.path.join(OUTPUT_DIR, "tmp", f"scout_{slug}")
 
@@ -2159,11 +2248,13 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
         4: "Round 4: 相关性过滤中...",
         4.5: "Round 4.5: 整理候选列表...",
     }
+    phase1_started = datetime.now()
+    all_lines_p1 = []
     try:
         env = os.environ.copy()
         env["PATH"] = os.path.dirname(RESOLVED_CLAUDE_BIN) + os.pathsep + env.get("PATH", "")
         with open(log_path, "a", encoding="utf-8") as lf:
-            lf.write(f"\n=== {datetime.now().isoformat(timespec='seconds')} ===\nTopic: {topic}\nPhase: 1\n\n")
+            lf.write(f"\n=== {phase1_started.isoformat(timespec='seconds')} ===\nTopic: {topic}\nPhase: 1\n\n")
             lf.flush()
             proc = subprocess.Popen(
                 cmd, cwd=ROOT, env=env,
@@ -2181,6 +2272,7 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
                             s = line.rstrip()
                             lf.write(s + "\n"); lf.flush()
                             logs.append(s); logs = logs[-80:]
+                            all_lines_p1.append(s)
                             m = _ROUND_RE.search(s)
                             if m:
                                 try:
@@ -2193,10 +2285,14 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
                                     pass
             rem = proc.stdout.read() if proc.stdout else ""
             for raw in rem.splitlines():
-                lf.write(raw.rstrip() + "\n"); logs.append(raw.rstrip())
+                s = raw.rstrip()
+                lf.write(s + "\n"); logs.append(s); all_lines_p1.append(s)
             lf.flush(); logs = logs[-80:]
             if proc.returncode not in (0, -15):
                 raise RuntimeError("\n".join(logs[-20:]).strip() or f"claude exited {proc.returncode}")
+
+        stats = _accumulate_run_stats(all_lines_p1)
+        _write_run_stats(slug, 1, f"conference-scout/{topic}", stats, phase1_started)
 
         cdata = _load_candidates(slug)
         candidates = cdata.get("candidates", [])
@@ -2249,11 +2345,13 @@ def run_conference_scout_phase2_bg(topic, description, year_start, year_end, ven
         6.5: "Round 6.5: 记录 Token 用量...",
         7: "Round 7: 生成最终输出...",
     }
+    phase2_started = datetime.now()
+    all_lines_p2 = []
     try:
         env = os.environ.copy()
         env["PATH"] = os.path.dirname(RESOLVED_CLAUDE_BIN) + os.pathsep + env.get("PATH", "")
         with open(log_path, "a", encoding="utf-8") as lf:
-            lf.write(f"\n=== {datetime.now().isoformat(timespec='seconds')} ===\nTopic: {topic}\nPhase: 2\n\n")
+            lf.write(f"\n=== {phase2_started.isoformat(timespec='seconds')} ===\nTopic: {topic}\nPhase: 2\n\n")
             lf.flush()
             proc = subprocess.Popen(
                 cmd, cwd=ROOT, env=env,
@@ -2271,6 +2369,7 @@ def run_conference_scout_phase2_bg(topic, description, year_start, year_end, ven
                             s = line.rstrip()
                             lf.write(s + "\n"); lf.flush()
                             logs.append(s); logs = logs[-80:]
+                            all_lines_p2.append(s)
                             m = _ROUND_RE.search(s)
                             if m:
                                 try:
@@ -2283,10 +2382,14 @@ def run_conference_scout_phase2_bg(topic, description, year_start, year_end, ven
                                     pass
             rem = proc.stdout.read() if proc.stdout else ""
             for raw in rem.splitlines():
-                lf.write(raw.rstrip() + "\n"); logs.append(raw.rstrip())
+                s = raw.rstrip()
+                lf.write(s + "\n"); logs.append(s); all_lines_p2.append(s)
             lf.flush(); logs = logs[-80:]
             if proc.returncode not in (0, -15):
                 raise RuntimeError("\n".join(logs[-20:]).strip() or f"claude exited {proc.returncode}")
+
+        stats2 = _accumulate_run_stats(all_lines_p2)
+        _write_run_stats(slug, 2, f"conference-scout/{topic}", stats2, phase2_started)
 
         usage = parse_usage_from_log_file(log_path)
         append_token_usage("conference-scout", slug, topic, usage)
