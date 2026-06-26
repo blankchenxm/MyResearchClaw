@@ -1964,6 +1964,119 @@ def save_scout_status(**kwargs):
     save_json_file(SCOUT_STATUS_JSON, current)
 
 
+def _build_run_report(all_lines, slug, topic, phase, operation, started_at):
+    """Parse stream-json into a human-readable Markdown report, one section per Round."""
+    os.makedirs(RUN_STATS_DIR, exist_ok=True)
+    ts = started_at.strftime("%Y%m%dT%H%M%S")
+    path = os.path.join(RUN_STATS_DIR, f"{slug}_phase{phase}_{ts}.md")
+
+    # ── pass 1: collect per-round blocks ────────────────────────────────────
+    rounds = {}          # round_label → list of (kind, text)
+    cur = "pre-start"
+    round_tokens = {}    # round_label → token counters
+    result_meta = {}
+
+    def _bucket(label):
+        if label not in rounds:
+            rounds[label] = []
+            round_tokens[label] = {"turns": 0, "out": 0, "cache_r": 0, "cache_c": 0}
+        return rounds[label], round_tokens[label]
+
+    for raw in all_lines:
+        try:
+            obj = json.loads(raw)
+        except Exception:
+            continue
+        t = obj.get("type", "")
+
+        if t == "result":
+            result_meta = {
+                "cost": obj.get("total_cost_usd"),
+                "turns": obj.get("num_turns"),
+                "ms": obj.get("duration_ms", 0),
+            }
+            continue
+
+        if t != "assistant":
+            continue
+
+        msg = obj.get("message", {})
+        usage = msg.get("usage", {})
+        content = msg.get("content", [])
+
+        # Detect round change from text blocks first
+        for block in content:
+            if block.get("type") == "text":
+                m = _ROUND_RE.search(block.get("text", ""))
+                if m:
+                    cur = f"Round {m.group(1)}"
+
+        bucket, tok = _bucket(cur)
+        if usage:
+            tok["turns"] += 1
+            tok["out"] += usage.get("output_tokens", 0)
+            tok["cache_r"] += usage.get("cache_read_input_tokens", 0)
+            tok["cache_c"] += usage.get("cache_creation_input_tokens", 0)
+
+        for block in content:
+            btype = block.get("type", "")
+            if btype == "thinking":
+                continue  # skip — too noisy
+            elif btype == "text":
+                text = block.get("text", "").strip()
+                if text:
+                    bucket.append(("text", text))
+            elif btype == "tool_use":
+                name = block.get("name", "")
+                inp = block.get("input", {})
+                if name in ("WebFetch", "WebSearch"):
+                    summary = inp.get("url") or inp.get("query") or str(inp)[:120]
+                elif name in ("Read", "Write", "Edit"):
+                    summary = inp.get("file_path", str(inp)[:80])
+                elif name == "Bash":
+                    summary = (inp.get("command") or "")[:120]
+                else:
+                    summary = str(inp)[:100]
+                bucket.append(("tool", f"{name}({summary})"))
+
+    # ── pass 2: render Markdown ──────────────────────────────────────────────
+    duration_min = round((datetime.now() - started_at).total_seconds() / 60, 1)
+    cost_str = f"${result_meta.get('cost', 0):.3f}" if result_meta.get("cost") else "?"
+    turns_str = str(result_meta.get("turns", "?"))
+
+    lines_out = [
+        f"# {operation}",
+        f"Phase {phase} | {started_at.strftime('%Y-%m-%d %H:%M')} | "
+        f"{duration_min} min | {cost_str} | {turns_str} turns",
+        "",
+    ]
+
+    for label in rounds:
+        tok = round_tokens[label]
+        # Rough cost estimate: output tokens dominate
+        lines_out.append(f"## [{label}]  {tok['turns']} turns")
+        lines_out.append("")
+        prev_kind = None
+        for kind, content_str in rounds[label]:
+            if kind == "tool":
+                lines_out.append(f"  → {content_str}")
+            else:
+                # Only print non-duplicate text sections (agent often repeats tool output)
+                if content_str != prev_kind:
+                    # Truncate very long text blocks
+                    preview = content_str[:800] + ("…" if len(content_str) > 800 else "")
+                    lines_out.append(preview)
+            prev_kind = content_str
+        lines_out.append("")
+
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines_out))
+        print(f"[serve.py] Run report written: {path}", flush=True)
+    except Exception as e:
+        print(f"[serve.py] Run report write failed: {e}", flush=True)
+
+
 def _accumulate_run_stats(all_lines):
     """Parse stream-json lines into per-round token stats.
 
@@ -2293,6 +2406,7 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
 
         stats = _accumulate_run_stats(all_lines_p1)
         _write_run_stats(slug, 1, f"conference-scout/{topic}", stats, phase1_started)
+        _build_run_report(all_lines_p1, slug, topic, 1, f"Conference Scout: {topic}", phase1_started)
 
         cdata = _load_candidates(slug)
         candidates = cdata.get("candidates", [])
@@ -2390,6 +2504,7 @@ def run_conference_scout_phase2_bg(topic, description, year_start, year_end, ven
 
         stats2 = _accumulate_run_stats(all_lines_p2)
         _write_run_stats(slug, 2, f"conference-scout/{topic}", stats2, phase2_started)
+        _build_run_report(all_lines_p2, slug, topic, 2, f"Conference Scout: {topic}", phase2_started)
 
         usage = parse_usage_from_log_file(log_path)
         append_token_usage("conference-scout", slug, topic, usage)
@@ -2804,6 +2919,8 @@ def read_paper_bg(paper_id, url, title):
         "--verbose",
     ]
 
+    reader_started = datetime.now()
+    all_lines_reader = []
     try:
         if ensure_local_pdf(paper_id):
             set_paper_fields(paper_id, progress=8, status="reading")
@@ -2814,7 +2931,7 @@ def read_paper_bg(paper_id, url, title):
         env["PATH"] = claude_dir + os.pathsep + env.get("PATH", "")
         with open(log_path, "a", encoding="utf-8") as log_file:
             log_file.write(
-                f"\n=== {datetime.now().isoformat(timespec='seconds')} ===\n"
+                f"\n=== {reader_started.isoformat(timespec='seconds')} ===\n"
                 f"Paper ID: {paper_id}\n"
                 f"Title: {title}\n"
                 f"URL: {url}\n"
@@ -2850,6 +2967,7 @@ def read_paper_bg(paper_id, url, title):
                             log_file.write(stripped + "\n")
                             log_file.flush()
                             logs.append(stripped)
+                            all_lines_reader.append(stripped)
                             if len(logs) > 60:
                                 logs = logs[-60:]
                             last_output_at = time.time()
@@ -2883,6 +3001,7 @@ def read_paper_bg(paper_id, url, title):
                     stripped = raw_line.rstrip()
                     log_file.write(stripped + "\n")
                     logs.append(stripped)
+                    all_lines_reader.append(stripped)
                 log_file.flush()
                 logs = logs[-60:]
 
@@ -2898,6 +3017,9 @@ def read_paper_bg(paper_id, url, title):
 
         usage = parse_usage_from_log_file(log_path)
         append_token_usage("paper-reader", paper_id, title, usage)
+        stats_r = _accumulate_run_stats(all_lines_reader)
+        _write_run_stats(paper_id, 1, f"paper-reader/{title}", stats_r, reader_started)
+        _build_run_report(all_lines_reader, paper_id, title, 1, f"Paper Reader: {title}", reader_started)
         print(f"[serve.py] Complete via Claude CLI: {title[:60]}", flush=True)
     except Exception as exc:
         print(f"[serve.py] Claude CLI error: {exc}", flush=True)
