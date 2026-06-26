@@ -1621,7 +1621,10 @@ async function _pollScoutStatus() {{
     if (st === 'done') {{
       if (_scoutPollTimer) {{ clearInterval(_scoutPollTimer); _scoutPollTimer = null; }}
       _showProgressPanel('完成', data.message || '调研完成！', 100);
-      setTimeout(() => window.location.reload(), 2000);
+      setTimeout(async () => {{
+        await fetch('/api/dismiss-scout', {{ method: 'POST' }}).catch(() => {{}});
+        window.location.reload();
+      }}, 2000);
     }}
     if (st === 'error') {{
       if (_scoutPollTimer) {{ clearInterval(_scoutPollTimer); _scoutPollTimer = null; }}
