@@ -41,7 +41,19 @@
       "cache_creation_input_tokens": 135234,
       "cost_usd": 0.0,
       "duration_ms": 1228126
+    },
+    {
+      "type": "paper-reader",
+      "entity_id": "vuebuds-visual-intelligence-wireless-earbuds",
+      "title": "VueBuds: Visual Intelligence with Wireless Earbuds",
+      "date": "2026-06-28",
+      "input_tokens": 83,
+      "output_tokens": 61046,
+      "cache_read_input_tokens": 7321322,
+      "cache_creation_input_tokens": 213499,
+      "cost_usd": 0.0,
+      "duration_ms": 1460382
     }
   ],
-  "last_updated": "2026-06-27"
+  "last_updated": "2026-06-28"
 }

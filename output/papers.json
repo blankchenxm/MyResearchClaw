@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-06-27",
+  "last_updated": "2026-06-28",
   "searches": [
     {
       "topic": "LLM Agent for Automated PCB Design",
@@ -1181,7 +1181,7 @@
       "timeline_reason_zh": "首个在无线耳机中集成微型摄像头实现视觉智能的 CHI 2026 工作：从耳朵位置捕获侧向第一人称视频，在设备端运行视觉模型提供场景理解，赋予耳机看的能力；代表耳机视觉模态的最新前沿探索",
       "summary_en": "VueBuds integrates a miniature side-facing camera into wireless earbuds to give earphones visual intelligence capabilities: the camera captures egocentric video from the ear position, and an on-device vision model processes scene context to enable visual question answering, object identification, and activity recognition from the ear viewpoint. The system addresses the fundamental audio-only limitation of current earphones by adding vision as a complementary sensing modality without requiring a separate glasses or wrist device. The ear position provides a unique lateral viewpoint that complements standard front-facing phone cameras. CHI 2026 presentation establishes earphone-integrated cameras as an emerging research direction.",
       "summary_zh": "VueBuds 将微型侧向摄像头集成到无线耳机中，赋予耳机视觉智能能力：摄像头从耳部位置捕获第一人称视频，设备端视觉模型处理场景上下文，实现视觉问答、物体识别和从耳部视角进行活动识别。系统通过将视觉作为互补传感模态加入耳机，解决了当前耳机仅限音频的根本局限，无需额外眼镜或手腕设备。耳部位置提供了独特的侧向视角，与标准前置手机摄像头互补。CHI 2026 发表，将耳机集成摄像头确立为新兴研究方向。",
-      "status": "reading",
+      "status": "done",
       "topic": "More modality in wearable system",
       "topic_slug": "more-modality-in-wearable-system",
       "tags": [
@@ -1193,10 +1193,11 @@
         "CHI"
       ],
       "progress": 100,
-      "pipeline_step": "笔记已完成|Note complete",
-      "note_path": "/Users/xiaomeng/research/MyResearchClaw/output/notes/more-modality-in-wearable-system/vuebuds-visual-intelligence-wireless-earbuds/note.md",
+      "pipeline_step": "",
+      "note_path": "output/notes/more-modality-in-wearable-system/vuebuds-visual-intelligence-wireless-earbuds/note.md",
       "figures_dir": "/Users/xiaomeng/research/MyResearchClaw/output/notes/more-modality-in-wearable-system/vuebuds-visual-intelligence-wireless-earbuds/figures",
-      "pipeline_status": "complete"
+      "pipeline_status": "complete",
+      "last_updated": "2026-06-28"
     },
     {
       "id": "earsleeve-earphones-12-lead-ecg-sensing",

@@ -1,0 +1,44 @@
+{
+  "slug": "vuebuds-visual-intelligence-wireless-earbuds",
+  "operation": "paper-reader/VueBuds: Visual Intelligence with Wireless Earbuds",
+  "phase": 1,
+  "started_at": "2026-06-28T01:03:29",
+  "completed_at": "2026-06-28T01:28:13",
+  "duration_min": 24.7,
+  "total_cost_usd": 4.555109499999999,
+  "num_turns": 85,
+  "model_usage": {
+    "claude-haiku-4-5-20251001": {
+      "input": 1882,
+      "output": 21,
+      "cache_read": 0,
+      "cache_create": 0,
+      "cost_usd": 0.001987,
+      "web_searches": 0
+    },
+    "claude-sonnet-4-6": {
+      "input": 1463,
+      "output": 67944,
+      "cache_read": 7487015,
+      "cache_create": 214159,
+      "cost_usd": 4.553122499999999,
+      "web_searches": 0
+    }
+  },
+  "per_round": {
+    "pre-start": {
+      "turns": 146,
+      "output_tokens": 4503,
+      "cache_create": 493068,
+      "cache_read": 12737539,
+      "input_tokens": 149
+    }
+  },
+  "totals": {
+    "turns": 146,
+    "output_tokens": 4503,
+    "cache_create": 493068,
+    "cache_read": 12737539,
+    "input_tokens": 149
+  }
+}
