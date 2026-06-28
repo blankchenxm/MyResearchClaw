@@ -1,0 +1,47 @@
+{
+  "operations": [
+    {
+      "type": "conference-scout",
+      "entity_id": "automatic-embedded-firmware-agent",
+      "title": "automatic embedded firmware agent",
+      "date": "2026-06-24",
+      "web_searches": 0,
+      "web_fetches": 6,
+      "note": "conference-scout phase 2"
+    },
+    {
+      "type": "conference-scout",
+      "entity_id": "automatic-embedded-firmware-agent",
+      "title": "automatic embedded firmware agent",
+      "date": "2026-06-24",
+      "input_tokens": 12713,
+      "output_tokens": 69054,
+      "cache_read_input_tokens": 1536967,
+      "cache_creation_input_tokens": 135991,
+      "cost_usd": 0.0,
+      "duration_ms": 1060993
+    },
+    {
+      "type": "conference-scout",
+      "entity_id": "more-modality-in-wearable-system",
+      "title": "More modality in wearable system",
+      "date": "2026-06-27",
+      "web_searches": 0,
+      "web_fetches": 10,
+      "note": "conference-scout phase 2 (rounds 5-7), 18 papers added"
+    },
+    {
+      "type": "conference-scout",
+      "entity_id": "more-modality-in-wearable-system",
+      "title": "More modality in wearable system",
+      "date": "2026-06-27",
+      "input_tokens": 93,
+      "output_tokens": 78836,
+      "cache_read_input_tokens": 2457662,
+      "cache_creation_input_tokens": 135234,
+      "cost_usd": 0.0,
+      "duration_ms": 1228126
+    }
+  ],
+  "last_updated": "2026-06-27"
+}
