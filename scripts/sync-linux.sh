@@ -20,5 +20,12 @@ REMOTE=$(git rev-parse origin/master 2>/dev/null)
 
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 echo "[${TIMESTAMP}] Pulling update $(git rev-parse --short origin/master)..." >> "$LOG"
+
+# Remove untracked files that would block the merge
+git diff --name-only --diff-filter=U HEAD origin/master 2>/dev/null | xargs -r rm -f
+git ls-files --others --exclude-standard | while read f; do
+    git show origin/master:"$f" &>/dev/null && rm -f "$f"
+done
+
 git pull --ff-only origin master >> "$LOG" 2>&1
 echo "[${TIMESTAMP}] Done." >> "$LOG"

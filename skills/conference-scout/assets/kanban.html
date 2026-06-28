@@ -136,6 +136,13 @@ body.light {
 .role-consolidation { color:#c0b6ff; border-color:rgba(162,155,254,0.22); background:rgba(162,155,254,0.09); }
 .role-frontier { color:var(--accent2); border-color:rgba(56,217,199,0.22); background:rgba(56,217,199,0.09); }
 .role-timeline { color:var(--text-dim); border-color:var(--border); background:rgba(255,255,255,0.03); }
+.role-foundation { color:#93c5fd; border-color:rgba(147,197,253,0.22); background:rgba(147,197,253,0.09); }
+.role-legend {
+  display:flex; flex-wrap:wrap; gap:10px 20px; align-items:center;
+  padding:12px 16px; margin-bottom:18px;
+  background:rgba(255,255,255,0.03); border-radius:12px; border:1px solid var(--border);
+}
+.role-legend-desc { font-size:11px; color:var(--text-dim); margin-right:8px; }
 .timeline-note { color:var(--text-dim); line-height:1.8; font-size:16px; }
 .timeline-card-wrap { min-width:0; }
 .paper-card {
@@ -199,7 +206,7 @@ body:not(.lang-en) .role-reason-copy.lang-en { display:none; }
 .btn-read { color:#c0b6ff; background:rgba(162,155,254,0.08); border-color:rgba(162,155,254,0.18); }
 .btn-read.reading { color:var(--accent4); background:rgba(255,214,110,0.08); border-color:rgba(255,214,110,0.18); }
 .btn-done, .btn-notes { color:var(--accent2); background:rgba(56,217,199,0.08); border-color:rgba(56,217,199,0.18); }
-.notes-shell { display:grid; grid-template-columns:minmax(0, 0.98fr) minmax(380px, 0.92fr); gap:18px; align-items:start; height:calc(100vh - 140px); }
+.notes-shell { display:block; height:calc(100vh - 140px); }
 .notes-pane, .pdf-pane {
   background:var(--bg-card); border:1px solid var(--border); border-radius:22px; min-height:0; height:100%;
 }
@@ -353,6 +360,13 @@ body:not(.lang-en) .role-reason-copy.lang-en { display:none; }
           <span class="lang-en lang-inline">Continuous Timeline</span>
         </div>
       </div>
+      <div class="role-legend">
+        <span class="timeline-role role-survey">Survey</span><span class="role-legend-desc lang-zh lang-inline">全领域综述，建立分类框架</span><span class="role-legend-desc lang-en lang-inline">field-wide literature map</span>
+        <span class="timeline-role role-breakthrough">Breakthrough</span><span class="role-legend-desc lang-zh lang-inline">引入核心概念，被后续大量引用</span><span class="role-legend-desc lang-en lang-inline">introduced a key concept the community built on</span>
+        <span class="timeline-role role-foundation">Foundation</span><span class="role-legend-desc lang-zh lang-inline">早期奠基论文，确立方向基线</span><span class="role-legend-desc lang-en lang-inline">early core papers that established the baseline</span>
+        <span class="timeline-role role-consolidation">Consolidation</span><span class="role-legend-desc lang-zh lang-inline">推动领域分支成熟，承上启下</span><span class="role-legend-desc lang-en lang-inline">shows how the field branched and matured</span>
+        <span class="timeline-role role-frontier">Frontier</span><span class="role-legend-desc lang-zh lang-inline">近期顶会前沿，代表当前最强方向</span><span class="role-legend-desc lang-en lang-inline">recent tier-1 papers, current strongest direction</span>
+      </div>
       <div class="timeline-rail">
         {{TIMELINE_ITEMS}}
       </div>
@@ -379,33 +393,6 @@ body:not(.lang-en) .role-reason-copy.lang-en { display:none; }
         <div id="notes-content" class="notes-content"></div>
       </section>
 
-      <aside class="pdf-pane">
-        <div class="pdf-topbar">
-          <div class="pdf-title">
-            <span class="lang-zh lang-inline">论文 PDF</span>
-            <span class="lang-en lang-inline">Paper PDF</span>
-          </div>
-          <div class="pdf-links">
-            <a id="pdf-open-link" class="btn btn-view" href="#" target="_blank" style="display:none">
-              <span class="lang-zh lang-inline">打开 PDF ↗</span>
-              <span class="lang-en lang-inline">Open PDF ↗</span>
-            </a>
-            <a id="paper-open-link" class="btn btn-view" href="#" target="_blank" style="display:none">
-              <span class="lang-zh lang-inline">打开论文页 ↗</span>
-              <span class="lang-en lang-inline">Open Paper ↗</span>
-            </a>
-          </div>
-        </div>
-        <div class="pdf-body">
-          <div class="pdf-viewer">
-            <iframe id="pdf-frame" class="pdf-frame" title="Paper PDF Viewer"></iframe>
-            <div id="pdf-empty" class="pdf-empty">
-              <div class="lang-zh lang-block">当前没有可直接预览的 PDF。若论文页面可访问，右上角可直接打开原文。</div>
-              <div class="lang-en lang-block">No inline PDF is available yet. If the paper page is reachable, use the top-right links to open the source directly.</div>
-            </div>
-          </div>
-        </div>
-      </aside>
     </div>
   </div>
 
@@ -593,6 +580,7 @@ function updateCard(p) {
   if (p.note_path) card.setAttribute('data-note-path', p.note_path);
   if (p.pdf_local_path) card.setAttribute('data-pdf-url', `${API}/api/pdf/${encodeURIComponent(p.id)}`);
   else if (p.pdf_url) card.setAttribute('data-pdf-url', p.pdf_url);
+  if (p.arxiv_id) card.setAttribute('data-arxiv-id', p.arxiv_id);
 
   if (prog >= 100 && p.id === activeReadId) {
     activeReadId = null;
@@ -732,10 +720,10 @@ async function showNotes(paperId) {
     const resources = extractPaperResources(md, card?.getAttribute('data-url') || '', card?.getAttribute('data-pdf-url') || '');
     currentPdfUrl = resources.pdfUrl;
     currentPaperUrl = resources.paperUrl;
-    await showPdfPanel(resources.pdfUrl, resources.paperUrl);
+    await showPdfPanel(resources.pdfUrl, resources.paperUrl, card?.getAttribute('data-arxiv-id') || '');
   } catch {
     content.innerHTML = `<p style="color:var(--accent3)">Notes not ready yet. Please wait for reading to complete.</p>`;
-    await showPdfPanel(card?.getAttribute('data-pdf-url') || '', card?.getAttribute('data-url') || '');
+    await showPdfPanel(card?.getAttribute('data-pdf-url') || '', card?.getAttribute('data-url') || '', card?.getAttribute('data-arxiv-id') || '');
   }
 }
 
@@ -771,33 +759,8 @@ function extractPaperResources(md, fallbackPaperUrl, presetPdfUrl) {
   return { pdfUrl, paperUrl };
 }
 
-async function showPdfPanel(pdfUrl, paperUrl) {
-  const frame = document.getElementById('pdf-frame');
-  const empty = document.getElementById('pdf-empty');
-  const pdfLink = document.getElementById('pdf-open-link');
-  const paperLink = document.getElementById('paper-open-link');
-
-  frame.style.display = 'none';
-  empty.style.display = 'flex';
-
-  if (paperUrl) {
-    paperLink.href = paperUrl;
-    paperLink.style.display = 'inline-flex';
-  } else paperLink.style.display = 'none';
-
-  if (!pdfUrl) {
-    pdfLink.style.display = 'none';
-    empty.textContent = '当前还没有可预览的本地 PDF。服务端会优先尝试下载并缓存 PDF；如果失败，再使用右上角按钮打开论文原页面。';
-    return;
-  }
-
-  pdfLink.href = pdfUrl;
-  pdfLink.style.display = 'inline-flex';
-  empty.textContent = 'PDF 正在加载中...';
-  empty.style.display = 'flex';
-  frame.src = pdfUrl + '#toolbar=1&navpanes=0&view=FitH';
-  frame.style.display = 'block';
-  empty.style.display = 'none';
+async function showPdfPanel(pdfUrl, paperUrl, arxivId) {
+  // PDF panel removed — single-column notes-only layout
 }
 
 function escapeHtml(text) {

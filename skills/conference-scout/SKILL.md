@@ -1,6 +1,6 @@
 ---
 name: conference-scout
-description: Iteratively search top-conference papers on one topic, gate by relevance, build a chronological timeline labeled by each paper's role (survey / breakthrough / foundation / consolidation / frontier), and persist to output/papers.json + render output/projects/{slug}/papers.html. Two-pass strategy with a confirmation pause after relevance gating, so the user can adjust constraints before citation expansion runs. Use when the user wants to find / scout / map papers on a topic; triggers include 搜论文, 顶会论文, find papers, scout papers, 调研, conference papers, "[topic] in [conference]". Not for精读 one paper — that's paper-reader.
+description: Iteratively search top-conference papers on one topic, gate by relevance, build a chronological timeline labeled by each paper's role (survey / breakthrough / foundation / consolidation / frontier), and persist to output/papers.json. Runs all Rounds 0-7 in one session without pausing. Use when the user wants to find / scout / map papers on a topic; triggers include 搜论文, 顶会论文, find papers, scout papers, 调研, conference papers, "[topic] in [conference]". Not for精读 one paper — that's paper-reader.
 ---
 
 # Conference Scout
@@ -137,9 +137,9 @@ Every candidate must pass all three:
 
 Reject if it matches `negative_patterns`, is outside `subfield_boundary`, or is a workshop version of a venue-confirmed paper already in the pool. Venue alone is not sufficient — top venues contain many off-topic papers.
 
-### Round 4.5 — Candidate Confirmation *(PAUSE)*
+### Round 4.5 — Candidate Summary *(print and continue)*
 
-Before Round 5, show the user a lightweight table and wait for confirmation:
+Before Round 5, print the candidate table, then **immediately continue to Round 5 without waiting**:
 
 ```
 | # | 标题 | Venue | 年份 | 引用 | influential | PDF |
@@ -150,9 +150,9 @@ Before Round 5, show the user a lightweight table and wait for confirmation:
 
 PDF column is quick precheck only — `✓ arXiv` if `arxiv_id` set; `✓ S2` if `openAccessPdf.url` non-null; otherwise `✗`. Do NOT run the full PDF cascade here (OpenAlex / Unpaywall / Google Scholar) — that belongs to paper-reader.
 
-Ask: `共 {N} 篇通过 Round 4，是否继续 Round 5-7？或需要调整 negative_patterns / constraint_terms？`
+Print: `共 {N} 篇通过 Round 4，继续 Round 5-7…`
 
-Only proceed after the user confirms. If the user adjusts, re-run Round 4 with the new rubric and present the table again.
+Do NOT pause. Do NOT wait for user input. Proceed directly to Round 5.
 
 ### Round 5 — Citation Expansion
 
@@ -276,11 +276,9 @@ Append the search itself to `output/papers.json.searches[]`:
 
 ### `output/projects/{topic_slug}/papers.html`
 
-Generate from `assets/kanban.html`. serve.py / the layout handles the placeholders ({{LAST_UPDATED}}, {{TIMELINE_ITEMS}}, etc.) — you just need to write the data.
+**Do NOT generate this file.** serve.py calls `regenerate_kanban()` automatically after `output/papers.json` is written — the dashboard renders from the template without any agent involvement.
 
-Render a continuous chronological timeline with role annotations, paper cards showing `timeline_role` + bilingual role reasoning + reading progress + note links + venue tier badge.
-
-For topic-specific HTML requests, still update `output/papers.json` and generate `output/projects/{topic_slug}/papers.html` — do NOT overwrite the shared `output/kanban.html`.
+Only update `output/papers.json`. Do NOT write any `.html` or `.py` files in Round 7.
 
 ## Response
 
@@ -288,7 +286,7 @@ For topic-specific HTML requests, still update `output/papers.json` and generate
 Conference Scout — {TOPIC}
 {YEAR_RANGE} | {VENUES_CHECKED}
 
-Rounds: Discovery → Anchors → Precision → Gate → [pause confirmed] → Citation → Timeline
+Rounds: Discovery → Anchors → Precision → Gate → Candidate table → Citation → Timeline
 
 {N} new papers added | {TOTAL} total tracked
 
@@ -324,5 +322,5 @@ Read the **含义** before picking an action. Don't reflexively retry.
 | 同一方式重试 3 次无改善 | 路径错了，不是还没找到 | 换平台或换关键词 |
 | Round 4 拒绝 > 80% 候选 | query 太宽或 negative_patterns 太严 | 暂停告知用户；放宽一个条件重新 gate |
 | 无任何 venue-confirmed 论文 | 顶会未覆盖该子方向 / 主题词被换说法 | 显示最佳未过滤匹配（标 unconfirmed）；回 Round 0 重扩 query |
-| Round 4.5 暂停后用户改条件 | 用户不接受当前候选集 | 用新条件重跑 Round 4，重新呈现表，不要直接进 Round 5 |
+| Round 4 拒绝率异常高 | subfield_boundary 太严或 query 偏 | 继续跑，在 Round 7 response 里注明候选数偏少 |
 | `papers.json` malformed | 文件结构损坏 | recreate with warning，先备份，不要静默覆盖 |

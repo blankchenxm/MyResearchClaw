@@ -115,6 +115,16 @@ body.light {
 .scout-year-row { display:flex; gap:8px; align-items:center; }
 .scout-year-row select { flex:1; }
 .scout-year-sep { color:var(--muted); font-size:13px; }
+.vg-btn-group { display:flex; flex-wrap:wrap; gap:6px; }
+.vg-btn {
+  padding:5px 11px; border-radius:20px; font-size:12px; cursor:pointer;
+  border:1px solid var(--line); background:var(--panel-soft); color:var(--muted);
+  transition:all .15s; user-select:none;
+}
+.vg-btn.active {
+  border-color:rgba(105,166,255,0.7); background:rgba(105,166,255,0.15);
+  color:var(--text);
+}
 
 /* Venue chips */
 .venue-chip-input-row { display:flex; gap:8px; }
@@ -299,17 +309,17 @@ body.light {
 <option value="2026" selected>2026</option></select>
             </div>
           </div>
-          <div class="scout-field">
-            <label>领域 / 会议组</label>
-            <select id="sfVenueGroup">
-              <option value="wearable_sensing">穿戴传感 (wearable_sensing)</option>
-              <option value="ai_ml">AI / 机器学习 (ai_ml)</option>
-              <option value="iot_systems">IoT 系统 (iot_systems)</option>
-              <option value="eda_hardware">EDA / 硬件 (eda_hardware)</option>
-              <option value="security">安全 (security)</option>
-              <option value="systems">系统 (systems)</option>
-              <option value="hci">人机交互 (hci)</option>
-            </select>
+          <div class="scout-field scout-form-full">
+            <label>领域 / 会议组（可多选）</label>
+            <div class="vg-btn-group" id="sfVenueGroupBtns">
+              <span class="vg-btn active" data-vg="wearable_sensing">穿戴传感</span>
+              <span class="vg-btn" data-vg="ai_ml">AI / ML</span>
+              <span class="vg-btn" data-vg="iot_systems">IoT 系统</span>
+              <span class="vg-btn" data-vg="eda_hardware">EDA / 硬件</span>
+              <span class="vg-btn" data-vg="security">安全</span>
+              <span class="vg-btn" data-vg="systems">系统</span>
+              <span class="vg-btn" data-vg="hci">人机交互</span>
+            </div>
           </div>
           <div class="scout-field scout-form-full">
             <label>指定会议（可选，输入后按 Enter 添加）</label>
@@ -330,11 +340,15 @@ body.light {
       <div class="scout-progress-panel" id="scoutProgressPanel" style="display:none">
         <div class="scout-progress-header">
           <div class="scout-progress-title" id="scoutProgressTitle">Conference Scout 运行中…</div>
-          <span class="scout-phase-badge" id="scoutPhaseBadge">Phase 1</span>
+          <span class="scout-phase-badge" id="scoutPhaseBadge">运行中</span>
         </div>
         <div class="scout-track"><div class="scout-fill" id="scoutFill" style="width:0%"></div></div>
         <div class="scout-progress-msg" id="scoutProgressMsg">初始化…</div>
         <div class="scout-error-msg" id="scoutErrorMsg" style="display:none"></div>
+        <div id="scoutDismissRow" style="display:none;margin-top:10px;gap:8px">
+          <button id="scoutRetryBtn" onclick="retryScout()" style="background:#2a4a2a;color:#7ec87e;border:1px solid #4a7a4a;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px">↩ 重试</button>
+          <button onclick="dismissScout()" style="background:#333;color:#aaa;border:1px solid #555;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px">✕ 关闭</button>
+        </div>
       </div>
 
       <!-- ── Round 4.5 Confirmation Panel ── -->
@@ -374,6 +388,74 @@ body.light {
       </div>
 
       
+        <article class="topic-card">
+          <div class="topic-top">
+            <div class="topic-title-wrap">
+              <div class="topic-eyebrow">Research Theme</div>
+              <h2>More modality in wearable system</h2>
+            </div>
+            <div class="topic-top-right">
+              <div class="topic-count">18 papers</div>
+              <button class="topic-delete" title="Delete this theme" onclick="deleteTopic('More modality in wearable system', 'more-modality-in-wearable-system', 18)">🗑️</button>
+            </div>
+          </div>
+          <div class="topic-meta">
+            <span><span class="meta-label">检索范围</span>2021-2026</span>
+            <span><span class="meta-label">创建于</span>2026-06-27</span>
+          </div>
+          <p class="topic-venues">Unknown Venues</p>
+          <div class="topic-actions">
+            <a href="/projects/more-modality-in-wearable-system/papers.html" class="action-papers">
+              <span class="action-icon">📚</span>
+              <span class="action-text">
+                <span class="action-title">Open Papers</span>
+                <span class="action-desc">论文时间线 · 精读笔记</span>
+              </span>
+            </a>
+            <a href="/projects/more-modality-in-wearable-system/engineering.html" class="action-engineering">
+              <span class="action-icon">🛠️</span>
+              <span class="action-text">
+                <span class="action-title">Engineering View</span>
+                <span class="action-desc">开源仓库 · 工程实现</span>
+              </span>
+            </a>
+          </div>
+        </article>
+
+        <article class="topic-card">
+          <div class="topic-top">
+            <div class="topic-title-wrap">
+              <div class="topic-eyebrow">Research Theme</div>
+              <h2>automatic embedded firmware agent</h2>
+            </div>
+            <div class="topic-top-right">
+              <div class="topic-count">13 papers</div>
+              <button class="topic-delete" title="Delete this theme" onclick="deleteTopic('automatic embedded firmware agent', 'automatic-embedded-firmware-agent', 13)">🗑️</button>
+            </div>
+          </div>
+          <div class="topic-meta">
+            <span><span class="meta-label">检索范围</span>2021-2026</span>
+            <span><span class="meta-label">创建于</span>2026-06-24</span>
+          </div>
+          <p class="topic-venues">Unknown Venues</p>
+          <div class="topic-actions">
+            <a href="/projects/automatic-embedded-firmware-agent/papers.html" class="action-papers">
+              <span class="action-icon">📚</span>
+              <span class="action-text">
+                <span class="action-title">Open Papers</span>
+                <span class="action-desc">论文时间线 · 精读笔记</span>
+              </span>
+            </a>
+            <a href="/projects/automatic-embedded-firmware-agent/engineering.html" class="action-engineering">
+              <span class="action-icon">🛠️</span>
+              <span class="action-text">
+                <span class="action-title">Engineering View</span>
+                <span class="action-desc">开源仓库 · 工程实现</span>
+              </span>
+            </a>
+          </div>
+        </article>
+
         <article class="topic-card">
           <div class="topic-top">
             <div class="topic-title-wrap">
@@ -451,6 +533,24 @@ function toggleScoutForm() {
   if (_scoutFormOpen) document.getElementById('sfTopic').focus();
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.vg-btn').forEach(btn => {
+    btn.addEventListener('click', () => btn.classList.toggle('active'));
+  });
+});
+
+function _getVenueGroups() {
+  return Array.from(document.querySelectorAll('#sfVenueGroupBtns .vg-btn.active'))
+              .map(b => b.dataset.vg).filter(Boolean).join(',');
+}
+
+function _setVenueGroups(val) {
+  const vals = (val || '').split(',').map(s => s.trim()).filter(Boolean);
+  document.querySelectorAll('#sfVenueGroupBtns .vg-btn').forEach(btn => {
+    btn.classList.toggle('active', vals.includes(btn.dataset.vg));
+  });
+}
+
 function venueInputKey(e) {
   if (e.key === 'Enter') { e.preventDefault(); addVenueChip(); }
 }
@@ -478,11 +578,12 @@ async function submitScout() {
   const description = document.getElementById('sfDescription').value.trim();
   const yearStart = parseInt(document.getElementById('sfYearStart').value);
   const yearEnd   = parseInt(document.getElementById('sfYearEnd').value);
-  const venueGroup = document.getElementById('sfVenueGroup').value;
+  const venueGroup = _getVenueGroups();
   const specificVenues = _getVenues();
 
   if (!topic) { alert('请填写 Topic 名称'); return; }
   if (yearStart > yearEnd) { alert('年份起始不能大于结束'); return; }
+  if (!venueGroup) { alert('请至少选择一个领域 / 会议组'); return; }
 
   try {
     const r = await fetch('/api/start-scout', {
@@ -494,7 +595,7 @@ async function submitScout() {
     if (!data.ok) { alert('启动失败：' + (data.error || '')); return; }
     document.getElementById('scoutFormPanel').style.display = 'none';
     _scoutFormOpen = false;
-    _showProgressPanel('Phase 1', '初始化…', 0);
+    _showProgressPanel('搜索中', '初始化…', 0);
     _startPoll();
   } catch (e) {
     alert('启动失败：' + e.message);
@@ -508,6 +609,41 @@ function _showProgressPanel(phase, msg, pct) {
   document.getElementById('scoutProgressMsg').textContent = msg;
   document.getElementById('scoutFill').style.width = pct + '%';
   document.getElementById('scoutErrorMsg').style.display = 'none';
+  document.getElementById('scoutDismissRow').style.display = 'none';
+}
+
+async function dismissScout() {
+  try {
+    await fetch('/api/dismiss-scout', { method: 'POST' });
+  } catch (_) {}
+  document.getElementById('scoutProgressPanel').style.display = 'none';
+}
+
+async function retryScout() {
+  try {
+    const r = await fetch('/api/scout-status');
+    const st = await r.json();
+    const body = {
+      topic: st.topic || '',
+      description: st.description || '',
+      year_start: st.year_start || '',
+      year_end: st.year_end || '',
+      venue_group: st.venue_group || 'wearable_sensing',
+      specific_venues: st.specific_venues || '',
+    };
+    const r2 = await fetch('/api/start-scout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await r2.json();
+    if (!data.ok) { alert('重试失败：' + (data.error || '未知错误')); return; }
+    document.getElementById('scoutDismissRow').style.display = 'none';
+    _showProgressPanel('搜索中', '初始化…', 0);
+    _startPoll();
+  } catch (e) {
+    alert('重试失败：' + e.message);
+  }
 }
 
 function _showConfirmPanel(data) {
@@ -604,14 +740,9 @@ async function readjustRound4() {
   }
 }
 
-function _roundToPct(round, phase) {
-  if (phase === 1) {
-    const map = {0:5,1:15,2:30,3:50,4:70,4.5:90};
-    return map[round] || Math.min(5 + round * 15, 90);
-  } else {
-    const map = {5:65,6:80,6.5:90,7:98};
-    return map[round] || Math.min(60 + round * 8, 98);
-  }
+function _roundToPct(round) {
+  const map = {0:5, 1:15, 2:28, 3:45, 4:62, 4.5:72, 5:82, 6:90, 6.5:95, 7:99};
+  return map[round] || Math.min(5 + round * 10, 99);
 }
 
 function _startPoll() {
@@ -631,21 +762,19 @@ async function _pollScoutStatus() {
       if (_scoutPollTimer) { clearInterval(_scoutPollTimer); _scoutPollTimer = null; }
       return;
     }
-    if (st === 'running_phase1' || st === 'running_phase2') {
-      const phase = st === 'running_phase1' ? 1 : 2;
-      const pct = _roundToPct(data.current_round || 0, phase);
-      _showProgressPanel(`Phase ${phase}`, data.message || '处理中…', pct);
+    if (st === 'running_phase1' || st === 'running_phase2' || st === 'running') {
+      const pct = _roundToPct(data.current_round || 0);
+      _showProgressPanel('搜索中', data.message || '处理中…', pct);
       document.getElementById('scoutProgressTitle').textContent =
         `Conference Scout — ${data.topic || ''}`;
-    }
-    if (st === 'awaiting_confirmation') {
-      if (_scoutPollTimer) { clearInterval(_scoutPollTimer); _scoutPollTimer = null; }
-      _showConfirmPanel(data);
     }
     if (st === 'done') {
       if (_scoutPollTimer) { clearInterval(_scoutPollTimer); _scoutPollTimer = null; }
       _showProgressPanel('完成', data.message || '调研完成！', 100);
-      setTimeout(() => window.location.reload(), 2000);
+      setTimeout(async () => {
+        await fetch('/api/dismiss-scout', { method: 'POST' }).catch(() => {});
+        window.location.reload();
+      }, 2000);
     }
     if (st === 'error') {
       if (_scoutPollTimer) { clearInterval(_scoutPollTimer); _scoutPollTimer = null; }
@@ -654,6 +783,14 @@ async function _pollScoutStatus() {
       document.getElementById('scoutErrorMsg').textContent = '错误：' + (data.message || '未知错误');
       document.getElementById('scoutFill').style.width = '0%';
       document.getElementById('scoutProgressMsg').textContent = '调研失败，请检查日志';
+      const cpRound = data.checkpoint_round;
+      const retryBtn = document.getElementById('scoutRetryBtn');
+      if (cpRound && cpRound >= 3) {
+        retryBtn.textContent = `↩ 从 Round ${cpRound + 1} 继续`;
+      } else {
+        retryBtn.textContent = '↩ 重试 (从头)';
+      }
+      document.getElementById('scoutDismissRow').style.display = 'flex';
     }
   } catch (_) {}
 }

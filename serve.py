@@ -1117,6 +1117,16 @@ body.light {{
 .scout-year-row {{ display:flex; gap:8px; align-items:center; }}
 .scout-year-row select {{ flex:1; }}
 .scout-year-sep {{ color:var(--muted); font-size:13px; }}
+.vg-btn-group {{ display:flex; flex-wrap:wrap; gap:6px; }}
+.vg-btn {{
+  padding:5px 11px; border-radius:20px; font-size:12px; cursor:pointer;
+  border:1px solid var(--line); background:var(--panel-soft); color:var(--muted);
+  transition:all .15s; user-select:none;
+}}
+.vg-btn.active {{
+  border-color:rgba(105,166,255,0.7); background:rgba(105,166,255,0.15);
+  color:var(--text);
+}}
 
 /* Venue chips */
 .venue-chip-input-row {{ display:flex; gap:8px; }}
@@ -1269,17 +1279,17 @@ body.light {{
               <select id="sfYearEnd">{_year_opts_end}</select>
             </div>
           </div>
-          <div class="scout-field">
-            <label>领域 / 会议组</label>
-            <select id="sfVenueGroup">
-              <option value="wearable_sensing">穿戴传感 (wearable_sensing)</option>
-              <option value="ai_ml">AI / 机器学习 (ai_ml)</option>
-              <option value="iot_systems">IoT 系统 (iot_systems)</option>
-              <option value="eda_hardware">EDA / 硬件 (eda_hardware)</option>
-              <option value="security">安全 (security)</option>
-              <option value="systems">系统 (systems)</option>
-              <option value="hci">人机交互 (hci)</option>
-            </select>
+          <div class="scout-field scout-form-full">
+            <label>领域 / 会议组（可多选）</label>
+            <div class="vg-btn-group" id="sfVenueGroupBtns">
+              <span class="vg-btn active" data-vg="wearable_sensing">穿戴传感</span>
+              <span class="vg-btn" data-vg="ai_ml">AI / ML</span>
+              <span class="vg-btn" data-vg="iot_systems">IoT 系统</span>
+              <span class="vg-btn" data-vg="eda_hardware">EDA / 硬件</span>
+              <span class="vg-btn" data-vg="security">安全</span>
+              <span class="vg-btn" data-vg="systems">系统</span>
+              <span class="vg-btn" data-vg="hci">人机交互</span>
+            </div>
           </div>
           <div class="scout-field scout-form-full">
             <label>指定会议（可选，输入后按 Enter 添加）</label>
@@ -1300,7 +1310,7 @@ body.light {{
       <div class="scout-progress-panel" id="scoutProgressPanel" style="display:none">
         <div class="scout-progress-header">
           <div class="scout-progress-title" id="scoutProgressTitle">Conference Scout 运行中…</div>
-          <span class="scout-phase-badge" id="scoutPhaseBadge">Phase 1</span>
+          <span class="scout-phase-badge" id="scoutPhaseBadge">运行中</span>
         </div>
         <div class="scout-track"><div class="scout-fill" id="scoutFill" style="width:0%"></div></div>
         <div class="scout-progress-msg" id="scoutProgressMsg">初始化…</div>
@@ -1392,6 +1402,24 @@ function toggleScoutForm() {{
   if (_scoutFormOpen) document.getElementById('sfTopic').focus();
 }}
 
+document.addEventListener('DOMContentLoaded', () => {{
+  document.querySelectorAll('.vg-btn').forEach(btn => {{
+    btn.addEventListener('click', () => btn.classList.toggle('active'));
+  }});
+}});
+
+function _getVenueGroups() {{
+  return Array.from(document.querySelectorAll('#sfVenueGroupBtns .vg-btn.active'))
+              .map(b => b.dataset.vg).filter(Boolean).join(',');
+}}
+
+function _setVenueGroups(val) {{
+  const vals = (val || '').split(',').map(s => s.trim()).filter(Boolean);
+  document.querySelectorAll('#sfVenueGroupBtns .vg-btn').forEach(btn => {{
+    btn.classList.toggle('active', vals.includes(btn.dataset.vg));
+  }});
+}}
+
 function venueInputKey(e) {{
   if (e.key === 'Enter') {{ e.preventDefault(); addVenueChip(); }}
 }}
@@ -1419,11 +1447,12 @@ async function submitScout() {{
   const description = document.getElementById('sfDescription').value.trim();
   const yearStart = parseInt(document.getElementById('sfYearStart').value);
   const yearEnd   = parseInt(document.getElementById('sfYearEnd').value);
-  const venueGroup = document.getElementById('sfVenueGroup').value;
+  const venueGroup = _getVenueGroups();
   const specificVenues = _getVenues();
 
   if (!topic) {{ alert('请填写 Topic 名称'); return; }}
   if (yearStart > yearEnd) {{ alert('年份起始不能大于结束'); return; }}
+  if (!venueGroup) {{ alert('请至少选择一个领域 / 会议组'); return; }}
 
   try {{
     const r = await fetch('/api/start-scout', {{
@@ -1435,7 +1464,7 @@ async function submitScout() {{
     if (!data.ok) {{ alert('启动失败：' + (data.error || '')); return; }}
     document.getElementById('scoutFormPanel').style.display = 'none';
     _scoutFormOpen = false;
-    _showProgressPanel('Phase 1', '初始化…', 0);
+    _showProgressPanel('搜索中', '初始化…', 0);
     _startPoll();
   }} catch (e) {{
     alert('启动失败：' + e.message);
@@ -1468,7 +1497,7 @@ async function retryScout() {{
       description: st.description || '',
       year_start: st.year_start || '',
       year_end: st.year_end || '',
-      venue_group: st.venue_group || '',
+      venue_group: st.venue_group || 'wearable_sensing',
       specific_venues: st.specific_venues || '',
     }};
     const r2 = await fetch('/api/start-scout', {{
@@ -1479,7 +1508,7 @@ async function retryScout() {{
     const data = await r2.json();
     if (!data.ok) {{ alert('重试失败：' + (data.error || '未知错误')); return; }}
     document.getElementById('scoutDismissRow').style.display = 'none';
-    _showProgressPanel('Phase 1', '初始化…', 0);
+    _showProgressPanel('搜索中', '初始化…', 0);
     _startPoll();
   }} catch (e) {{
     alert('重试失败：' + e.message);
@@ -1580,14 +1609,9 @@ async function readjustRound4() {{
   }}
 }}
 
-function _roundToPct(round, phase) {{
-  if (phase === 1) {{
-    const map = {{0:5,1:15,2:30,3:50,4:70,4.5:90}};
-    return map[round] || Math.min(5 + round * 15, 90);
-  }} else {{
-    const map = {{5:65,6:80,6.5:90,7:98}};
-    return map[round] || Math.min(60 + round * 8, 98);
-  }}
+function _roundToPct(round) {{
+  const map = {{0:5, 1:15, 2:28, 3:45, 4:62, 4.5:72, 5:82, 6:90, 6.5:95, 7:99}};
+  return map[round] || Math.min(5 + round * 10, 99);
 }}
 
 function _startPoll() {{
@@ -1607,16 +1631,11 @@ async function _pollScoutStatus() {{
       if (_scoutPollTimer) {{ clearInterval(_scoutPollTimer); _scoutPollTimer = null; }}
       return;
     }}
-    if (st === 'running_phase1' || st === 'running_phase2') {{
-      const phase = st === 'running_phase1' ? 1 : 2;
-      const pct = _roundToPct(data.current_round || 0, phase);
-      _showProgressPanel(`Phase ${{phase}}`, data.message || '处理中…', pct);
+    if (st === 'running_phase1' || st === 'running_phase2' || st === 'running') {{
+      const pct = _roundToPct(data.current_round || 0);
+      _showProgressPanel('搜索中', data.message || '处理中…', pct);
       document.getElementById('scoutProgressTitle').textContent =
         `Conference Scout — ${{data.topic || ''}}`;
-    }}
-    if (st === 'awaiting_confirmation') {{
-      if (_scoutPollTimer) {{ clearInterval(_scoutPollTimer); _scoutPollTimer = null; }}
-      _showConfirmPanel(data);
     }}
     if (st === 'done') {{
       if (_scoutPollTimer) {{ clearInterval(_scoutPollTimer); _scoutPollTimer = null; }}
@@ -2224,12 +2243,14 @@ def build_conference_scout_resume_prompt(checkpoint):
         "## Instructions\n"
         "Do NOT re-run Rounds 0, 1, 2, or 3. The data above is authoritative.\n"
         "Start directly at **Round 4 — Relevance Gate**: apply the gate to every candidate above.\n"
-        "Then run Round 4.5 (Candidate Confirmation pause) as specified in SKILL.md.\n"
-        "After Round 4.5, STOP. Do NOT begin Round 5.\n\n"
-        "## Required output before stopping\n"
-        f"Write the filtered candidate list to `{candidates_rel}` using the schema in SKILL.md.\n"
-        "After writing the file, display the Round 4.5 table.\n"
-        "Then output the line `SCOUT_PHASE1_COMPLETE` and STOP.\n"
+        "Then run Round 4.5: write the candidate JSON, print the table, continue immediately.\n"
+        "Then run Rounds 5, 6, 6.5, and 7 to completion.\n\n"
+        "## Required output at Round 4.5\n"
+        f"Write the filtered candidate list to `{candidates_rel}` using the schema in SKILL.md.\n\n"
+        "## Round 7 constraint — IMPORTANT\n"
+        "Only update `output/papers.json`. "
+        "Do NOT write any .html or .py files. "
+        "serve.py regenerates the dashboard HTML automatically.\n"
     )
 
 
@@ -2247,11 +2268,10 @@ def build_conference_scout_phase1_prompt(topic, description, year_start, year_en
         f"- year_end: {year_end}\n"
         f"- venue_group: {venue_group}\n"
         f"- specific_venues: {venues_str}\n\n"
-        "## IMPORTANT: Scope\n"
-        "Run Rounds 0, 1, 2, 3, 4, and 4.5 ONLY.\n"
-        "After Round 4.5, STOP. Do NOT begin Round 5 under any circumstances.\n"
-        "The user will confirm via the web interface; a separate command will run Rounds 5-7.\n\n"
-        "## Required output before stopping\n"
+        "## Scope\n"
+        "Run all Rounds 0 through 7 in sequence without stopping.\n"
+        "At Round 4.5: write the candidates JSON, print the table, then continue to Round 5 immediately.\n\n"
+        "## Required output at Round 4.5\n"
         f"Create directory `output/tmp/scout_{slug}/` and write the candidate list to:\n"
         f"  `{candidates_rel}`\n\n"
         "Use this JSON schema (fill with actual data):\n"
@@ -2282,8 +2302,10 @@ def build_conference_scout_phase1_prompt(topic, description, year_start, year_en
         '  ]\n'
         "}\n"
         "```\n\n"
-        "After writing the file, display the Round 4.5 table exactly as in SKILL.md.\n"
-        "Then output the line `SCOUT_PHASE1_COMPLETE` and STOP. Do not proceed to Round 5.\n"
+        "## Round 7 constraint — IMPORTANT\n"
+        "Only update `output/papers.json`. "
+        "Do NOT write any .html or .py files. "
+        "serve.py regenerates the dashboard HTML automatically after papers.json is written.\n"
     )
 
 
@@ -2316,7 +2338,8 @@ def build_conference_scout_phase2_prompt(topic, description, year_start, year_en
         "## Required actions\n"
         "Run Round 5 (Citation Expansion), Round 6 (Timeline Assembly), "
         "Round 6.5 (Token Usage), and Round 7 (Final Output) to completion.\n"
-        f"Write output to `output/papers.json` and generate `output/projects/{slug}/papers.html`.\n"
+        "Only update `output/papers.json`. Do NOT write any .html or .py files — "
+        "serve.py regenerates the dashboard HTML automatically.\n"
         "Follow all instructions in the SKILL.md for these rounds.\n"
     )
 
@@ -2362,7 +2385,11 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
         2: "Round 2: 提取 Anchor 关键词...",
         3: "Round 3: 精确搜索中...",
         4: "Round 4: 相关性过滤中...",
-        4.5: "Round 4.5: 整理候选列表...",
+        4.5: "Round 4.5: 整理候选列表，继续中...",
+        5: "Round 5: 引用扩展中...",
+        6: "Round 6: 组装时间线...",
+        6.5: "Round 6.5: 记录 Token 用量...",
+        7: "Round 7: 写入 papers.json...",
     }
     phase1_started = datetime.now()
     all_lines_p1 = []
@@ -2411,23 +2438,22 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
         _write_run_stats(slug, 1, f"conference-scout/{topic}", stats, phase1_started)
         _build_run_report(all_lines_p1, slug, topic, 1, f"Conference Scout: {topic}", phase1_started)
 
+        usage = parse_usage_from_log_file(log_path)
+        append_token_usage("conference-scout", slug, topic, usage)
+        regenerate_kanban()
         cdata = _load_candidates(slug)
         candidates = cdata.get("candidates", [])
-        if not cdata:
-            raise RuntimeError("Phase 1 completed but candidates_r4.json was not written.")
+        n = len(candidates)
         save_scout_status(
-            status="awaiting_confirmation",
-            current_round=4.5,
-            message=f"Round 4.5 完成：{len(candidates)} 篇候选论文，请确认后继续 Round 5-7",
-            candidates=candidates,
-            negative_patterns=cdata.get("negative_patterns", []),
-            constraint_terms=cdata.get("constraint_terms", []),
+            status="done",
+            current_round=7,
+            message=f"调研完成：{n} 篇论文已写入 papers.json",
         )
-        # Clear checkpoint — run reached confirmation, no longer needed for resume
+        # Clear checkpoint — full run completed
         cp = _checkpoint_path(slug)
         if os.path.exists(cp):
             os.remove(cp)
-        print(f"[serve.py] Scout Phase 1 done: {topic}, {len(candidates)} candidates", flush=True)
+        print(f"[serve.py] Scout done: {topic}, {n} candidates", flush=True)
     except Exception as exc:
         save_scout_status(status="error", message=str(exc))
         print(f"[serve.py] Scout Phase 1 error: {exc}", flush=True)
