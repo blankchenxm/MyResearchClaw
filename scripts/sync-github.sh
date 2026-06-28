@@ -41,6 +41,7 @@ REMOTE=$(git rev-parse origin/master 2>/dev/null)
 
 # New code commits — pull and restart serve.py
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Pulling code update $(git rev-parse --short origin/master)..." >> "$LOG"
+git checkout -- output/kanban.html 2>/dev/null || true
 git pull --ff-only origin master >> "$LOG" 2>&1
 
 launchctl kickstart -k "gui/$(id -u)/com.myresearchclaw.serve" >> "$LOG" 2>&1
