@@ -63,6 +63,18 @@
       "web_fetches": 0,
       "notes": "Round 1-2 S2 rate-limited, switched to DBLP venue scanning. Final pool: 14 papers (12 R4 + 2 expansion)",
       "phase": "conference-scout phase 2"
+    },
+    {
+      "type": "conference-scout",
+      "entity_id": "cameras-in-ai-wearable-system",
+      "title": "Cameras in AI wearable system",
+      "date": "2026-06-28",
+      "input_tokens": 200,
+      "output_tokens": 34252,
+      "cache_read_input_tokens": 999786,
+      "cache_creation_input_tokens": 57443,
+      "cost_usd": 0.0,
+      "duration_ms": 560071
     }
   ],
   "last_updated": "2026-06-28"

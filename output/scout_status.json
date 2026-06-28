@@ -1,5 +1,5 @@
 {
-  "status": "running_phase1",
+  "status": "done",
   "topic": "Cameras in AI wearable system",
   "slug": "cameras-in-ai-wearable-system",
   "description": "我希望你帮我查一下最新的论文，看看在这种 AI 可穿戴设备（比如耳机、眼镜）上面，摄像头都能用来干嘛，做什么应用。我主要想看那种不是直接调用产品原有摄像头，而是额外硬件添加摄像头的方案的",
@@ -7,8 +7,8 @@
   "year_end": 2026,
   "venue_group": "wearable_sensing,iot_systems,hci",
   "specific_venues": [],
-  "message": "Round 7: 写入 papers.json...",
-  "current_round": 7.0,
+  "message": "调研完成：12 篇论文已写入 papers.json",
+  "current_round": 7,
   "phase": 1,
   "last_updated": "2026-06-28",
   "candidates": [],

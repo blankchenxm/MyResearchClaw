@@ -1,0 +1,92 @@
+{
+  "slug": "cameras-in-ai-wearable-system",
+  "operation": "conference-scout/Cameras in AI wearable system",
+  "phase": 1,
+  "started_at": "2026-06-28T07:48:43",
+  "completed_at": "2026-06-28T07:58:05",
+  "duration_min": 9.4,
+  "total_cost_usd": 1.30250695,
+  "num_turns": 28,
+  "model_usage": {
+    "claude-haiku-4-5-20251001": {
+      "input": 410220,
+      "output": 54326,
+      "cache_read": 1175322,
+      "cache_create": 96034,
+      "cost_usd": 1.30250695,
+      "web_searches": 34
+    }
+  },
+  "per_round": {
+    "pre-start": {
+      "turns": 10,
+      "output_tokens": 16,
+      "cache_create": 36267,
+      "cache_read": 196293,
+      "input_tokens": 74
+    },
+    "Round 0": {
+      "turns": 22,
+      "output_tokens": 42,
+      "cache_create": 17557,
+      "cache_read": 640525,
+      "input_tokens": 160
+    },
+    "Round 2": {
+      "turns": 49,
+      "output_tokens": 115,
+      "cache_create": 156797,
+      "cache_read": 1125004,
+      "input_tokens": 34034
+    },
+    "Round 4": {
+      "turns": 7,
+      "output_tokens": 16,
+      "cache_create": 28023,
+      "cache_read": 293917,
+      "input_tokens": 49
+    },
+    "Round 4.5": {
+      "turns": 8,
+      "output_tokens": 11,
+      "cache_create": 13401,
+      "cache_read": 363733,
+      "input_tokens": 56
+    },
+    "Round 5": {
+      "turns": 3,
+      "output_tokens": 9,
+      "cache_create": 3925,
+      "cache_read": 145231,
+      "input_tokens": 21
+    },
+    "Round 6": {
+      "turns": 3,
+      "output_tokens": 5,
+      "cache_create": 5284,
+      "cache_read": 149156,
+      "input_tokens": 21
+    },
+    "Round 6.5": {
+      "turns": 3,
+      "output_tokens": 14,
+      "cache_create": 5043,
+      "cache_read": 154440,
+      "input_tokens": 21
+    },
+    "Round 7": {
+      "turns": 5,
+      "output_tokens": 21,
+      "cache_create": 23071,
+      "cache_read": 273904,
+      "input_tokens": 35
+    }
+  },
+  "totals": {
+    "turns": 110,
+    "output_tokens": 249,
+    "cache_create": 289368,
+    "cache_read": 3342203,
+    "input_tokens": 34471
+  }
+}
