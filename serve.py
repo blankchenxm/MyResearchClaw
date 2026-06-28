@@ -1300,6 +1300,13 @@ body.light {{
             <div class="venue-chips" id="sfVenueChips"></div>
           </div>
         </div>
+          <div class="scout-field scout-form-full" style="margin-top:4px">
+            <label>模型</label>
+            <select id="sfModel" style="width:100%;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-soft);color:var(--text);font-size:13px">
+              <option value="claude-sonnet-4-6">Sonnet 4.6（默认，质量最好）</option>
+              <option value="claude-haiku-4-5-20251001">Haiku 4.5（更快更便宜，约 1/4 费用）</option>
+            </select>
+          </div>
         <div class="scout-form-actions">
           <button class="scout-submit-btn" onclick="submitScout()">🔍 开始调研</button>
           <button class="scout-cancel-btn" onclick="toggleScoutForm()">取消</button>
@@ -1458,7 +1465,7 @@ async function submitScout() {{
     const r = await fetch('/api/start-scout', {{
       method: 'POST',
       headers: {{ 'Content-Type': 'application/json' }},
-      body: JSON.stringify({{ topic, description, year_start: yearStart, year_end: yearEnd, venue_group: venueGroup, specific_venues: specificVenues }})
+      body: JSON.stringify({{ topic, description, year_start: yearStart, year_end: yearEnd, venue_group: venueGroup, specific_venues: specificVenues, model: document.getElementById('sfModel').value }})
     }});
     const data = await r.json();
     if (!data.ok) {{ alert('启动失败：' + (data.error || '')); return; }}
@@ -2344,7 +2351,7 @@ def build_conference_scout_phase2_prompt(topic, description, year_start, year_en
     )
 
 
-def run_conference_scout_phase1_bg(topic, description, year_start, year_end, venue_group, specific_venues):
+def run_conference_scout_phase1_bg(topic, description, year_start, year_end, venue_group, specific_venues, model=None):
     slug = slugify_topic(topic)
     os.makedirs(_scout_tmp_dir(slug), exist_ok=True)
     os.makedirs(LOGS_DIR, exist_ok=True)
@@ -2373,7 +2380,7 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
     )
     cmd = [
         RESOLVED_CLAUDE_BIN, "-p", prompt,
-        "--model", MODEL,
+        "--model", model or MODEL,
         "--permission-mode", "bypassPermissions",
         "--add-dir", ROOT,
         "--output-format", "stream-json",
@@ -2920,7 +2927,7 @@ def _get_pipeline_step_progress(paper_id):
     return 10, "正在初始化...|Initializing..."
 
 
-def read_paper_bg(paper_id, url, title):
+def read_paper_bg(paper_id, url, title, model=None):
     previous_state = snapshot_paper_state(paper_id)
     set_paper_fields(paper_id, progress=5, status="reading")
     regenerate_kanban()
@@ -2938,7 +2945,7 @@ def read_paper_bg(paper_id, url, title):
         "-p",
         prompt,
         "--model",
-        MODEL,
+        model or MODEL,
         "--permission-mode",
         "bypassPermissions",
         "--add-dir",
@@ -3324,6 +3331,7 @@ class Handler(BaseHTTPRequestHandler):
             url = body.get("url", "").strip()
             paper_id = body.get("paper_id", "").strip()
             title = body.get("title", "").strip()
+            reader_model = (body.get("model") or MODEL).strip()
 
             if not url or not paper_id:
                 self.send_json(400, {"ok": False, "error": "missing url or paper_id"})
@@ -3331,7 +3339,7 @@ class Handler(BaseHTTPRequestHandler):
 
             threading.Thread(
                 target=read_paper_bg,
-                args=(paper_id, url, title),
+                args=(paper_id, url, title, reader_model),
                 daemon=True,
             ).start()
 
@@ -3350,6 +3358,7 @@ class Handler(BaseHTTPRequestHandler):
             year_end = int(body.get("year_end") or datetime.now().year)
             venue_group = (body.get("venue_group") or "ai_ml").strip()
             specific_venues = [v.strip() for v in (body.get("specific_venues") or []) if str(v).strip()]
+            scout_model = (body.get("model") or MODEL).strip()
             if not topic:
                 self.send_json(400, {"ok": False, "error": "missing topic"})
                 return
@@ -3359,7 +3368,7 @@ class Handler(BaseHTTPRequestHandler):
                 return
             threading.Thread(
                 target=run_conference_scout_phase1_bg,
-                args=(topic, description, year_start, year_end, venue_group, specific_venues),
+                args=(topic, description, year_start, year_end, venue_group, specific_venues, scout_model),
                 daemon=True,
             ).start()
             self.send_json(200, {"ok": True, "status": "started", "topic": topic})
