@@ -1,0 +1,79 @@
+{
+  "slug": "more-modality-in-wearable-system",
+  "operation": "conference-scout/More modality in wearable system",
+  "phase": 2,
+  "started_at": "2026-06-27T20:33:21",
+  "completed_at": "2026-06-27T20:53:51",
+  "duration_min": 20.5,
+  "total_cost_usd": 2.7332606000000004,
+  "num_turns": 49,
+  "model_usage": {
+    "claude-haiku-4-5-20251001": {
+      "input": 1629,
+      "output": 22,
+      "cache_read": 0,
+      "cache_create": 0,
+      "cost_usd": 0.001739,
+      "web_searches": 0
+    },
+    "claude-sonnet-4-6": {
+      "input": 93,
+      "output": 78836,
+      "cache_read": 2457662,
+      "cache_create": 135234,
+      "cost_usd": 2.7315216000000007,
+      "web_searches": 0
+    }
+  },
+  "per_round": {
+    "pre-start": {
+      "turns": 24,
+      "output_tokens": 576,
+      "cache_create": 89301,
+      "cache_read": 561925,
+      "input_tokens": 85
+    },
+    "Round 5": {
+      "turns": 44,
+      "output_tokens": 1119,
+      "cache_create": 139813,
+      "cache_read": 2529082,
+      "input_tokens": 44
+    },
+    "Round 6": {
+      "turns": 6,
+      "output_tokens": 187,
+      "cache_create": 51477,
+      "cache_read": 559472,
+      "input_tokens": 6
+    },
+    "Round 6.5": {
+      "turns": 2,
+      "output_tokens": 40,
+      "cache_create": 630,
+      "cache_read": 234328,
+      "input_tokens": 2
+    },
+    "Round 7": {
+      "turns": 14,
+      "output_tokens": 353,
+      "cache_create": 50808,
+      "cache_read": 1774134,
+      "input_tokens": 14
+    },
+    "Round 4.5": {
+      "turns": 1,
+      "output_tokens": 1,
+      "cache_create": 1561,
+      "cache_read": 144169,
+      "input_tokens": 1
+    }
+  },
+  "totals": {
+    "turns": 91,
+    "output_tokens": 2276,
+    "cache_create": 333590,
+    "cache_read": 5803110,
+    "input_tokens": 152
+  }
+}
