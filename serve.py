@@ -158,7 +158,7 @@ def _enqueue_scout(task: dict):
         _save_queue(SCOUT_QUEUE_JSON, _scout_queue)
 
 
-def _dequeue_scout() -> dict | None:
+def _dequeue_scout():
     with _queue_lock:
         if not _scout_queue:
             return None
@@ -181,7 +181,7 @@ def _enqueue_reader(task: dict):
             pass
 
 
-def _dequeue_reader() -> dict | None:
+def _dequeue_reader():
     with _queue_lock:
         if not _reader_queue:
             return None
