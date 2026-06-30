@@ -104,6 +104,14 @@ RESOLVED_CLAUDE_BIN = resolve_claude_bin()
 _active_readers: dict = {}
 _active_readers_lock = __import__("threading").Lock()
 
+# Queue state — persisted to JSON files on disk
+_scout_queue: list = []   # [{topic, description, year_start, year_end, venue_group, specific_venues, submitted_at}]
+_reader_queue: list = []  # [{paper_id, url, title, submitted_at}]
+_queue_lock = __import__("threading").Lock()
+
+SCOUT_QUEUE_JSON = os.path.join(OUTPUT_DIR, "scout_queue.json")
+READER_QUEUE_JSON = os.path.join(OUTPUT_DIR, "reader_queue.json")
+
 
 def load_papers():
     with open(PAPERS_JSON, encoding="utf-8") as f:
@@ -117,6 +125,108 @@ def save_papers(data):
 
 def today_iso():
     return datetime.now().strftime("%Y-%m-%d")
+
+
+# ── Queue helpers ─────────────────────────────────────────────────────────────
+
+def _load_queue(path, global_list):
+    try:
+        data = load_json_file(path, {})
+        global_list.clear()
+        global_list.extend(data.get("pending", []))
+    except Exception:
+        pass
+
+
+def _save_queue(path, global_list):
+    try:
+        save_json_file(path, {"pending": list(global_list)})
+    except Exception:
+        pass
+
+
+def _init_queues():
+    with _queue_lock:
+        _load_queue(SCOUT_QUEUE_JSON, _scout_queue)
+        _load_queue(READER_QUEUE_JSON, _reader_queue)
+
+
+def _enqueue_scout(task: dict):
+    with _queue_lock:
+        task.setdefault("submitted_at", datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
+        _scout_queue.append(task)
+        _save_queue(SCOUT_QUEUE_JSON, _scout_queue)
+
+
+def _dequeue_scout() -> dict | None:
+    with _queue_lock:
+        if not _scout_queue:
+            return None
+        task = _scout_queue.pop(0)
+        _save_queue(SCOUT_QUEUE_JSON, _scout_queue)
+        return task
+
+
+def _enqueue_reader(task: dict):
+    with _queue_lock:
+        task.setdefault("submitted_at", datetime.now().strftime("%Y-%m-%dT%H:%M:%S"))
+        _reader_queue.append(task)
+        _save_queue(READER_QUEUE_JSON, _reader_queue)
+        # Mark paper as queued in papers.json
+        try:
+            pos = len(_reader_queue)
+            set_paper_fields(task["paper_id"], status="queued", queue_position=pos)
+            regenerate_kanban()
+        except Exception:
+            pass
+
+
+def _dequeue_reader() -> dict | None:
+    with _queue_lock:
+        if not _reader_queue:
+            return None
+        task = _reader_queue.pop(0)
+        _save_queue(READER_QUEUE_JSON, _reader_queue)
+        # Update queue positions for remaining
+        try:
+            for i, t in enumerate(_reader_queue):
+                set_paper_fields(t["paper_id"], queue_position=i + 1)
+        except Exception:
+            pass
+        return task
+
+
+def _start_next_reader():
+    """Start the next reader in queue if no reader is active."""
+    with _active_readers_lock:
+        if _active_readers:
+            return  # something is still running
+    task = _dequeue_reader()
+    if task:
+        threading.Thread(
+            target=read_paper_bg,
+            args=(task["paper_id"], task["url"], task.get("title", ""), task.get("model", MODEL)),
+            daemon=True,
+        ).start()
+
+
+def _start_next_scout():
+    """Start the next scout in queue if no scout is active."""
+    status = load_scout_status()
+    if status.get("status") in ("running_phase1", "running_phase2"):
+        return
+    task = _dequeue_scout()
+    if task:
+        threading.Thread(
+            target=run_conference_scout_phase1_bg,
+            args=(
+                task["topic"], task.get("description", ""),
+                task.get("year_start", 2020), task.get("year_end", datetime.now().year),
+                task.get("venue_group", "ai_ml"), task.get("specific_venues", []),
+                task.get("model", MODEL),
+            ),
+            daemon=True,
+        ).start()
 
 
 def set_paper_fields(paper_id, **kwargs):
@@ -1190,6 +1300,23 @@ body.light {{
 .scout-progress-msg {{ font-size:13px; color:var(--dim); }}
 .scout-error-msg {{ color:#ff8d6b; font-size:13px; margin-top:8px; }}
 
+/* ── Scout queue panel ── */
+.scout-queue-panel {{
+  background:var(--panel); border:1px solid rgba(255,214,110,0.15);
+  border-radius:22px; padding:18px 24px; margin-top:0;
+}}
+.scout-queue-title {{ font:600 13px 'JetBrains Mono',monospace; color:var(--accent4); margin-bottom:10px; }}
+.scout-queue-list {{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; }}
+.scout-queue-list li {{
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:13px; color:var(--dim); padding:5px 8px;
+  border-radius:8px; background:rgba(255,255,255,0.03);
+}}
+.scout-queue-list li .q-remove {{
+  cursor:pointer; color:#ff8080; font-size:11px; opacity:0.6;
+}}
+.scout-queue-list li .q-remove:hover {{ opacity:1; }}
+
 /* ── Scout: candidates confirmation panel ── */
 .scout-confirm-panel {{
   background:var(--panel); border:1px solid rgba(255,214,110,0.2);
@@ -1325,6 +1452,12 @@ body.light {{
           <button id="scoutRetryBtn" onclick="retryScout()" style="background:#2a4a2a;color:#7ec87e;border:1px solid #4a7a4a;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px">↩ 重试</button>
           <button onclick="dismissScout()" style="background:#333;color:#aaa;border:1px solid #555;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:13px">✕ 关闭</button>
         </div>
+      </div>
+
+      <!-- ── Scout Queue Panel ── -->
+      <div class="scout-queue-panel" id="scoutQueuePanel" style="display:none">
+        <div class="scout-queue-title">⏳ 等待调研队列</div>
+        <ul class="scout-queue-list" id="scoutQueueList"></ul>
       </div>
 
       <!-- ── Round 4.5 Confirmation Panel ── -->
@@ -1660,19 +1793,52 @@ async function _pollScoutStatus() {{
       document.getElementById('scoutProgressMsg').textContent = '调研失败，请检查日志';
       const cpRound = data.checkpoint_round;
       const retryBtn = document.getElementById('scoutRetryBtn');
-      if (cpRound && cpRound >= 3) {{
-        retryBtn.textContent = `↩ 从 Round ${{cpRound + 1}} 继续`;
+      if (cpRound !== null && cpRound !== undefined && cpRound >= 0) {{
+        retryBtn.textContent = `▶ 从 Round ${{cpRound + 1}} 继续`;
       }} else {{
-        retryBtn.textContent = '↩ 重试 (从头)';
+        retryBtn.textContent = '↩ 从头重试';
       }}
       document.getElementById('scoutDismissRow').style.display = 'flex';
     }}
   }} catch (_) {{}}
 }}
 
+async function _pollScoutQueue() {{
+  try {{
+    const r = await fetch('/api/scout-queue');
+    if (!r.ok) return;
+    const data = await r.json();
+    const pending = data.pending || [];
+    const panel = document.getElementById('scoutQueuePanel');
+    const list = document.getElementById('scoutQueueList');
+    if (pending.length === 0) {{
+      panel.style.display = 'none';
+      return;
+    }}
+    panel.style.display = '';
+    list.innerHTML = '';
+    pending.forEach((t, i) => {{
+      const li = document.createElement('li');
+      li.innerHTML = `<span>#${{i+1}} ${{t.topic}}</span><span class="q-remove" onclick="removeScoutQueue(${{i}})">✕</span>`;
+      list.appendChild(li);
+    }});
+  }} catch (_) {{}}
+}}
+
+async function removeScoutQueue(idx) {{
+  await fetch('/api/remove-scout-queue', {{
+    method: 'POST',
+    headers: {{ 'Content-Type': 'application/json' }},
+    body: JSON.stringify({{ index: idx }})
+  }}).catch(() => {{}});
+  _pollScoutQueue();
+}}
+
 window.addEventListener('load', () => {{
   applyTheme();
   _pollScoutStatus();  // check if a scout is already running from a previous session
+  _pollScoutQueue();
+  setInterval(_pollScoutQueue, 5000);
 }});
 </script>
 </body>
@@ -2210,54 +2376,125 @@ def _checkpoint_path(slug):
 
 
 def _load_scout_checkpoint(slug):
-    """Return checkpoint dict if a Round-3 checkpoint exists, else None."""
-    path = _checkpoint_path(slug)
-    if not os.path.exists(path):
-        return None
-    data = load_json_file(path, {})
-    return data if data.get("last_completed_round") else None
+    """Return the latest checkpoint dict across all rounds, or None."""
+    tmp_dir = _scout_tmp_dir(slug)
+    best = None
+    best_round = -1
+    for r in range(7):
+        path = os.path.join(tmp_dir, f"scout_checkpoint_r{r}.json")
+        if not os.path.exists(path):
+            continue
+        data = load_json_file(path, {})
+        round_num = data.get("last_completed_round", -1)
+        if isinstance(round_num, int) and round_num > best_round:
+            best_round = round_num
+            best = data
+    return best if best is not None else None
 
 
 def build_conference_scout_resume_prompt(checkpoint):
-    """Build a prompt to resume Phase 1 from Round 4 using a saved checkpoint."""
+    """Build a prompt to resume Phase 1 from the checkpoint's last completed round."""
     topic = checkpoint["topic"]
     slug = checkpoint["slug"]
     description = checkpoint.get("description", "")
     year_start = checkpoint.get("year_start", "")
     year_end = checkpoint.get("year_end", "")
     venue_group = checkpoint.get("venue_group", "")
+    last_round = checkpoint.get("last_completed_round", 3)
+    resume_round = last_round + 1
     candidates_rel = f"output/tmp/scout_{slug}/candidates_r4.json"
-    today = today_iso()
 
     anchors_json = json.dumps(checkpoint.get("anchors", {}), ensure_ascii=False, indent=2)
-    r3_candidates_json = json.dumps(checkpoint.get("r3_candidates", []), ensure_ascii=False, indent=2)
     venues_checked = ", ".join(checkpoint.get("venues_checked", []))
 
-    return (
-        "A Conference Scout run was interrupted after Round 3. Resume from Round 4.\n\n"
+    ctx = (
+        f"A Conference Scout run was interrupted after Round {last_round}. Resume from Round {resume_round}.\n\n"
         "## Context\n"
         f"- topic: {topic}\n"
         f"- description: {description}\n"
         f"- year_start: {year_start}\n"
         f"- year_end: {year_end}\n"
         f"- venue_group: {venue_group}\n"
-        f"- venues already checked in Round 3: {venues_checked}\n\n"
-        "## Round 2 anchor data (already completed)\n"
-        f"```json\n{anchors_json}\n```\n\n"
-        "## Round 3 candidates found (already completed)\n"
-        f"```json\n{r3_candidates_json}\n```\n\n"
+    )
+
+    if last_round >= 3:
+        r3_candidates_json = json.dumps(checkpoint.get("r3_candidates", []), ensure_ascii=False, indent=2)
+        ctx += (
+            f"- venues already checked in Round 3: {venues_checked}\n\n"
+            "## Round 2 anchor data (already completed)\n"
+            f"```json\n{anchors_json}\n```\n\n"
+            "## Round 3 candidates found (already completed)\n"
+            f"```json\n{r3_candidates_json}\n```\n\n"
+        )
+    elif last_round == 2:
+        ctx += (
+            "\n## Round 2 anchor data (already completed)\n"
+            f"```json\n{anchors_json}\n```\n\n"
+        )
+    elif last_round == 1:
+        discovery_json = json.dumps(checkpoint.get("discovery_papers", []), ensure_ascii=False, indent=2)
+        queries_json = json.dumps(checkpoint.get("queries", []), ensure_ascii=False, indent=2)
+        ctx += (
+            "\n## Round 0 queries (already completed)\n"
+            f"```json\n{queries_json}\n```\n\n"
+            "## Round 1 discovery papers (already completed)\n"
+            f"```json\n{discovery_json}\n```\n\n"
+        )
+    elif last_round == 0:
+        queries_json = json.dumps(checkpoint.get("queries", []), ensure_ascii=False, indent=2)
+        ctx += (
+            "\n## Round 0 queries (already completed)\n"
+            f"```json\n{queries_json}\n```\n\n"
+        )
+
+    if last_round >= 4:
+        candidates_key = "expanded_candidates" if last_round >= 5 else "gate_passed"
+        candidates = checkpoint.get(candidates_key, checkpoint.get("gate_passed", []))
+        gate_json = json.dumps(candidates, ensure_ascii=False, indent=2)
+        ctx += (
+            "## Round 4 gate-passed candidates (already completed)\n"
+            f"```json\n{gate_json}\n```\n\n"
+        )
+    if last_round >= 5:
+        exp_json = json.dumps(checkpoint.get("expanded_candidates", []), ensure_ascii=False, indent=2)
+        ctx += (
+            "## Round 5 expanded candidates (already completed)\n"
+            f"```json\n{exp_json}\n```\n\n"
+        )
+    if last_round >= 6:
+        timeline_json = json.dumps(checkpoint.get("timeline", []), ensure_ascii=False, indent=2)
+        ctx += (
+            "## Round 6 timeline (already completed)\n"
+            f"```json\n{timeline_json}\n```\n\n"
+        )
+
+    skip_rounds = " ".join(str(r) for r in range(resume_round))
+    ctx += (
         "## Instructions\n"
-        "Do NOT re-run Rounds 0, 1, 2, or 3. The data above is authoritative.\n"
-        "Start directly at **Round 4 — Relevance Gate**: apply the gate to every candidate above.\n"
-        "Then run Round 4.5: write the candidate JSON, print the table, continue immediately.\n"
-        "Then run Rounds 5, 6, 6.5, and 7 to completion.\n\n"
-        "## Required output at Round 4.5\n"
-        f"Write the filtered candidate list to `{candidates_rel}` using the schema in SKILL.md.\n\n"
+        f"Do NOT re-run Rounds {skip_rounds}. The data above is authoritative.\n"
+        f"Start directly at **Round {resume_round}**.\n"
+    )
+    if resume_round <= 4:
+        ctx += (
+            "After Round 4 gate, run Round 4.5: write the candidate JSON, print the table, continue immediately.\n"
+            "Then run Rounds 5, 6, 6.5, and 7 to completion.\n\n"
+            "## Required output at Round 4.5\n"
+            f"Write the filtered candidate list to `{candidates_rel}` using the schema in SKILL.md.\n\n"
+        )
+    elif resume_round == 5:
+        ctx += "Then run Rounds 6, 6.5, and 7 to completion.\n\n"
+    elif resume_round == 6:
+        ctx += "Then run Rounds 6.5 and 7 to completion.\n\n"
+    else:
+        ctx += "Run Round 7 to completion.\n\n"
+
+    ctx += (
         "## Round 7 constraint — IMPORTANT\n"
         "Only update `output/papers.json`. "
         "Do NOT write any .html or .py files. "
         "serve.py regenerates the dashboard HTML automatically.\n"
     )
+    return ctx
 
 
 def build_conference_scout_phase1_prompt(topic, description, year_start, year_end, venue_group, specific_venues):
@@ -2466,14 +2703,31 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
             current_round=7,
             message=f"调研完成：{n} 篇论文已写入 papers.json",
         )
-        # Clear checkpoint — full run completed
-        cp = _checkpoint_path(slug)
-        if os.path.exists(cp):
-            os.remove(cp)
+        # Clear all checkpoints — full run completed
+        tmp_dir = _scout_tmp_dir(slug)
+        for r in range(7):
+            cp = os.path.join(tmp_dir, f"scout_checkpoint_r{r}.json")
+            if os.path.exists(cp):
+                try:
+                    os.remove(cp)
+                except OSError:
+                    pass
         print(f"[serve.py] Scout done: {topic}, {n} candidates", flush=True)
     except Exception as exc:
-        save_scout_status(status="error", message=str(exc))
-        print(f"[serve.py] Scout Phase 1 error: {exc}", flush=True)
+        exc_str = str(exc)
+        err_lower = exc_str.lower()
+        combined = "\n".join(all_lines_p1[-40:]).lower()
+        if any(k in err_lower or k in combined for k in ("rate limit", "429", "too many requests", "overloaded")):
+            scout_error_type = "rate_limit"
+        elif any(k in err_lower or k in combined for k in ("quota", "usage limit", "monthly", "credit")):
+            scout_error_type = "quota_exceeded"
+        else:
+            scout_error_type = "permanent"
+        save_scout_status(status="error", message=exc_str, error_type=scout_error_type)
+        print(f"[serve.py] Scout Phase 1 error ({scout_error_type}): {exc_str}", flush=True)
+    finally:
+        # Auto-start next queued scout
+        threading.Thread(target=_start_next_scout, daemon=True).start()
 
 
 def run_conference_scout_phase2_bg(topic, description, year_start, year_end, venue_group,
@@ -2910,6 +3164,181 @@ Step F. Quality + readability review (in the same turn — do not pause for conf
 """
 
 
+def _paper_reader_resume_stage(paper_id):
+    """Detect the last completed stage from existing artifacts.
+    Returns (stage_name, done_steps_description) or (None, None) if nothing done."""
+    prefix = (paper_id.split("-")[0] or "run")[:20]
+    tmp_dir = os.path.join(OUTPUT_DIR, "tmp", paper_id)
+    if not os.path.isdir(tmp_dir):
+        return None, None
+    existing = set(os.listdir(tmp_dir))
+
+    def has(f): return f in existing
+
+    if has(f"{prefix}_write.json"):
+        return "complete", None  # already done
+    if has(f"{prefix}_note_lint.json"):
+        return "after_lint", "A(run_pipeline) + B(note_plan) + C(lint_grounding) + D(draft_note) + E(lint_note)"
+    if has(f"{prefix}_note.md"):
+        return "after_draft", "A(run_pipeline) + B(note_plan) + C(lint_grounding) + D(draft_note)"
+    if has(f"{prefix}_note.plan.json"):
+        return "after_plan", "A(run_pipeline) + B(note_plan) + C(lint_grounding)"
+    if has(f"{prefix}_bundle.json"):
+        return "after_pipeline", "A(run_pipeline)"
+    return None, None
+
+
+def build_paper_reader_resume_prompt(url, paper_id, title):
+    """Build a resume prompt for a paper reader that was interrupted mid-way."""
+    paper = find_paper_by_id(paper_id) or {}
+    topic_slug = paper_topic_slug(paper) if paper else "unclassified"
+    note_relpath = paper_note_relpath(paper_id)
+    workdir = f"output/tmp/{paper_id}"
+    prefix = paper_id.split("-")[0][:20] or "run"
+    stage, done_desc = _paper_reader_resume_stage(paper_id)
+
+    # Build the remaining steps based on stage
+    if stage == "after_pipeline":
+        remaining = f"""## Resuming from Step B (pipeline artifacts already exist)
+
+Step A was completed in a previous session. The following artifacts are already in `{workdir}/`:
+- `{prefix}_bundle.json`, `{prefix}_source_manifest.json`, `{prefix}_figure_table_decisions.json` and others
+
+Read `{prefix}_bundle.json` to understand the paper, then continue:
+
+Step B. Write `{workdir}/{prefix}_note.plan.json` — the note_plan artifact.
+
+Step C. Run lint_grounding:
+
+    {PAPER_READER_PYTHON} skills/paper-reader/scripts/lint_grounding.py \\
+      --note-plan {workdir}/{prefix}_note.plan.json \\
+      --source-manifest {workdir}/{prefix}_source_manifest.json \\
+      --bundle-json {workdir}/{prefix}_bundle.json \\
+      --figure-decisions {workdir}/{prefix}_figure_table_decisions.json
+
+Step D. Draft the Chinese 12-section note to `{workdir}/{prefix}_note.md`.
+
+Step E. Lint:
+
+    {PAPER_READER_PYTHON} skills/paper-reader/scripts/lint_note.py \\
+      --input {workdir}/{prefix}_note.md \\
+      --plan-file {workdir}/{prefix}_note.plan.json
+
+Step F. Persist:
+
+    {PAPER_READER_PYTHON} skills/paper-reader/scripts/write_note.py \\
+      --title "{title}" \\
+      --content-file {workdir}/{prefix}_note.md \\
+      --lint-json {workdir}/{prefix}_note_lint.json \\
+      --figure-decisions {workdir}/{prefix}_figure_table_decisions.json \\
+      --topic-slug "{topic_slug}" \\
+      --paper-id "{paper_id}" \\
+      --papers-json output/papers.json \\
+      --output {workdir}/{prefix}_write.json"""
+
+    elif stage == "after_plan":
+        remaining = f"""## Resuming from Step C (pipeline + note_plan already exist)
+
+Steps A and B completed. `{prefix}_note.plan.json` exists in `{workdir}/`.
+
+Step C. Run lint_grounding:
+
+    {PAPER_READER_PYTHON} skills/paper-reader/scripts/lint_grounding.py \\
+      --note-plan {workdir}/{prefix}_note.plan.json \\
+      --source-manifest {workdir}/{prefix}_source_manifest.json \\
+      --bundle-json {workdir}/{prefix}_bundle.json \\
+      --figure-decisions {workdir}/{prefix}_figure_table_decisions.json
+
+If it fails, fix the note_plan and re-run.
+
+Step D. Draft the Chinese 12-section note to `{workdir}/{prefix}_note.md`.
+
+Step E. Lint:
+
+    {PAPER_READER_PYTHON} skills/paper-reader/scripts/lint_note.py \\
+      --input {workdir}/{prefix}_note.md \\
+      --plan-file {workdir}/{prefix}_note.plan.json
+
+Step F. Persist:
+
+    {PAPER_READER_PYTHON} skills/paper-reader/scripts/write_note.py \\
+      --title "{title}" \\
+      --content-file {workdir}/{prefix}_note.md \\
+      --lint-json {workdir}/{prefix}_note_lint.json \\
+      --figure-decisions {workdir}/{prefix}_figure_table_decisions.json \\
+      --topic-slug "{topic_slug}" \\
+      --paper-id "{paper_id}" \\
+      --papers-json output/papers.json \\
+      --output {workdir}/{prefix}_write.json"""
+
+    elif stage == "after_draft":
+        remaining = f"""## Resuming from Step E (note draft already exists)
+
+Steps A-D completed. `{prefix}_note.md` exists in `{workdir}/`. Read it to understand current draft.
+
+Step E. Lint the draft:
+
+    {PAPER_READER_PYTHON} skills/paper-reader/scripts/lint_note.py \\
+      --input {workdir}/{prefix}_note.md \\
+      --plan-file {workdir}/{prefix}_note.plan.json
+
+If `passes_style_gate: false` or `passes_basic_structure: false`, fix and re-lint. Max 3 cycles.
+
+Step F. Persist:
+
+    {PAPER_READER_PYTHON} skills/paper-reader/scripts/write_note.py \\
+      --title "{title}" \\
+      --content-file {workdir}/{prefix}_note.md \\
+      --lint-json {workdir}/{prefix}_note_lint.json \\
+      --figure-decisions {workdir}/{prefix}_figure_table_decisions.json \\
+      --topic-slug "{topic_slug}" \\
+      --paper-id "{paper_id}" \\
+      --papers-json output/papers.json \\
+      --output {workdir}/{prefix}_write.json"""
+
+    elif stage == "after_lint":
+        remaining = f"""## Resuming from Step F (note draft + lint results already exist)
+
+Steps A-E completed. `{prefix}_note.md` and `{prefix}_note_lint.json` exist in `{workdir}/`. Read both files.
+
+Step F. Persist:
+
+    {PAPER_READER_PYTHON} skills/paper-reader/scripts/write_note.py \\
+      --title "{title}" \\
+      --content-file {workdir}/{prefix}_note.md \\
+      --lint-json {workdir}/{prefix}_note_lint.json \\
+      --figure-decisions {workdir}/{prefix}_figure_table_decisions.json \\
+      --topic-slug "{topic_slug}" \\
+      --paper-id "{paper_id}" \\
+      --papers-json output/papers.json \\
+      --output {workdir}/{prefix}_write.json"""
+    else:
+        # Fallback: start from scratch
+        return build_paper_reader_prompt(url, paper_id, title)
+
+    return f"""You are RESUMING the project skill `paper-reader` for a paper that was interrupted mid-way.
+
+Paper URL: {url}
+Paper ID: {paper_id}
+Title: {title}
+Topic slug: {topic_slug}
+Work directory: {workdir}
+
+## Required reading
+1. `skills/paper-reader/SKILL.md` — the 15-step workflow
+
+## Required Python interpreter
+ALL pipeline scripts MUST use: {PAPER_READER_PYTHON}
+
+{remaining}
+
+## Stop conditions
+- After write_note.py succeeds, your task is complete. Print a one-line summary and STOP.
+- Do not regenerate kanban.html — serve.py does that automatically.
+- Do not re-run already-completed steps. The artifacts listed above are valid.
+"""
+
+
 def _get_pipeline_step_progress(paper_id):
     """Return (pct, 'zh|en') reflecting the most-recently-completed pipeline artifact."""
     prefix = (paper_id.split("-")[0] or "run")[:20]
@@ -2939,12 +3368,19 @@ def _get_pipeline_step_progress(paper_id):
 
 def read_paper_bg(paper_id, url, title, model=None):
     previous_state = snapshot_paper_state(paper_id)
-    set_paper_fields(paper_id, progress=5, status="reading")
+    # Detect if we're resuming from a previous interrupted run
+    resume_stage, _ = _paper_reader_resume_stage(paper_id)
+    is_resuming = resume_stage is not None and resume_stage != "complete"
+    set_paper_fields(paper_id, progress=5 if not is_resuming else previous_state.get("progress", 5),
+                     status="reading")
     regenerate_kanban()
     os.makedirs(LOGS_DIR, exist_ok=True)
     log_path = paper_log_abspath(paper_id)
 
-    prompt = build_paper_reader_prompt(url, paper_id, title)
+    if is_resuming:
+        prompt = build_paper_reader_resume_prompt(url, paper_id, title)
+    else:
+        prompt = build_paper_reader_prompt(url, paper_id, title)
     with tempfile.NamedTemporaryFile(
         mode="w+", encoding="utf-8", suffix=".txt", delete=False
     ) as output_file:
@@ -3074,18 +3510,39 @@ def read_paper_bg(paper_id, url, title, model=None):
     except Exception as exc:
         with _active_readers_lock:
             _active_readers.pop(paper_id, None)
-        print(f"[serve.py] Claude CLI error: {exc}", flush=True)
+        exc_str = str(exc)
+        print(f"[serve.py] Claude CLI error: {exc_str}", flush=True)
+        # Detect error type from CLI output
+        err_lower = exc_str.lower()
+        if any(k in err_lower for k in ("rate limit", "429", "too many requests", "overloaded")):
+            read_error_type = "rate_limit"
+        elif any(k in err_lower for k in ("quota", "usage limit", "monthly", "credit")):
+            read_error_type = "quota_exceeded"
+        else:
+            read_error_type = "permanent"
+
         if _check_pdf_fetch_failed(paper_id):
             set_paper_fields(paper_id, status="reading", progress=5,
-                             pipeline_status="pdf_fetch_failed")
+                             pipeline_status="pdf_fetch_failed",
+                             read_error_type=read_error_type)
             regenerate_kanban()
         else:
-            restore_paper_state(paper_id, previous_state)
+            # Check if we have partial artifacts — keep progress so user can resume
+            stage, _ = _paper_reader_resume_stage(paper_id)
+            if stage and stage != "complete":
+                pct, _ = _get_pipeline_step_progress(paper_id)
+                set_paper_fields(paper_id, status="error_resumable", progress=pct,
+                                 read_error_type=read_error_type)
+                regenerate_kanban()
+            else:
+                restore_paper_state(paper_id, previous_state)
     finally:
         try:
             os.unlink(output_path)
         except OSError:
             pass
+        # Auto-start next queued reader
+        threading.Thread(target=_start_next_reader, daemon=True).start()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -3240,6 +3697,14 @@ class Handler(BaseHTTPRequestHandler):
                 st["checkpoint_round"] = cp.get("last_completed_round") if cp else None
             self.send_json(200, st)
 
+        elif path == "/api/scout-queue":
+            with _queue_lock:
+                self.send_json(200, {"pending": list(_scout_queue)})
+
+        elif path == "/api/reader-queue":
+            with _queue_lock:
+                self.send_json(200, {"pending": list(_reader_queue)})
+
         elif path == "/api/engineering-status":
             context = latest_search_context()
             status = load_engineering_status()
@@ -3353,6 +3818,17 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(400, {"ok": False, "error": "missing url or paper_id"})
                 return
 
+            with _active_readers_lock:
+                busy = bool(_active_readers)
+
+            if busy:
+                task = {"paper_id": paper_id, "url": url, "title": title, "model": reader_model}
+                _enqueue_reader(task)
+                with _queue_lock:
+                    pos = next((i + 1 for i, t in enumerate(_reader_queue) if t["paper_id"] == paper_id), len(_reader_queue))
+                self.send_json(200, {"status": "queued", "paper_id": paper_id, "queue_position": pos})
+                return
+
             threading.Thread(
                 target=read_paper_bg,
                 args=(paper_id, url, title, reader_model),
@@ -3410,7 +3886,15 @@ class Handler(BaseHTTPRequestHandler):
                 return
             status = load_scout_status()
             if status.get("status") in ("running_phase1", "running_phase2"):
-                self.send_json(409, {"ok": False, "error": "a scout is already running"})
+                task = {
+                    "topic": topic, "description": description,
+                    "year_start": year_start, "year_end": year_end,
+                    "venue_group": venue_group, "specific_venues": specific_venues,
+                    "model": scout_model,
+                }
+                _enqueue_scout(task)
+                pos = len(_scout_queue)
+                self.send_json(200, {"ok": True, "status": "queued", "topic": topic, "queue_position": pos})
                 return
             threading.Thread(
                 target=run_conference_scout_phase1_bg,
@@ -3518,6 +4002,46 @@ class Handler(BaseHTTPRequestHandler):
             save_scout_status(status="idle", message="")
             self.send_json(200, {"ok": True})
 
+        elif self.path == "/api/remove-scout-queue":
+            length = int(self.headers.get("Content-Length", 0))
+            try:
+                body = json.loads(self.rfile.read(length))
+            except Exception:
+                self.send_json(400, {"ok": False, "error": "invalid json"}); return
+            idx = body.get("index")
+            if idx is None:
+                self.send_json(400, {"ok": False, "error": "missing index"}); return
+            with _queue_lock:
+                if 0 <= idx < len(_scout_queue):
+                    _scout_queue.pop(idx)
+                    _save_queue(SCOUT_QUEUE_JSON, _scout_queue)
+                    self.send_json(200, {"ok": True})
+                else:
+                    self.send_json(404, {"ok": False, "error": "index out of range"})
+
+        elif self.path == "/api/remove-reader-queue":
+            length = int(self.headers.get("Content-Length", 0))
+            try:
+                body = json.loads(self.rfile.read(length))
+            except Exception:
+                self.send_json(400, {"ok": False, "error": "invalid json"}); return
+            paper_id = (body.get("paper_id") or "").strip()
+            if not paper_id:
+                self.send_json(400, {"ok": False, "error": "missing paper_id"}); return
+            with _queue_lock:
+                before = len(_reader_queue)
+                _reader_queue[:] = [t for t in _reader_queue if t["paper_id"] != paper_id]
+                _save_queue(READER_QUEUE_JSON, _reader_queue)
+            if len(_reader_queue) < before:
+                try:
+                    set_paper_fields(paper_id, status="unread", queue_position=None)
+                    regenerate_kanban()
+                except Exception:
+                    pass
+                self.send_json(200, {"ok": True})
+            else:
+                self.send_json(404, {"ok": False, "error": "paper not in queue"})
+
         elif self.path == "/api/clear-chat":
             length = int(self.headers.get("Content-Length", 0))
             try:
@@ -3604,6 +4128,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    _init_queues()
     if os.path.exists(PAPERS_JSON) and os.path.exists(KANBAN_TEMPLATE):
         regenerate_kanban()
     if os.path.exists(PAPERS_JSON) and os.path.exists(ENGINEERING_TEMPLATE):

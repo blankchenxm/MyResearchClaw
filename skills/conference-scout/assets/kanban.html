@@ -208,6 +208,8 @@ body:not(.lang-en) .role-reason-copy.lang-en { display:none; }
 .btn-done, .btn-notes { color:var(--accent2); background:rgba(56,217,199,0.08); border-color:rgba(56,217,199,0.18); }
 .btn-cancel-read { color:var(--muted); background:transparent; border-color:rgba(255,100,100,0.2); font-size:11px; padding:4px 10px; }
 .btn-cancel-read:hover { color:#ff8080; border-color:rgba(255,100,100,0.5); }
+.btn-resume-read { color:#ffb347; background:rgba(255,179,71,0.08); border-color:rgba(255,179,71,0.25); }
+.btn-resume-read:hover { background:rgba(255,179,71,0.16); border-color:rgba(255,179,71,0.45); }
 .notes-shell { display:block; height:calc(100vh - 140px); }
 .notes-pane, .pdf-pane {
   background:var(--bg-card); border:1px solid var(--border); border-radius:22px; min-height:0; height:100%;
@@ -540,6 +542,9 @@ function updateCard(p) {
     } else if (prog >= 100) {
       lbl.innerHTML = '<span class="lang-zh lang-inline">✓ 已完成</span><span class="lang-en lang-inline">✓ Complete</span>';
       lbl.className = 'progress-label done';
+    } else if (p.status === 'error_resumable' && prog > 0) {
+      lbl.innerHTML = `<span class="lang-zh lang-inline">⚠ 已中断 ${prog}%</span><span class="lang-en lang-inline">⚠ Interrupted ${prog}%</span>`;
+      lbl.className = 'progress-label failed';
     } else if (prog > 0) {
       const stepParts = (p.pipeline_step || '').split('|');
       const stepZh = stepParts[0] || '精读中...';
@@ -569,6 +574,23 @@ function updateCard(p) {
       btn.innerHTML = '<span class="lang-zh lang-inline">📄 查看笔记</span><span class="lang-en lang-inline">📄 View Notes</span>';
       btn.className = 'btn btn-notes';
       btn.onclick = () => navigateTo('notes', p.id);
+    } else if (p.status === 'queued') {
+      const cb = card.querySelector('[data-role="cancel-read-btn"]');
+      if (cb) cb.remove();
+      btn.disabled = true;
+      const pos = p.queue_position || '';
+      btn.innerHTML = `<span class="lang-zh lang-inline">⏳ 排队中${pos ? ' #' + pos : ''}</span><span class="lang-en lang-inline">⏳ Queued${pos ? ' #' + pos : ''}</span>`;
+      btn.className = 'btn btn-read reading';
+    } else if (p.status === 'error_resumable' && prog > 0) {
+      // Interrupted mid-read — artifacts exist, can resume
+      const cb = card.querySelector('[data-role="cancel-read-btn"]');
+      if (cb) cb.remove();
+      btn.disabled = false;
+      btn.innerHTML = `<span class="lang-zh lang-inline">▶ 继续精读（${prog}%）</span><span class="lang-en lang-inline">▶ Resume (${prog}%)</span>`;
+      btn.className = 'btn btn-resume-read';
+      const url = card.getAttribute('data-url');
+      const title = card.querySelector('.card-title').textContent.trim();
+      btn.onclick = () => triggerRead(p.id, url, title);
     } else if (prog > 0) {
       btn.disabled = true;
       btn.innerHTML = '<span class="lang-zh lang-inline">⏳ 精读中...</span><span class="lang-en lang-inline">⏳ Reading...</span>';

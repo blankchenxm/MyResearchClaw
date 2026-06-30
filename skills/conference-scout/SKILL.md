@@ -43,6 +43,27 @@ Expand the raw topic into 3-5 complementary queries covering:
 - sub-concepts: `silent speech` → `silent speech recognition`, `non-audible speech`, `articulatory gesture`
 - known anchors: famous system names in the field (e.g. AlterEgo, EchoSpeech)
 
+**After Round 0 completes, save a checkpoint:**
+
+```python
+import json, os
+from datetime import datetime
+slug = "{TOPIC_SLUG}"
+cp_path = f"output/tmp/scout_{slug}/scout_checkpoint_r0.json"
+os.makedirs(os.path.dirname(cp_path), exist_ok=True)
+json.dump({
+    "last_completed_round": 0,
+    "topic": "{TOPIC}", "slug": slug,
+    "description": "{DESCRIPTION}",
+    "year_start": {YEAR_START}, "year_end": {YEAR_END},
+    "venue_group": "{VENUE_GROUP}",
+    "saved_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+    "queries": ["{query1}", "{query2}"]   # all expanded queries
+}, open(cp_path, "w"), ensure_ascii=False, indent=2)
+```
+
+If the write fails, skip silently and continue.
+
 ### Round 1 — Discovery
 
 Run these in order on Semantic Scholar, stop early if survey coverage is rich:
@@ -54,6 +75,31 @@ Run these in order on Semantic Scholar, stop early if survey coverage is rich:
 5. Survey thin? → `{topic}` scoped to most relevant tier-1 venue + recent year
 
 Read abstracts. Note system / task / metric vocabulary. Don't filter by venue here — discovery is intentionally broad.
+
+**After Round 1 completes, save a checkpoint:**
+
+```python
+import json, os
+from datetime import datetime
+slug = "{TOPIC_SLUG}"
+cp_path = f"output/tmp/scout_{slug}/scout_checkpoint_r1.json"
+os.makedirs(os.path.dirname(cp_path), exist_ok=True)
+json.dump({
+    "last_completed_round": 1,
+    "topic": "{TOPIC}", "slug": slug,
+    "description": "{DESCRIPTION}",
+    "year_start": {YEAR_START}, "year_end": {YEAR_END},
+    "venue_group": "{VENUE_GROUP}",
+    "saved_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+    "queries": ["{query1}", ...],
+    "discovery_papers": [
+        {"title": "...", "authors": "...", "venue": "...", "year": 2024,
+         "citations": 0, "url": "https://...", "abstract": "..."}
+    ]
+}, open(cp_path, "w"), ensure_ascii=False, indent=2)
+```
+
+If the write fails, skip silently and continue.
 
 ### Round 2 — Anchor Extraction *(LLM only, no API)*
 
@@ -75,6 +121,29 @@ Produce this JSON before proceeding:
 ```
 
 **Series detection rule:** If ≥ 2 papers share a first or last author, treat them as a research program. Add the group to `series_clusters` and schedule a full author DBLP sweep in Round 3 — the same group likely has sibling papers at other venues in the same publication cycle.
+
+**After Round 2 completes, save a checkpoint:**
+
+```python
+import json, os
+from datetime import datetime
+slug = "{TOPIC_SLUG}"
+cp_path = f"output/tmp/scout_{slug}/scout_checkpoint_r2.json"
+os.makedirs(os.path.dirname(cp_path), exist_ok=True)
+json.dump({
+    "last_completed_round": 2,
+    "topic": "{TOPIC}", "slug": slug,
+    "description": "{DESCRIPTION}",
+    "year_start": {YEAR_START}, "year_end": {YEAR_END},
+    "venue_group": "{VENUE_GROUP}",
+    "saved_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+    "queries": ["{query1}", ...],
+    "discovery_papers": [...],
+    "anchors": { ...Round 2 anchor JSON verbatim... }
+}, open(cp_path, "w"), ensure_ascii=False, indent=2)
+```
+
+If the write fails, skip silently and continue.
 
 ### Round 3 — Precision Search
 
@@ -154,6 +223,33 @@ Print: `共 {N} 篇通过 Round 4，继续 Round 5-7…`
 
 Do NOT pause. Do NOT wait for user input. Proceed directly to Round 5.
 
+**After Round 4 completes (and Round 4.5 summary printed), save a checkpoint:**
+
+```python
+import json, os
+from datetime import datetime
+slug = "{TOPIC_SLUG}"
+cp_path = f"output/tmp/scout_{slug}/scout_checkpoint_r4.json"
+os.makedirs(os.path.dirname(cp_path), exist_ok=True)
+json.dump({
+    "last_completed_round": 4,
+    "topic": "{TOPIC}", "slug": slug,
+    "description": "{DESCRIPTION}",
+    "year_start": {YEAR_START}, "year_end": {YEAR_END},
+    "venue_group": "{VENUE_GROUP}",
+    "saved_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+    "venues_checked": ["{VENUE} {YEAR}", ...],
+    "anchors": { ...Round 2 anchor JSON verbatim... },
+    "gate_passed": [
+        {"title": "...", "authors": "...", "venue": "...", "year": 2024,
+         "citations": 0, "influential_citations": 0,
+         "url": "https://...", "arxiv_id": null, "abstract": "..."}
+    ]
+}, open(cp_path, "w"), ensure_ascii=False, indent=2)
+```
+
+If the write fails, skip silently and continue.
+
 ### Round 5 — Citation Expansion
 
 After confirmation, and only if Round 3 produced ≥ 6 anchor papers that passed Round 4. **Skip Round 5 entirely if fewer than 6 papers passed — the pool is too small for expansion to add value.**
@@ -165,6 +261,33 @@ After confirmation, and only if Round 3 produced ≥ 6 anchor papers that passed
 3. Skip `series_clusters` DBLP sweeps if already at API budget.
 
 Foundation elevation signals: high `influentialCitationCount / citationCount` ratio; described as "first" / "seminal" / "pioneering" in multiple frontier papers' related-work sections.
+
+**After Round 5 completes, save a checkpoint:**
+
+```python
+import json, os
+from datetime import datetime
+slug = "{TOPIC_SLUG}"
+cp_path = f"output/tmp/scout_{slug}/scout_checkpoint_r5.json"
+os.makedirs(os.path.dirname(cp_path), exist_ok=True)
+json.dump({
+    "last_completed_round": 5,
+    "topic": "{TOPIC}", "slug": slug,
+    "description": "{DESCRIPTION}",
+    "year_start": {YEAR_START}, "year_end": {YEAR_END},
+    "venue_group": "{VENUE_GROUP}",
+    "saved_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+    "venues_checked": ["{VENUE} {YEAR}", ...],
+    "anchors": { ...Round 2 anchor JSON verbatim... },
+    "expanded_candidates": [
+        {"title": "...", "authors": "...", "venue": "...", "year": 2024,
+         "citations": 0, "influential_citations": 0,
+         "url": "https://...", "arxiv_id": null, "abstract": "..."}
+    ]
+}, open(cp_path, "w"), ensure_ascii=False, indent=2)
+```
+
+If the write fails, skip silently and continue.
 
 ### Round 6 — Timeline Assembly
 
@@ -181,6 +304,33 @@ Classify every Round-4 survivor into exactly one role:
 Role is by citation structure + related-work language, NOT by year. A 2023 paper can be `breakthrough`; a 2019 paper can still be `frontier` in a young field. Low confidence → prefer `consolidation` over inventing certainty.
 
 Sort chronologically within and across roles. Timeline is continuous; role is an annotation.
+
+**After Round 6 completes, save a checkpoint:**
+
+```python
+import json, os
+from datetime import datetime
+slug = "{TOPIC_SLUG}"
+cp_path = f"output/tmp/scout_{slug}/scout_checkpoint_r6.json"
+os.makedirs(os.path.dirname(cp_path), exist_ok=True)
+json.dump({
+    "last_completed_round": 6,
+    "topic": "{TOPIC}", "slug": slug,
+    "description": "{DESCRIPTION}",
+    "year_start": {YEAR_START}, "year_end": {YEAR_END},
+    "venue_group": "{VENUE_GROUP}",
+    "saved_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+    "venues_checked": ["{VENUE} {YEAR}", ...],
+    "anchors": { ...Round 2 anchor JSON verbatim... },
+    "timeline": [
+        {"title": "...", "authors": "...", "venue": "...", "year": 2024,
+         "role": "frontier", "citations": 0, "influential_citations": 0,
+         "url": "https://...", "arxiv_id": null, "abstract": "..."}
+    ]
+}, open(cp_path, "w"), ensure_ascii=False, indent=2)
+```
+
+If the write fails, skip silently and continue.
 
 ### Round 6.5 — Token Usage Record *(LLM only, no API)*
 
