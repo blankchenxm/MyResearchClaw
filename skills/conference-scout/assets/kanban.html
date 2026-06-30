@@ -206,6 +206,8 @@ body:not(.lang-en) .role-reason-copy.lang-en { display:none; }
 .btn-read { color:#c0b6ff; background:rgba(162,155,254,0.08); border-color:rgba(162,155,254,0.18); }
 .btn-read.reading { color:var(--accent4); background:rgba(255,214,110,0.08); border-color:rgba(255,214,110,0.18); }
 .btn-done, .btn-notes { color:var(--accent2); background:rgba(56,217,199,0.08); border-color:rgba(56,217,199,0.18); }
+.btn-cancel-read { color:var(--muted); background:transparent; border-color:rgba(255,100,100,0.2); font-size:11px; padding:4px 10px; }
+.btn-cancel-read:hover { color:#ff8080; border-color:rgba(255,100,100,0.5); }
 .notes-shell { display:block; height:calc(100vh - 140px); }
 .notes-pane, .pdf-pane {
   background:var(--bg-card); border:1px solid var(--border); border-radius:22px; min-height:0; height:100%;
@@ -344,6 +346,10 @@ body:not(.lang-en) .role-reason-copy.lang-en { display:none; }
         </div>
       </div>
       <div class="hero-actions">
+        <a href="/" class="hero-btn" style="text-decoration:none;font-size:13px;padding:8px 16px;opacity:.7">
+          <span class="lang-zh lang-inline">← Topic Navigator</span>
+          <span class="lang-en lang-inline">← Topic Navigator</span>
+        </a>
         <button class="hero-btn engineering" onclick="openEngineeringView()">
           <span class="lang-zh lang-inline">Engineering View →</span>
           <span class="lang-en lang-inline">Engineering View →</span>
@@ -370,7 +376,8 @@ body:not(.lang-en) .role-reason-copy.lang-en { display:none; }
       <div style="display:flex;align-items:center;gap:8px;margin:10px 0 14px;font-size:13px;color:var(--muted)">
         <span class="lang-zh lang-inline">精读模型</span><span class="lang-en lang-inline">Reader model</span>
         <select id="readerModelSelect" style="padding:4px 8px;border-radius:8px;border:1px solid var(--line);background:var(--panel-soft);color:var(--text);font-size:12px">
-          <option value="claude-sonnet-4-6">Sonnet 4.6（默认）</option>
+          <option value="">不指定（服务器默认）</option>
+          <option value="claude-sonnet-4-6">Sonnet 4.6</option>
           <option value="claude-haiku-4-5-20251001">Haiku 4.5（更便宜）</option>
         </select>
       </div>
@@ -574,7 +581,19 @@ function updateCard(p) {
       btn.disabled = true;
       btn.innerHTML = '<span class="lang-zh lang-inline">⏳ 精读中...</span><span class="lang-en lang-inline">⏳ Reading...</span>';
       btn.className = 'btn btn-read reading';
+      // Show cancel button if not already present
+      if (!card.querySelector('[data-role="cancel-read-btn"]')) {
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-cancel-read';
+        cancelBtn.setAttribute('data-role', 'cancel-read-btn');
+        cancelBtn.innerHTML = '<span class="lang-zh lang-inline">✕ 取消</span><span class="lang-en lang-inline">✕ Cancel</span>';
+        cancelBtn.onclick = () => cancelRead(p.id, cancelBtn);
+        btn.insertAdjacentElement('afterend', cancelBtn);
+      }
     } else {
+      // Remove cancel button if present
+      const cb = card.querySelector('[data-role="cancel-read-btn"]');
+      if (cb) cb.remove();
       btn.disabled = false;
       btn.innerHTML = '<span class="lang-zh lang-inline">📖 精读论文</span><span class="lang-en lang-inline">📖 Read Paper</span>';
       btn.className = 'btn btn-read';
@@ -678,6 +697,19 @@ async function triggerRead(id, url, title) {
     btn.onclick = () => triggerRead(id, url, title);
     showToast(url);
   }
+}
+
+async function cancelRead(paperId, cancelBtn) {
+  cancelBtn.disabled = true;
+  cancelBtn.innerHTML = '<span class="lang-zh lang-inline">取消中...</span><span class="lang-en lang-inline">Cancelling...</span>';
+  try {
+    await fetch(`${API}/api/cancel-read`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paper_id: paperId })
+    });
+  } catch (e) { /* ignore */ }
+  cancelBtn.remove();
 }
 
 function renderRoute() {

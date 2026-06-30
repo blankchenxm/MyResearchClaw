@@ -100,6 +100,10 @@ def resolve_claude_bin():
 
 RESOLVED_CLAUDE_BIN = resolve_claude_bin()
 
+# paper_id → Popen, used by /api/cancel-read
+_active_readers: dict = {}
+_active_readers_lock = __import__("threading").Lock()
+
 
 def load_papers():
     with open(PAPERS_JSON, encoding="utf-8") as f:
@@ -946,7 +950,8 @@ def render_topic_index_html(searches, papers):
                 "slug": slug,
                 "paper_count": paper_count,
                 "year_range": search.get("year_range") or "Unknown Range",
-                "venues": search.get("venues") or "Unknown Venues",
+                "venues": ", ".join(search.get("venues_checked") or []) or "Unknown Venues",
+                "description": search.get("description") or "",
                 "date": search.get("date") or today_iso(),
             }
         )
@@ -968,7 +973,7 @@ def render_topic_index_html(searches, papers):
             <span><span class="meta-label">检索范围</span>{escape(row["year_range"])}</span>
             <span><span class="meta-label">创建于</span>{escape(row["date"])}</span>
           </div>
-          <p class="topic-venues">{escape(row["venues"])}</p>
+          {f'<p class="topic-desc">{escape(row["description"])}</p>' if row["description"] else f'<p class="topic-venues">{escape(row["venues"])}</p>'}
           <div class="topic-actions">
             <a href="/projects/{row["slug"]}/papers.html" class="action-papers">
               <span class="action-icon">📚</span>
@@ -1059,6 +1064,7 @@ body.light {{
 .topic-meta {{ display:flex; gap:18px; flex-wrap:wrap; margin-bottom:14px; color:var(--dim); font-size:16px; }}
 .topic-meta .meta-label {{ font:600 12px 'JetBrains Mono', monospace; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-right:6px; }}
 .topic-venues {{ color:var(--dim); line-height:1.8; margin-bottom:18px; font-size:16px; }}
+.topic-desc {{ color:var(--text); line-height:1.6; margin-bottom:18px; font-size:15px; opacity:.85; }}
 .topic-actions {{ display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; }}
 .topic-actions a {{
   display:flex; align-items:center; gap:16px; text-decoration:none; border:1px solid var(--line);
@@ -1303,7 +1309,8 @@ body.light {{
           <div class="scout-field scout-form-full" style="margin-top:4px">
             <label>模型</label>
             <select id="sfModel" style="width:100%;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-soft);color:var(--text);font-size:13px">
-              <option value="claude-sonnet-4-6">Sonnet 4.6（默认，质量最好）</option>
+              <option value="">不指定（服务器默认）</option>
+              <option value="claude-sonnet-4-6">Sonnet 4.6（质量最好）</option>
               <option value="claude-haiku-4-5-20251001">Haiku 4.5（更快更便宜，约 1/4 费用）</option>
             </select>
           </div>
@@ -1803,7 +1810,7 @@ def regenerate_kanban():
         slug = slugify_topic(topic)
         topic_papers = [p for p in papers if p.get("topic") == topic]
         year_range = search.get("year_range") or "Unknown Range"
-        venues = search.get("venues") or "Unknown Venues"
+        venues = ", ".join(search.get("venues_checked") or []) or "Unknown Venues"
         engineering_relpath = topic_engineering_relpath(slug)
         rendered = render_dashboard_html(
             active_topic=topic,
@@ -2447,6 +2454,17 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
 
         usage = parse_usage_from_log_file(log_path)
         append_token_usage("conference-scout", slug, topic, usage)
+        # Inject description into the matching search entry so topic cards can display it
+        if description:
+            try:
+                pdata = load_papers()
+                for s in reversed(pdata.get("searches", [])):
+                    if s.get("topic_slug") == slug or s.get("topic") == topic:
+                        s.setdefault("description", description)
+                        break
+                save_papers(pdata)
+            except Exception:
+                pass
         regenerate_kanban()
         cdata = _load_candidates(slug)
         candidates = cdata.get("candidates", [])
@@ -2985,6 +3003,8 @@ def read_paper_bg(paper_id, url, title, model=None):
                 text=True,
                 bufsize=1,
             )
+            with _active_readers_lock:
+                _active_readers[paper_id] = proc
 
             last_file_check = 0.0
             last_progress = 8
@@ -3041,6 +3061,8 @@ def read_paper_bg(paper_id, url, title, model=None):
                 log_file.flush()
                 logs = logs[-60:]
 
+            with _active_readers_lock:
+                _active_readers.pop(paper_id, None)
             if proc.returncode not in (0, -15):
                 raise RuntimeError("\n".join(logs[-20:]).strip() or f"claude exited {proc.returncode}")
 
@@ -3058,6 +3080,8 @@ def read_paper_bg(paper_id, url, title, model=None):
         _build_run_report(all_lines_reader, paper_id, title, 1, f"Paper Reader: {title}", reader_started)
         print(f"[serve.py] Complete via Claude CLI: {title[:60]}", flush=True)
     except Exception as exc:
+        with _active_readers_lock:
+            _active_readers.pop(paper_id, None)
         print(f"[serve.py] Claude CLI error: {exc}", flush=True)
         if _check_pdf_fetch_failed(paper_id):
             set_paper_fields(paper_id, status="reading", progress=5,
@@ -3344,6 +3368,36 @@ class Handler(BaseHTTPRequestHandler):
             ).start()
 
             self.send_json(200, {"status": "started", "paper_id": paper_id})
+
+        elif self.path == "/api/cancel-read":
+            length = int(self.headers.get("Content-Length", 0))
+            try:
+                body = json.loads(self.rfile.read(length))
+            except Exception:
+                self.send_json(400, {"ok": False, "error": "invalid json body"})
+                return
+            paper_id = (body.get("paper_id") or "").strip()
+            if not paper_id:
+                self.send_json(400, {"ok": False, "error": "missing paper_id"})
+                return
+            with _active_readers_lock:
+                proc = _active_readers.pop(paper_id, None)
+            if proc and proc.poll() is None:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=5)
+                except Exception:
+                    proc.kill()
+            # Reset paper state
+            set_paper_fields(paper_id, status="unread", progress=0,
+                             pipeline_status=None, pipeline_step=None)
+            # Delete incomplete workdir
+            workdir = os.path.join(ROOT, "output", "tmp", paper_id)
+            if os.path.isdir(workdir):
+                import shutil
+                shutil.rmtree(workdir, ignore_errors=True)
+            regenerate_kanban()
+            self.send_json(200, {"ok": True, "paper_id": paper_id})
 
         elif self.path == "/api/start-scout":
             length = int(self.headers.get("Content-Length", 0))
