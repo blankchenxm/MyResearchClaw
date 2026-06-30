@@ -4129,6 +4129,9 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     _init_queues()
+    # Resume any queued tasks that were waiting before restart
+    threading.Thread(target=_start_next_reader, daemon=True).start()
+    threading.Thread(target=_start_next_scout, daemon=True).start()
     if os.path.exists(PAPERS_JSON) and os.path.exists(KANBAN_TEMPLATE):
         regenerate_kanban()
     if os.path.exists(PAPERS_JSON) and os.path.exists(ENGINEERING_TEMPLATE):

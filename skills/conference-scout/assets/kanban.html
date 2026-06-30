@@ -575,12 +575,26 @@ function updateCard(p) {
       btn.className = 'btn btn-notes';
       btn.onclick = () => navigateTo('notes', p.id);
     } else if (p.status === 'queued') {
-      const cb = card.querySelector('[data-role="cancel-read-btn"]');
-      if (cb) cb.remove();
       btn.disabled = true;
       const pos = p.queue_position || '';
       btn.innerHTML = `<span class="lang-zh lang-inline">⏳ 排队中${pos ? ' #' + pos : ''}</span><span class="lang-en lang-inline">⏳ Queued${pos ? ' #' + pos : ''}</span>`;
       btn.className = 'btn btn-read reading';
+      // Show remove-from-queue button if not already present
+      if (!card.querySelector('[data-role="cancel-read-btn"]')) {
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'btn btn-cancel-read';
+        removeBtn.setAttribute('data-role', 'cancel-read-btn');
+        removeBtn.innerHTML = '<span class="lang-zh lang-inline">✕ 取消排队</span><span class="lang-en lang-inline">✕ Dequeue</span>';
+        removeBtn.onclick = async () => {
+          removeBtn.disabled = true;
+          await fetch('/api/remove-reader-queue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paper_id: p.id })
+          }).catch(() => {});
+        };
+        btn.insertAdjacentElement('afterend', removeBtn);
+      }
     } else if (p.status === 'error_resumable' && prog > 0) {
       // Interrupted mid-read — artifacts exist, can resume
       const cb = card.querySelector('[data-role="cancel-read-btn"]');
