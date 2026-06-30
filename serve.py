@@ -1306,14 +1306,6 @@ body.light {{
             <div class="venue-chips" id="sfVenueChips"></div>
           </div>
         </div>
-          <div class="scout-field scout-form-full" style="margin-top:4px">
-            <label>模型</label>
-            <select id="sfModel" style="width:100%;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-soft);color:var(--text);font-size:13px">
-              <option value="">不指定（服务器默认）</option>
-              <option value="claude-sonnet-4-6">Sonnet 4.6（质量最好）</option>
-              <option value="claude-haiku-4-5-20251001">Haiku 4.5（更快更便宜，约 1/4 费用）</option>
-            </select>
-          </div>
         <div class="scout-form-actions">
           <button class="scout-submit-btn" onclick="submitScout()">🔍 开始调研</button>
           <button class="scout-cancel-btn" onclick="toggleScoutForm()">取消</button>
@@ -1472,7 +1464,7 @@ async function submitScout() {{
     const r = await fetch('/api/start-scout', {{
       method: 'POST',
       headers: {{ 'Content-Type': 'application/json' }},
-      body: JSON.stringify({{ topic, description, year_start: yearStart, year_end: yearEnd, venue_group: venueGroup, specific_venues: specificVenues, model: document.getElementById('sfModel').value }})
+      body: JSON.stringify({{ topic, description, year_start: yearStart, year_end: yearEnd, venue_group: venueGroup, specific_venues: specificVenues }})
     }});
     const data = await r.json();
     if (!data.ok) {{ alert('启动失败：' + (data.error || '')); return; }}
