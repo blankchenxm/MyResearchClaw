@@ -1,14 +1,14 @@
 {
   "status": "running_phase1",
-  "topic": "Wearable Agent System",
-  "slug": "wearable-agent-system",
-  "description": "有没有针对可穿戴系统的 Agent 系统？  我希望能找两方面的论文：  1. 多模态处理能力：    系统可以通过可穿戴设备（比如眼镜、耳机等）获取声音、文字、图像、视频等信息，并据此构建一个 Agent 系统。  2. 记忆系统（Memory System）：    该系统能够让用户记录或回想起之前发生过的事情。  有没有类似这样的系统？",
+  "topic": "auto-translate system",
+  "slug": "auto-translate-system",
+  "description": "当前有没有实现双向自动翻译的硬件系统？\n我希望这种系统是端侧的本地的，不是上传到服务器的，形式上不管是耳机还是其他硬件都可以。它的核心功能是双向实时翻译：\n1. 能够将实时听到的话，转化翻译成用户希望的语言并播放\n2. 能够将用户说的话，实时翻译成对方期待的语言并播放出来，并且类似于变声器那种感觉，不是用户说完再播放，而是实时转化播放\n这种系统要能做到滞后感很小，整个系统最重要的是低延迟。只要能实现上述效果的硬件系统都可以。有没有类似的",
   "year_start": 2021,
   "year_end": 2026,
   "venue_group": "wearable_sensing,ai_ml,iot_systems,hci",
   "specific_venues": [],
-  "message": "Round 7: 写入 papers.json...",
-  "current_round": 7.0,
+  "message": "Round 0: 查询扩展中...",
+  "current_round": 0,
   "phase": 1,
   "last_updated": "2026-07-01",
   "candidates": [],
@@ -27,5 +27,6 @@
     "wearable",
     "earphone OR glasses",
     "camera OR EEG OR EMG OR EOG OR ExG OR ECG OR acoustic sonar"
-  ]
+  ],
+  "error_type": "rate_limit"
 }
