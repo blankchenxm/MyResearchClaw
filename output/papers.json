@@ -750,7 +750,7 @@
       "timeline_reason_zh": "目前最全面的 LLM 驱动嵌入式 IoT 软件自动开发系统，覆盖需求代码生成自动测试持续调试直至运行成功完整闭环，支持 ESP、Arduino、nRF、STM 等多种主流 MCU；SenSys 2026 最新发表，代表该方向当前前沿",
       "summary_en": "AutoEmbed is the most comprehensive LLM-driven automated software development system for embedded IoT, directly addressing the target scenario: given a natural language requirement and target MCU (ESP, Arduino, nRF, STM, etc.), it generates a complete compilable code project, runs automated tests, and iteratively debugs until the firmware compiles, passes tests, and meets functional requirements. The system employs a hierarchical agent architecture: a design agent decomposes requirements into hardware-aware subtasks, implementation agents generate code per module, and a validation agent orchestrates compilation, simulation, and on-device testing feedback. SenSys 2026.",
       "summary_zh": "AutoEmbed 是目前最全面的 LLM 驱动嵌入式 IoT 软件自动开发系统，与用户目标场景高度契合：输入自然语言需求和目标 MCU（ESP、Arduino、nRF、STM 等），自动生成完整可编译代码项目，运行自动化测试，持续调试直至固件成功编译、通过测试并满足功能需求。系统采用层级 Agent 架构：设计 Agent 将需求分解为硬件感知子任务，实现 Agent 按模块生成代码，验证 Agent 协调编译、仿真和真机测试反馈形成闭环。SenSys 2026 发表。",
-      "status": "unread",
+      "status": "queued",
       "topic": "automatic embedded firmware agent",
       "topic_slug": "automatic-embedded-firmware-agent",
       "tags": [
@@ -759,7 +759,8 @@
         "iterative-debugging",
         "SenSys",
         "multi-MCU"
-      ]
+      ],
+      "queue_position": 1
     },
     {
       "id": "sensing-with-earables-systematic-literature-review-taxonomy",
@@ -1165,8 +1166,8 @@
         "hybrid-sensing",
         "IEEE-IoT"
       ],
-      "progress": 10,
-      "pipeline_step": "正在初始化...|Initializing..."
+      "progress": 38,
+      "pipeline_step": "正在提取正文...|Extracting source text..."
     },
     {
       "id": "vuebuds-visual-intelligence-wireless-earbuds",
