@@ -761,8 +761,8 @@
         "multi-MCU"
       ],
       "queue_position": 1,
-      "progress": 38,
-      "pipeline_step": "正在提取正文...|Extracting source text..."
+      "progress": 50,
+      "pipeline_step": "正在提取证据...|Extracting evidence..."
     },
     {
       "id": "sensing-with-earables-systematic-literature-review-taxonomy",
