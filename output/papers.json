@@ -1154,7 +1154,7 @@
       "timeline_reason_zh": "在智能眼镜上实现完全车载（onboard）EOG 眼动追踪（IEEE IoT Journal 2025）：混合 EOG（hEOG）结合传统电极与 PPG 补偿运动伪迹，<1° 精度且所有推理在眼镜端运行；与声学眼动追踪（GazeTrak）形成互补的生理信号方案，代表眼镜附加模态的最新前沿",
       "summary_en": "ElectraSight achieves fully onboard eye tracking on smart glasses using hybrid EOG (hEOG), which combines traditional electrooculography electrodes around the frame with photoplethysmography signals to compensate for motion-induced artifacts, a key limitation of pure EOG in mobile settings. All signal processing and gaze inference run on the glasses embedded processor without cloud offloading, achieving under 1 degree accuracy. The hybrid electrode placement on the glasses frame avoids the need for facial adhesive electrodes used in clinical EOG setups. ElectraSight represents the physiological-signal alternative to acoustic eye tracking (GazeTrak), offering sub-degree accuracy at the cost of requiring electrode contact with skin around the frame.",
       "summary_zh": "ElectraSight 在智能眼镜上使用混合 EOG（hEOG）实现完全车载眼动追踪：将眼镜框架上的传统电位差测量电极与 PPG 信号结合，以补偿运动引起的伪迹（纯 EOG 在移动场景的关键局限）。所有信号处理和注视推理在眼镜嵌入式处理器本地运行，无需云端，精度低于 1°。眼镜框架上的混合电极布置避免了临床 EOG 需要的皮肤粘贴电极。ElectraSight 是声学眼动追踪（GazeTrak）的生理信号替代方案，以需要电极与皮肤接触为代价换取亚度级精度。",
-      "status": "unread",
+      "status": "reading",
       "topic": "More modality in wearable system",
       "topic_slug": "more-modality-in-wearable-system",
       "tags": [
@@ -1164,7 +1164,9 @@
         "eye-tracking",
         "hybrid-sensing",
         "IEEE-IoT"
-      ]
+      ],
+      "progress": 10,
+      "pipeline_step": "正在初始化...|Initializing..."
     },
     {
       "id": "vuebuds-visual-intelligence-wireless-earbuds",
