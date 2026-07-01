@@ -761,8 +761,8 @@
         "multi-MCU"
       ],
       "queue_position": 1,
-      "progress": 82,
-      "pipeline_step": "Claude 正在规划笔记...|Claude planning note..."
+      "progress": 88,
+      "pipeline_step": "Claude 正在撰写笔记...|Claude writing note..."
     },
     {
       "id": "sensing-with-earables-systematic-literature-review-taxonomy",
