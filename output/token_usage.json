@@ -75,7 +75,16 @@
       "cache_creation_input_tokens": 57443,
       "cost_usd": 0.0,
       "duration_ms": 560071
+    },
+    {
+      "type": "conference-scout",
+      "entity_id": "wearable-agent-system",
+      "title": "Wearable Agent System",
+      "date": "2026-07-01",
+      "web_searches": 18,
+      "web_fetches": 10,
+      "note": "conference-scout phase 2 — S2 API 429 throughout, fell back to web search + DBLP"
     }
   ],
-  "last_updated": "2026-06-28"
+  "last_updated": "2026-07-01"
 }
