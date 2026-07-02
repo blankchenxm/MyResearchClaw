@@ -3930,9 +3930,10 @@ class Handler(BaseHTTPRequestHandler):
                     proc.wait(timeout=5)
                 except Exception:
                     proc.kill()
-            # Reset paper state
+            # Reset paper state fully — clear all in-progress fields
             set_paper_fields(paper_id, status="unread", progress=0,
-                             pipeline_status=None, pipeline_step=None)
+                             pipeline_status=None, pipeline_step=None,
+                             read_error_type=None, queue_position=None)
             # Delete incomplete workdir
             workdir = os.path.join(ROOT, "output", "tmp", paper_id)
             if os.path.isdir(workdir):

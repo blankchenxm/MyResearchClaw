@@ -563,65 +563,89 @@ function updateCard(p) {
     if (pdfFailed) setupUploadZone(card);
   }
 
+  // Helper: ensure a secondary action button exists after the main btn
+  function _ensureSecondaryBtn(anchorBtn, role, labelZh, labelEn, className, onclick) {
+    let sb = card.querySelector(`[data-role="${role}"]`);
+    if (!sb) {
+      sb = document.createElement('button');
+      sb.setAttribute('data-role', role);
+      anchorBtn.insertAdjacentElement('afterend', sb);
+    }
+    sb.disabled = false;
+    sb.className = className;
+    sb.innerHTML = `<span class="lang-zh lang-inline">${labelZh}</span><span class="lang-en lang-inline">${labelEn}</span>`;
+    sb.onclick = onclick;
+  }
+  function _removeSecondaryBtn(role) {
+    const sb = card.querySelector(`[data-role="${role}"]`);
+    if (sb) sb.remove();
+  }
+
   const btn = card.querySelector('[data-role="read-btn"]');
   if (btn) {
     if (pdfFailed) {
+      // Waiting for PDF upload — show cancel to abandon the whole attempt
       btn.disabled = true;
       btn.innerHTML = '<span class="lang-zh lang-inline">📎 等待 PDF 上传</span><span class="lang-en lang-inline">📎 Awaiting PDF</span>';
       btn.className = 'btn btn-read';
+      _removeSecondaryBtn('dequeue-btn');
+      _ensureSecondaryBtn(btn, 'cancel-read-btn',
+        '✕ 取消精读', '✕ Cancel',
+        'btn btn-cancel-read',
+        () => cancelRead(p.id, card.querySelector('[data-role="cancel-read-btn"]')));
     } else if (prog >= 100) {
       btn.disabled = false;
       btn.innerHTML = '<span class="lang-zh lang-inline">📄 查看笔记</span><span class="lang-en lang-inline">📄 View Notes</span>';
       btn.className = 'btn btn-notes';
       btn.onclick = () => navigateTo('notes', p.id);
+      _removeSecondaryBtn('cancel-read-btn');
+      _removeSecondaryBtn('dequeue-btn');
     } else if (p.status === 'queued') {
+      // In queue — show dequeue button (not a full cancel, just removes from queue)
       btn.disabled = true;
       const pos = p.queue_position || '';
       btn.innerHTML = `<span class="lang-zh lang-inline">⏳ 排队中${pos ? ' #' + pos : ''}</span><span class="lang-en lang-inline">⏳ Queued${pos ? ' #' + pos : ''}</span>`;
       btn.className = 'btn btn-read reading';
-      // Show remove-from-queue button if not already present
-      if (!card.querySelector('[data-role="cancel-read-btn"]')) {
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'btn btn-cancel-read';
-        removeBtn.setAttribute('data-role', 'cancel-read-btn');
-        removeBtn.innerHTML = '<span class="lang-zh lang-inline">✕ 取消排队</span><span class="lang-en lang-inline">✕ Dequeue</span>';
-        removeBtn.onclick = async () => {
-          removeBtn.disabled = true;
+      _removeSecondaryBtn('cancel-read-btn');
+      _ensureSecondaryBtn(btn, 'dequeue-btn',
+        '✕ 取消排队', '✕ Dequeue',
+        'btn btn-cancel-read',
+        async () => {
+          const db = card.querySelector('[data-role="dequeue-btn"]');
+          if (db) db.disabled = true;
           await fetch('/api/remove-reader-queue', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ paper_id: p.id })
           }).catch(() => {});
-        };
-        btn.insertAdjacentElement('afterend', removeBtn);
-      }
+        });
     } else if (p.status === 'error_resumable' && prog > 0) {
-      // Interrupted mid-read — artifacts exist, can resume
-      const cb = card.querySelector('[data-role="cancel-read-btn"]');
-      if (cb) cb.remove();
+      // Interrupted mid-read — show resume + abandon buttons
+      _removeSecondaryBtn('dequeue-btn');
       btn.disabled = false;
       btn.innerHTML = `<span class="lang-zh lang-inline">▶ 继续精读（${prog}%）</span><span class="lang-en lang-inline">▶ Resume (${prog}%)</span>`;
       btn.className = 'btn btn-resume-read';
       const url = card.getAttribute('data-url');
       const title = card.querySelector('.card-title').textContent.trim();
       btn.onclick = () => triggerRead(p.id, url, title);
+      _ensureSecondaryBtn(btn, 'cancel-read-btn',
+        '✕ 放弃进度', '✕ Discard',
+        'btn btn-cancel-read',
+        () => cancelRead(p.id, card.querySelector('[data-role="cancel-read-btn"]')));
     } else if (prog > 0) {
+      // Actively reading
       btn.disabled = true;
       btn.innerHTML = '<span class="lang-zh lang-inline">⏳ 精读中...</span><span class="lang-en lang-inline">⏳ Reading...</span>';
       btn.className = 'btn btn-read reading';
-      // Show cancel button if not already present
-      if (!card.querySelector('[data-role="cancel-read-btn"]')) {
-        const cancelBtn = document.createElement('button');
-        cancelBtn.className = 'btn btn-cancel-read';
-        cancelBtn.setAttribute('data-role', 'cancel-read-btn');
-        cancelBtn.innerHTML = '<span class="lang-zh lang-inline">✕ 取消</span><span class="lang-en lang-inline">✕ Cancel</span>';
-        cancelBtn.onclick = () => cancelRead(p.id, cancelBtn);
-        btn.insertAdjacentElement('afterend', cancelBtn);
-      }
+      _removeSecondaryBtn('dequeue-btn');
+      _ensureSecondaryBtn(btn, 'cancel-read-btn',
+        '✕ 取消', '✕ Cancel',
+        'btn btn-cancel-read',
+        () => cancelRead(p.id, card.querySelector('[data-role="cancel-read-btn"]')));
     } else {
-      // Remove cancel button if present
-      const cb = card.querySelector('[data-role="cancel-read-btn"]');
-      if (cb) cb.remove();
+      // Idle / unread
+      _removeSecondaryBtn('cancel-read-btn');
+      _removeSecondaryBtn('dequeue-btn');
       btn.disabled = false;
       btn.innerHTML = '<span class="lang-zh lang-inline">📖 精读论文</span><span class="lang-en lang-inline">📖 Read Paper</span>';
       btn.className = 'btn btn-read';
