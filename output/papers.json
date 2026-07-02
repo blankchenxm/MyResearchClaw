@@ -750,7 +750,7 @@
       "timeline_reason_zh": "目前最全面的 LLM 驱动嵌入式 IoT 软件自动开发系统，覆盖需求代码生成自动测试持续调试直至运行成功完整闭环，支持 ESP、Arduino、nRF、STM 等多种主流 MCU；SenSys 2026 最新发表，代表该方向当前前沿",
       "summary_en": "AutoEmbed is the most comprehensive LLM-driven automated software development system for embedded IoT, directly addressing the target scenario: given a natural language requirement and target MCU (ESP, Arduino, nRF, STM, etc.), it generates a complete compilable code project, runs automated tests, and iteratively debugs until the firmware compiles, passes tests, and meets functional requirements. The system employs a hierarchical agent architecture: a design agent decomposes requirements into hardware-aware subtasks, implementation agents generate code per module, and a validation agent orchestrates compilation, simulation, and on-device testing feedback. SenSys 2026.",
       "summary_zh": "AutoEmbed 是目前最全面的 LLM 驱动嵌入式 IoT 软件自动开发系统，与用户目标场景高度契合：输入自然语言需求和目标 MCU（ESP、Arduino、nRF、STM 等），自动生成完整可编译代码项目，运行自动化测试，持续调试直至固件成功编译、通过测试并满足功能需求。系统采用层级 Agent 架构：设计 Agent 将需求分解为硬件感知子任务，实现 Agent 按模块生成代码，验证 Agent 协调编译、仿真和真机测试反馈形成闭环。SenSys 2026 发表。",
-      "status": "error_resumable",
+      "status": "unread",
       "topic": "automatic embedded firmware agent",
       "topic_slug": "automatic-embedded-firmware-agent",
       "tags": [
@@ -760,10 +760,11 @@
         "SenSys",
         "multi-MCU"
       ],
-      "queue_position": 1,
-      "progress": 88,
-      "pipeline_step": "Claude 正在撰写笔记...|Claude writing note...",
-      "read_error_type": "rate_limit"
+      "queue_position": null,
+      "progress": 0,
+      "pipeline_step": null,
+      "read_error_type": null,
+      "pipeline_status": null
     },
     {
       "id": "sensing-with-earables-systematic-literature-review-taxonomy",
@@ -1158,7 +1159,7 @@
       "timeline_reason_zh": "在智能眼镜上实现完全车载（onboard）EOG 眼动追踪（IEEE IoT Journal 2025）：混合 EOG（hEOG）结合传统电极与 PPG 补偿运动伪迹，<1° 精度且所有推理在眼镜端运行；与声学眼动追踪（GazeTrak）形成互补的生理信号方案，代表眼镜附加模态的最新前沿",
       "summary_en": "ElectraSight achieves fully onboard eye tracking on smart glasses using hybrid EOG (hEOG), which combines traditional electrooculography electrodes around the frame with photoplethysmography signals to compensate for motion-induced artifacts, a key limitation of pure EOG in mobile settings. All signal processing and gaze inference run on the glasses embedded processor without cloud offloading, achieving under 1 degree accuracy. The hybrid electrode placement on the glasses frame avoids the need for facial adhesive electrodes used in clinical EOG setups. ElectraSight represents the physiological-signal alternative to acoustic eye tracking (GazeTrak), offering sub-degree accuracy at the cost of requiring electrode contact with skin around the frame.",
       "summary_zh": "ElectraSight 在智能眼镜上使用混合 EOG（hEOG）实现完全车载眼动追踪：将眼镜框架上的传统电位差测量电极与 PPG 信号结合，以补偿运动引起的伪迹（纯 EOG 在移动场景的关键局限）。所有信号处理和注视推理在眼镜嵌入式处理器本地运行，无需云端，精度低于 1°。眼镜框架上的混合电极布置避免了临床 EOG 需要的皮肤粘贴电极。ElectraSight 是声学眼动追踪（GazeTrak）的生理信号替代方案，以需要电极与皮肤接触为代价换取亚度级精度。",
-      "status": "reading",
+      "status": "unread",
       "topic": "More modality in wearable system",
       "topic_slug": "more-modality-in-wearable-system",
       "tags": [
@@ -1169,12 +1170,13 @@
         "hybrid-sensing",
         "IEEE-IoT"
       ],
-      "progress": 5,
-      "pipeline_step": "PDF 不可访问（闭源）|PDF unavailable (closed access)",
+      "progress": 0,
+      "pipeline_step": null,
       "full_text_status": "no_open_pdf",
       "open_access_status": "closed",
-      "pipeline_status": "pdf_fetch_failed",
-      "read_error_type": "permanent"
+      "pipeline_status": null,
+      "read_error_type": null,
+      "queue_position": null
     },
     {
       "id": "vuebuds-visual-intelligence-wireless-earbuds",
