@@ -1012,6 +1012,22 @@ window.addEventListener('load', () => {
     const card = zone.closest('.paper-card');
     if (card) setupUploadZone(card);
   });
+  // Scroll to and highlight a specific paper if ?scroll=paper_id is set
+  const scrollTarget = new URLSearchParams(location.search).get('scroll');
+  if (scrollTarget) {
+    const target = document.querySelector(`[data-id="${scrollTarget}"]`);
+    if (target) {
+      setTimeout(() => {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.style.outline = '2px solid #ffb347';
+        target.style.boxShadow = '0 0 0 4px rgba(255,179,71,0.25)';
+        setTimeout(() => {
+          target.style.outline = '';
+          target.style.boxShadow = '';
+        }, 3000);
+      }, 400);
+    }
+  }
 });
 </script>
 </body>

@@ -109,6 +109,7 @@ _scout_queue: list = []   # [{topic, description, year_start, year_end, venue_gr
 _reader_queue: list = []  # [{paper_id, url, title, submitted_at}]
 _queue_lock = __import__("threading").Lock()
 _scout_start_lock = __import__("threading").Lock()  # prevents race on simultaneous /api/start-scout
+_global_task_lock = __import__("threading").Lock()  # global mutex: only one task (scout OR reader) at a time
 
 SCOUT_QUEUE_JSON = os.path.join(OUTPUT_DIR, "scout_queue.json")
 READER_QUEUE_JSON = os.path.join(OUTPUT_DIR, "reader_queue.json")
@@ -197,37 +198,50 @@ def _dequeue_reader():
         return task
 
 
-def _start_next_reader():
-    """Start the next reader in queue if no reader is active."""
+def _any_task_running():
+    """Return True if any scout or reader is currently active."""
+    scout_busy = load_scout_status().get("status") in ("running_phase1", "running_phase2")
     with _active_readers_lock:
-        if _active_readers:
-            return  # something is still running
-    task = _dequeue_reader()
-    if task:
-        threading.Thread(
-            target=read_paper_bg,
-            args=(task["paper_id"], task["url"], task.get("title", ""), task.get("model", MODEL)),
-            daemon=True,
-        ).start()
+        reader_busy = bool(_active_readers)
+    return scout_busy or reader_busy
+
+
+def _start_next_reader():
+    """Start the next queued reader if nothing is running globally."""
+    with _global_task_lock:
+        if _any_task_running():
+            return
+        task = _dequeue_reader()
+        if not task:
+            return
+        with _active_readers_lock:
+            _active_readers[task["paper_id"]] = None  # claim slot
+    threading.Thread(
+        target=read_paper_bg,
+        args=(task["paper_id"], task["url"], task.get("title", ""), task.get("model", MODEL)),
+        daemon=True,
+    ).start()
 
 
 def _start_next_scout():
-    """Start the next scout in queue if no scout is active."""
-    status = load_scout_status()
-    if status.get("status") in ("running_phase1", "running_phase2"):
-        return
-    task = _dequeue_scout()
-    if task:
-        threading.Thread(
-            target=run_conference_scout_phase1_bg,
-            args=(
-                task["topic"], task.get("description", ""),
-                task.get("year_start", 2020), task.get("year_end", datetime.now().year),
-                task.get("venue_group", "ai_ml"), task.get("specific_venues", []),
-                task.get("model", MODEL),
-            ),
-            daemon=True,
-        ).start()
+    """Start the next queued scout if nothing is running globally."""
+    with _global_task_lock:
+        if _any_task_running():
+            return
+        task = _dequeue_scout()
+        if not task:
+            return
+        save_scout_status(status="running_phase1")  # claim slot
+    threading.Thread(
+        target=run_conference_scout_phase1_bg,
+        args=(
+            task["topic"], task.get("description", ""),
+            task.get("year_start", 2020), task.get("year_end", datetime.now().year),
+            task.get("venue_group", "ai_ml"), task.get("specific_venues", []),
+            task.get("model", MODEL),
+        ),
+        daemon=True,
+    ).start()
 
 
 def set_paper_fields(paper_id, **kwargs):
@@ -1317,6 +1331,10 @@ body.light {{
   cursor:pointer; color:#ff8080; font-size:11px; opacity:0.6;
 }}
 .scout-queue-list li .q-remove:hover {{ opacity:1; }}
+.scout-queue-list li .q-jump {{
+  color:var(--blue); font-size:12px; text-decoration:none; margin-left:6px; opacity:0.7;
+}}
+.scout-queue-list li .q-jump:hover {{ opacity:1; }}
 
 /* ── Scout: candidates confirmation panel ── */
 .scout-confirm-panel {{
@@ -1457,8 +1475,13 @@ body.light {{
 
       <!-- ── Scout Queue Panel ── -->
       <div class="scout-queue-panel" id="scoutQueuePanel" style="display:none">
-        <div class="scout-queue-title">⏳ 等待调研队列</div>
+        <div class="scout-queue-title">⏳ 等待调研队列（Scout）</div>
         <ul class="scout-queue-list" id="scoutQueueList"></ul>
+      </div>
+
+      <div class="scout-queue-panel" id="readerQueuePanel" style="display:none">
+        <div class="scout-queue-title">⏳ 等待精读队列（Paper Reader）</div>
+        <ul class="scout-queue-list" id="readerQueueList"></ul>
       </div>
 
       <!-- ── Round 4.5 Confirmation Panel ── -->
@@ -1835,11 +1858,49 @@ async function removeScoutQueue(idx) {{
   _pollScoutQueue();
 }}
 
+async function _pollReaderQueue() {{
+  try {{
+    const r = await fetch('/api/reader-queue');
+    if (!r.ok) return;
+    const data = await r.json();
+    const pending = data.pending || [];
+    const panel = document.getElementById('readerQueuePanel');
+    const list = document.getElementById('readerQueueList');
+    if (pending.length === 0) {{
+      panel.style.display = 'none';
+      return;
+    }}
+    panel.style.display = '';
+    list.innerHTML = '';
+    pending.forEach((t, i) => {{
+      const slug = t.topic_slug || '';
+      const papersUrl = slug ? `/projects/${{slug}}/papers.html?scroll=${{encodeURIComponent(t.paper_id)}}` : '';
+      const jumpBtn = papersUrl
+        ? `<a class="q-jump" href="${{papersUrl}}" title="跳转到论文页">↗</a>`
+        : '';
+      const li = document.createElement('li');
+      li.innerHTML = `<span>#${{i+1}} ${{t.title || t.paper_id}}${{jumpBtn}}</span><span class="q-remove" onclick="removeReaderQueue('${{t.paper_id}}')">✕</span>`;
+      list.appendChild(li);
+    }});
+  }} catch (_) {{}}
+}}
+
+async function removeReaderQueue(paperId) {{
+  await fetch('/api/remove-reader-queue', {{
+    method: 'POST',
+    headers: {{ 'Content-Type': 'application/json' }},
+    body: JSON.stringify({{ paper_id: paperId }})
+  }}).catch(() => {{}});
+  _pollReaderQueue();
+}}
+
 window.addEventListener('load', () => {{
   applyTheme();
   _pollScoutStatus();  // check if a scout is already running from a previous session
   _pollScoutQueue();
+  _pollReaderQueue();
   setInterval(_pollScoutQueue, 5000);
+  setInterval(_pollReaderQueue, 5000);
 }});
 </script>
 </body>
@@ -3819,14 +3880,23 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(400, {"ok": False, "error": "missing url or paper_id"})
                 return
 
-            with _active_readers_lock:
-                busy = bool(_active_readers)
+            # Look up topic_slug for queue display
+            try:
+                pdata = load_papers()
+                pmatch = next((p for p in pdata.get("papers", []) if p["id"] == paper_id), None)
+                topic_slug = paper_topic_slug(pmatch) if pmatch else ""
+            except Exception:
+                topic_slug = ""
+
+            with _global_task_lock:
+                busy = _any_task_running()
                 if not busy:
-                    # claim the slot inside the lock to prevent race condition
-                    _active_readers[paper_id] = None  # placeholder until thread sets real proc
+                    with _active_readers_lock:
+                        _active_readers[paper_id] = None  # claim slot
 
             if busy:
-                task = {"paper_id": paper_id, "url": url, "title": title, "model": reader_model}
+                task = {"paper_id": paper_id, "url": url, "title": title,
+                        "model": reader_model, "topic_slug": topic_slug}
                 _enqueue_reader(task)
                 with _queue_lock:
                     pos = next((i + 1 for i, t in enumerate(_reader_queue) if t["paper_id"] == paper_id), len(_reader_queue))
@@ -3888,9 +3958,8 @@ class Handler(BaseHTTPRequestHandler):
             if not topic:
                 self.send_json(400, {"ok": False, "error": "missing topic"})
                 return
-            with _scout_start_lock:
-                status = load_scout_status()
-                if status.get("status") in ("running_phase1", "running_phase2"):
+            with _global_task_lock:
+                if _any_task_running():
                     task = {
                         "topic": topic, "description": description,
                         "year_start": year_start, "year_end": year_end,
@@ -3901,7 +3970,7 @@ class Handler(BaseHTTPRequestHandler):
                     pos = len(_scout_queue)
                     self.send_json(200, {"ok": True, "status": "queued", "topic": topic, "queue_position": pos})
                     return
-                save_scout_status(status="running_phase1")  # claim the slot before releasing lock
+                save_scout_status(status="running_phase1")  # claim slot
             threading.Thread(
                 target=run_conference_scout_phase1_bg,
                 args=(topic, description, year_start, year_end, venue_group, specific_venues, scout_model),
