@@ -108,6 +108,7 @@ _active_readers_lock = __import__("threading").Lock()
 _scout_queue: list = []   # [{topic, description, year_start, year_end, venue_group, specific_venues, submitted_at}]
 _reader_queue: list = []  # [{paper_id, url, title, submitted_at}]
 _queue_lock = __import__("threading").Lock()
+_scout_start_lock = __import__("threading").Lock()  # prevents race on simultaneous /api/start-scout
 
 SCOUT_QUEUE_JSON = os.path.join(OUTPUT_DIR, "scout_queue.json")
 READER_QUEUE_JSON = os.path.join(OUTPUT_DIR, "reader_queue.json")
@@ -3820,6 +3821,9 @@ class Handler(BaseHTTPRequestHandler):
 
             with _active_readers_lock:
                 busy = bool(_active_readers)
+                if not busy:
+                    # claim the slot inside the lock to prevent race condition
+                    _active_readers[paper_id] = None  # placeholder until thread sets real proc
 
             if busy:
                 task = {"paper_id": paper_id, "url": url, "title": title, "model": reader_model}
@@ -3884,18 +3888,20 @@ class Handler(BaseHTTPRequestHandler):
             if not topic:
                 self.send_json(400, {"ok": False, "error": "missing topic"})
                 return
-            status = load_scout_status()
-            if status.get("status") in ("running_phase1", "running_phase2"):
-                task = {
-                    "topic": topic, "description": description,
-                    "year_start": year_start, "year_end": year_end,
-                    "venue_group": venue_group, "specific_venues": specific_venues,
-                    "model": scout_model,
-                }
-                _enqueue_scout(task)
-                pos = len(_scout_queue)
-                self.send_json(200, {"ok": True, "status": "queued", "topic": topic, "queue_position": pos})
-                return
+            with _scout_start_lock:
+                status = load_scout_status()
+                if status.get("status") in ("running_phase1", "running_phase2"):
+                    task = {
+                        "topic": topic, "description": description,
+                        "year_start": year_start, "year_end": year_end,
+                        "venue_group": venue_group, "specific_venues": specific_venues,
+                        "model": scout_model,
+                    }
+                    _enqueue_scout(task)
+                    pos = len(_scout_queue)
+                    self.send_json(200, {"ok": True, "status": "queued", "topic": topic, "queue_position": pos})
+                    return
+                save_scout_status(status="running_phase1")  # claim the slot before releasing lock
             threading.Thread(
                 target=run_conference_scout_phase1_bg,
                 args=(topic, description, year_start, year_end, venue_group, specific_venues, scout_model),
