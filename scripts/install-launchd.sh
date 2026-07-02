@@ -65,6 +65,39 @@ install_plist "queue-runner" \
 </dict>
 </plist>"
 
+###############################################################################
+# 3. Cloudflare Tunnel (keep-alive, restart on crash)
+###############################################################################
+CLOUDFLARED="$(command -v cloudflared 2>/dev/null || echo /opt/homebrew/bin/cloudflared)"
+CF_CONFIG="$HOME/.cloudflared/config.yml"
+
+if [ ! -f "$CF_CONFIG" ]; then
+  echo "⚠ $CF_CONFIG not found — skipping cloudflared agent"
+else
+  install_plist "cloudflared" \
+    "$LAUNCH_DIR/com.myresearchclaw.cloudflared.plist" \
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+  <key>Label</key>             <string>com.myresearchclaw.cloudflared</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$CLOUDFLARED</string>
+    <string>tunnel</string>
+    <string>--config</string>
+    <string>$CF_CONFIG</string>
+    <string>run</string>
+    <string>crumb</string>
+  </array>
+  <key>RunAtLoad</key>         <true/>
+  <key>KeepAlive</key>         <true/>
+  <key>StandardOutPath</key>   <string>$HOME/.cloudflared/logs/cloudflared-launchd.log</string>
+  <key>StandardErrorPath</key> <string>$HOME/.cloudflared/logs/cloudflared-launchd.log</string>
+</dict>
+</plist>"
+fi
+
 echo ""
 echo "All agents installed. Verify with:"
 echo "  launchctl list | grep myresearchclaw"
