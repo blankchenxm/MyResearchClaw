@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-07-01",
+  "last_updated": "2026-07-17",
   "searches": [
     {
       "topic": "LLM Agent for Automated PCB Design",
@@ -55,6 +55,38 @@
         "arXiv 2025"
       ],
       "papers_added": 18
+    },
+    {
+      "topic": "IC Datasheet extracter",
+      "date": "2026-07-17",
+      "year_range": "2021-2026",
+      "venues_checked": [
+        "NeurIPS",
+        "ICLR",
+        "ICML",
+        "CVPR",
+        "AAAI",
+        "ACL",
+        "EMNLP",
+        "SenSys",
+        "MobiSys",
+        "IPSN",
+        "UbiComp / IMWUT",
+        "MobiCom",
+        "IoTDI",
+        "EuroSys",
+        "HotMobile",
+        "CHI",
+        "DAC",
+        "ICCAD",
+        "DATE",
+        "ASPLOS",
+        "ISPD",
+        "ISLPED",
+        "FPL"
+      ],
+      "papers_added": 8,
+      "description": "我现在希望你帮我搜索一些论文，看一下：\n\n1. 比如对于像电子元件这种 datasheet 的信息，能否有效地提取？尤其是里面图片IC信息\n2. 如果实在没有针对电子元件的，那么对于普通 PDF 里面图片和文字的信息，应该怎么有效地提取？\n\n尤其是图片。比如在 IC datasheet 中，可能一共有几百页，信息非常多，如何只定位有用的信息？\n\n以及，有用的信息可能在图片里面，如何对图片内部进行精确的定位？而且图片里有时候它的引脚等数字都很小，在这种情况下应该如何进行定位？"
     }
   ],
   "papers": [
@@ -1263,6 +1295,198 @@
         "edge-AI",
         "voice-vision",
         "wearable"
+      ]
+    },
+    {
+      "id": "pix2struct-screenshot-parsing-as-pretraining-for-visual-language-understanding",
+      "title": "Pix2Struct: Screenshot Parsing as Pretraining for Visual Language Understanding",
+      "authors": "Kenton Lee et al.",
+      "venue": "ICML",
+      "venue_tier": 1,
+      "year": 2023,
+      "timeline_role": "foundation",
+      "citations": 46,
+      "influential_citations": 0,
+      "url": "https://proceedings.mlr.press/v202/lee23g.html",
+      "arxiv_id": "2210.03347",
+      "timeline_reason_zh": "用可变分辨率、纯视觉 image-to-text 预训练建立通用文档/插图读取基线，直接对应 datasheet 小字需要的高分辨率输入。",
+      "summary_en": "Pix2Struct pretrains an image-to-text Transformer by parsing masked webpage screenshots into simplified HTML. Its variable-resolution input representation is especially relevant when tiny labels must retain enough pixels, as in IC pin diagrams. The model unifies OCR-like recognition, language modeling, and visual context instead of relying on a separate OCR engine. It reported state-of-the-art results on six of nine tasks across documents, illustrations, user interfaces, and natural images. For datasheets, it is best viewed as a reading backbone after candidate pages or crops have already been selected.",
+      "summary_zh": "Pix2Struct 通过把遮挡后的网页截图解析为简化 HTML，预训练一个 image-to-text Transformer。它的可变分辨率输入对 IC 引脚图中的微小数字尤其关键，因为可以避免整页缩放后文字只剩几个像素。该方法把类似 OCR 的识别、语言建模与视觉上下文统一起来，不依赖单独 OCR 引擎。论文在文档、插图、UI 和自然图像四类领域的九项任务中，有六项达到当时最好结果。用于 datasheet 时，更适合作为候选页面或局部裁剪后的精读骨干，而不是直接吞下数百页。",
+      "status": "unread",
+      "topic": "IC Datasheet extracter",
+      "topic_slug": "ic-datasheet-extracter",
+      "tags": [
+        "document-ai",
+        "visual-retrieval",
+        "datasheet"
+      ]
+    },
+    {
+      "id": "unifying-vision-text-and-layout-for-universal-document-processing",
+      "title": "Unifying Vision, Text, and Layout for Universal Document Processing",
+      "authors": "Zineng Tang et al.",
+      "venue": "CVPR",
+      "venue_tier": 1,
+      "year": 2023,
+      "timeline_role": "foundation",
+      "citations": 103,
+      "influential_citations": 0,
+      "url": "https://doi.org/10.1109/CVPR52729.2023.01845",
+      "arxiv_id": "2212.02623",
+      "timeline_reason_zh": "把文字、二维布局和页面图像统一到同一文档模型，奠定了对表格、正文与图示混合页面进行结构化抽取的通用路线。",
+      "summary_en": "UDOP jointly models document vision, recognized text, and two-dimensional layout in one encoder-decoder framework. Its mixture of understanding and generation objectives lets one architecture support extraction, question answering, classification, and document generation. The paper reports state-of-the-art performance on eight Document AI tasks spanning financial reports, academic papers, and websites. For an IC datasheet, explicit layout coordinates are useful for preserving the relation between a pin number, its label, and the nearby diagram geometry. It still depends on adequate text detection or image resolution, so tiny labels should be processed from high-DPI local crops.",
+      "summary_zh": "UDOP 在同一个编码器—解码器框架中联合建模页面视觉、识别文字与二维布局。其理解和生成混合目标让单一架构可覆盖抽取、问答、分类与文档生成。论文在金融报告、学术论文和网页等领域的八项 Document AI 任务上取得当时最好结果。对于 IC datasheet，显式布局坐标有助于保留引脚号、引脚名与邻近图形之间的关系。它仍受文字检测和输入分辨率制约，因此小字应从高 DPI 局部裁剪中读取。",
+      "status": "unread",
+      "topic": "IC Datasheet extracter",
+      "topic_slug": "ic-datasheet-extracter",
+      "tags": [
+        "document-ai",
+        "visual-retrieval",
+        "datasheet"
+      ]
+    },
+    {
+      "id": "mmlongbench-doc-benchmarking-long-context-document-understanding-with-visualizations",
+      "title": "MMLONGBENCH-DOC: Benchmarking Long-context Document Understanding with Visualizations",
+      "authors": "Yixin Cao et al.",
+      "venue": "NeurIPS",
+      "venue_tier": 1,
+      "year": 2024,
+      "timeline_role": "consolidation",
+      "citations": 8,
+      "influential_citations": 0,
+      "url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/ae0e43289bffea0c1fa34633fc608e92-Abstract-Datasets_and_Benchmarks_Track.html",
+      "arxiv_id": "2407.01523",
+      "timeline_reason_zh": "把长文档问题明确拆成跨页、跨模态、带页面位置的证据检索与推理，为“几百页中先找页”提供评测基准。",
+      "summary_en": "MMLongBench-Doc evaluates long-context understanding where answers depend on text, images, charts, tables, and layout structure. Evidence may appear at different page locations, making the benchmark a close proxy for hundreds-page technical manuals. Its main contribution is diagnostic: it reveals whether a system truly retrieves visual evidence instead of succeeding through nearby OCR text. The benchmark therefore supports separate evaluation of page selection and downstream answering. For datasheets, its lesson is to preserve page identity and modality metadata throughout retrieval rather than flattening the PDF into text chunks.",
+      "summary_zh": "MMLongBench-Doc 评测需要联合正文、图片、图表、表格和布局结构的长上下文理解，证据还可能分布在不同页。它与数百页技术手册的场景很接近，核心价值是诊断系统是否真的找到了视觉证据，而不是只靠图片附近的 OCR 文字猜中答案。该基准因此支持把页面选择与后续回答分开评测。对 datasheet 的直接启示是：索引时必须保留页码和模态信息，不能把 PDF 完全压平成无位置的文本块。",
+      "status": "unread",
+      "topic": "IC Datasheet extracter",
+      "topic_slug": "ic-datasheet-extracter",
+      "tags": [
+        "document-ai",
+        "visual-retrieval",
+        "datasheet"
+      ]
+    },
+    {
+      "id": "colpali-efficient-document-retrieval-with-vision-language-models",
+      "title": "ColPali: Efficient Document Retrieval with Vision Language Models",
+      "authors": "Manuel Faysse et al.",
+      "venue": "ICLR",
+      "venue_tier": 1,
+      "year": 2025,
+      "timeline_role": "breakthrough",
+      "citations": 5,
+      "influential_citations": 0,
+      "url": "https://openreview.net/forum?id=ogjBpZ8uSi",
+      "arxiv_id": "2407.01449",
+      "timeline_reason_zh": "提出 Retrieval in Vision Space：直接索引页面图像并以 late interaction 匹配查询，避免纯 OCR 索引漏掉封装图、波形和布局线索。",
+      "summary_en": "ColPali embeds document page images with a vision-language model and retains multiple patch-level vectors per page. A late-interaction scorer matches query tokens against those visual vectors, allowing figures, layout, and text appearance to influence retrieval without an OCR-first pipeline. On the ViDoRe benchmark it substantially outperformed conventional text-centric and single-vector retrieval baselines while remaining practical for indexing. This is the strongest direct answer to locating useful pages in a very long datasheet. It retrieves pages rather than exact pin labels, so a second-stage region retriever and high-resolution crop reader are still required.",
+      "summary_zh": "ColPali 用视觉语言模型直接编码文档页面图像，并为每页保留多个 patch 级向量。查询通过 late interaction 与这些视觉向量匹配，因此图片、布局和文字外观都能参与检索，不必先把页面完全 OCR 化。它在 ViDoRe 基准上显著优于传统文本检索和单向量视觉检索，同时仍适合实际建立索引。这是“如何在几百页 datasheet 中先找到有用页面”的最直接方案。但它主要做到页级召回，精确到引脚数字仍需要区域检索和高分辨率裁剪读取。",
+      "status": "unread",
+      "topic": "IC Datasheet extracter",
+      "topic_slug": "ic-datasheet-extracter",
+      "tags": [
+        "document-ai",
+        "visual-retrieval",
+        "datasheet"
+      ]
+    },
+    {
+      "id": "automated-pin-diagram-detection-and-mapping-from-semiconductor-datasheets-using-computer-vision-and-ocr",
+      "title": "Automated Pin Diagram Detection and Mapping from Semiconductor Datasheets using Computer Vision and OCR",
+      "authors": "Vinayak Kumar",
+      "venue": "TechRxiv",
+      "venue_tier": 0,
+      "year": 2025,
+      "timeline_role": "consolidation",
+      "citations": 0,
+      "influential_citations": 0,
+      "url": "https://doi.org/10.36227/techrxiv.176315396.69293464/v1",
+      "arxiv_id": null,
+      "timeline_reason_zh": "唯一直接针对半导体 datasheet 引脚图的案例：先用 CNN 特征相似度定位页面，再以 OCR 和文本规则生成 pin mapping；但仅为预印本和单 datasheet 案例。",
+      "summary_en": "This TechRxiv preprint targets semiconductor datasheets directly, using the MX25L3233F datasheet as a case study. It compares CNN feature extractors and distance metrics to identify pages containing pin diagrams, then applies Tesseract OCR and text parsing to build structured pin mappings. The workflow reportedly found all correct pin-configuration pages in the case study. Its coarse-to-fine pipeline is practical and highly relevant, but the evidence is narrow and not venue-confirmed. Tiny or rotated pin labels remain vulnerable to Tesseract errors, so production use should add high-DPI rerendering, oriented text detection, and geometry-based consistency checks.",
+      "summary_zh": "这篇 TechRxiv 预印本直接面向半导体 datasheet，并以 MX25L3233F 为案例。它比较多种 CNN 特征提取器和距离度量来定位引脚图页面，然后用 Tesseract OCR 与文本解析生成结构化 pin mapping。论文报告在该案例中找到了全部正确的引脚配置页面。其粗到细流程非常实用，也与需求最贴近，但证据仅来自单一 datasheet，且没有顶会确认。面对微小或旋转的引脚文字，生产系统还应加入高 DPI 重渲染、方向感知文字检测和基于几何关系的一致性校验。",
+      "status": "unread",
+      "topic": "IC Datasheet extracter",
+      "topic_slug": "ic-datasheet-extracter",
+      "tags": [
+        "document-ai",
+        "visual-retrieval",
+        "datasheet"
+      ]
+    },
+    {
+      "id": "benchmarking-retrieval-augmented-multimodal-generation-for-document-question-answering",
+      "title": "Benchmarking Retrieval-Augmented Multimodal Generation for Document Question Answering",
+      "authors": "Kuicai Dong et al.",
+      "venue": "NeurIPS",
+      "venue_tier": 1,
+      "year": 2025,
+      "timeline_role": "frontier",
+      "citations": 0,
+      "influential_citations": 0,
+      "url": "https://proceedings.neurips.cc/paper_files/paper/2025/hash/1a93178950e92fd2e7b7448f7d68fd7d-Abstract-Datasets_and_Benchmarks_Track.html",
+      "arxiv_id": "2505.16470",
+      "timeline_reason_zh": "用 4,055 个专家标注问题、跨页跨模态证据链系统评测 60 个模型和 14 个检索器，显示视觉证据选择仍是主要瓶颈。",
+      "summary_en": "MMDocRAG contains 4,055 expert-annotated questions with multi-page and cross-modal evidence chains. The study evaluates 60 VLM/LLM models and 14 retrieval systems, with metrics that separately inspect multimodal quote selection and answer integration. It finds that text-centric retrieval frequently misses critical visual evidence, while open-source models can degrade when visual inputs are added without strong alignment. Detailed image descriptions can materially improve fine-tuned language models. For datasheets, this supports a hybrid index containing native PDF text, page images, detected regions, and captions rather than trusting a single modality.",
+      "summary_zh": "MMDocRAG 包含 4,055 个专家标注问题，并显式标注跨页、跨模态证据链。研究评测了 60 个 VLM/LLM 和 14 种检索系统，指标会分别检查多模态证据选择与答案整合。结果显示纯文本检索经常漏掉关键视觉证据，而开源模型在视觉对齐不足时，加入图片反而可能退化；细致的图片描述则能显著帮助微调后的语言模型。对 datasheet 而言，这支持建立混合索引：同时保存原生 PDF 文字、页面图像、检测区域和区域描述，不能只信任一种模态。",
+      "status": "unread",
+      "topic": "IC Datasheet extracter",
+      "topic_slug": "ic-datasheet-extracter",
+      "tags": [
+        "document-ai",
+        "visual-retrieval",
+        "datasheet"
+      ]
+    },
+    {
+      "id": "mmdocir-benchmarking-multimodal-retrieval-for-long-documents",
+      "title": "MMDocIR: Benchmarking Multimodal Retrieval for Long Documents",
+      "authors": "Kuicai Dong et al.",
+      "venue": "EMNLP",
+      "venue_tier": 2,
+      "year": 2025,
+      "timeline_role": "frontier",
+      "citations": 3,
+      "influential_citations": 0,
+      "url": "https://doi.org/10.18653/v1/2025.emnlp-main.1576",
+      "arxiv_id": "2501.08828",
+      "timeline_reason_zh": "把长文档多模态检索本身从最终问答中分离出来，适合直接评估页级召回是否能覆盖图、表和文字证据。",
+      "summary_en": "MMDocIR isolates multimodal retrieval for long documents instead of hiding retrieval quality inside final QA accuracy. Its queries and evidence cover text, tables, figures, and other visual content, enabling comparison of textual, visual, and fused retrievers. This separation is important for datasheets because a reader cannot recover a pin diagram that the page retriever never selected. The benchmark also helps tune top-k and modality fusion before deploying an expensive VLM reader. A practical system should reproduce this staged evaluation with datasheet-specific page and region labels.",
+      "summary_zh": "MMDocIR 把长文档多模态检索从最终问答准确率中单独剥离出来。其查询与证据覆盖正文、表格、图片等内容，因此能直接比较文本检索、视觉检索和融合检索。对 datasheet 而言，这种拆分非常关键：页级检索若没选中引脚图，后面的阅读模型再强也无法恢复。该基准还能在调用昂贵 VLM 之前帮助调节 top-k 和模态融合策略。实际系统应仿照这种分阶段评测，并建立 datasheet 专用的页级与区域级标注。",
+      "status": "unread",
+      "topic": "IC Datasheet extracter",
+      "topic_slug": "ic-datasheet-extracter",
+      "tags": [
+        "document-ai",
+        "visual-retrieval",
+        "datasheet"
+      ]
+    },
+    {
+      "id": "regionrag-region-level-retrieval-augmented-generation-for-visual-document-understanding",
+      "title": "RegionRAG: Region-level Retrieval-Augmented Generation for Visual Document Understanding",
+      "authors": "Yinglu Li et al.",
+      "venue": "AAAI",
+      "venue_tier": 2,
+      "year": 2026,
+      "timeline_role": "frontier",
+      "citations": 1,
+      "influential_citations": 0,
+      "url": "https://doi.org/10.1609/aaai.v40i8.37597",
+      "arxiv_id": "2510.27261",
+      "timeline_reason_zh": "把检索粒度从整页推进到区域，平均 R@1 提升 10.02%、QA 提升 3.56%，同时只用先前方法 71.42% 的视觉 token。",
+      "summary_en": "RegionRAG treats detected document regions, rather than full pages, as retrieval units. The paper reports an average 10.02% absolute gain in R@1 and a 3.56% improvement in question answering while using 71.42% of the visual tokens required by prior methods. This directly addresses the need to localize evidence inside a page after coarse page retrieval. For IC diagrams, each pin bank, legend, table, or package view can become an independently indexed region. Very small labels may still need recursive crops or rasterization at higher DPI because retrieval localization alone does not create missing pixels.",
+      "summary_zh": "RegionRAG 不再把整页作为唯一检索单元，而是索引检测出的文档区域。论文报告平均 R@1 提升 10.02%，问答准确率提升 3.56%，同时视觉 token 仅为先前方法的 71.42%。这正面解决了页级召回之后，如何在页面内部继续定位证据的问题。用于 IC 图时，可把不同引脚组、图例、表格或封装视图分别建索引。需要注意，区域定位并不会凭空产生像素；特别小的标签仍要递归裁剪或以更高 DPI 重渲染。",
+      "status": "unread",
+      "topic": "IC Datasheet extracter",
+      "topic_slug": "ic-datasheet-extracter",
+      "tags": [
+        "document-ai",
+        "visual-retrieval",
+        "datasheet"
       ]
     }
   ]

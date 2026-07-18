@@ -1,0 +1,27 @@
+{
+  "slug": "ic-datasheet-extracter",
+  "operation": "conference-scout/IC Datasheet extracter",
+  "phase": 1,
+  "started_at": "2026-07-17T19:41:37",
+  "completed_at": "2026-07-17T19:53:50",
+  "duration_min": 12.2,
+  "total_cost_usd": null,
+  "num_turns": 1,
+  "model_usage": {},
+  "per_round": {
+    "pre-start": {
+      "turns": 1,
+      "output_tokens": 17776,
+      "cache_create": 0,
+      "cache_read": 1274880,
+      "input_tokens": 1353491
+    }
+  },
+  "totals": {
+    "turns": 1,
+    "output_tokens": 17776,
+    "cache_create": 0,
+    "cache_read": 1274880,
+    "input_tokens": 1353491
+  }
+}
