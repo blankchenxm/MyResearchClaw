@@ -16,7 +16,7 @@ import urllib.request
 import urllib.error
 from datetime import datetime
 
-PORT = 5001
+PORT = int(os.environ.get("MYRESEARCHCLAW_PORT", "5678"))
 BASE = f"http://localhost:{PORT}"
 LOG_DIR = os.path.join(os.path.dirname(__file__), "..", "output", "logs")
 LOG_PATH = os.path.join(LOG_DIR, "queue-runner.log")

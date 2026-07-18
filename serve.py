@@ -9,8 +9,10 @@ Usage:
 Then open http://localhost:5678
 
 Optional environment variables (or set in .env file next to serve.py):
-  MYRESEARCHCLAW_MODEL                default: claude-sonnet-4-6
-  MYRESEARCHCLAW_CLAUDE_BIN           default: claude
+  MYRESEARCHCLAW_MODEL                default: Codex CLI default model
+  MYRESEARCHCLAW_CODEX_BIN            default: codex
+  MYRESEARCHCLAW_CODEX_SEARCH         default: true
+  MYRESEARCHCLAW_CODEX_NETWORK        default: true
   MYRESEARCHCLAW_PORT                 default: 5678
   MYRESEARCHCLAW_PAPER_READER_PYTHON  default: auto-detected
 """
@@ -71,34 +73,76 @@ KANBAN_HTML = os.path.join(OUTPUT_DIR, "kanban.html")
 ENGINEERING_TEMPLATE = os.path.join(SKILLS_DIR, "engineering-scout", "assets", "engineering.html")
 ENGINEERING_HTML = os.path.join(OUTPUT_DIR, "engineering.html")
 
-MODEL = (
-    os.environ.get("MYRESEARCHCLAW_MODEL", "claude-sonnet-4-6").strip()
-    or "claude-sonnet-4-6"
-)
-CLAUDE_BIN = (
-    os.environ.get("MYRESEARCHCLAW_CLAUDE_BIN", "claude").strip() or "claude"
-)
+MODEL = os.environ.get("MYRESEARCHCLAW_MODEL", "").strip()
+CODEX_BIN = os.environ.get("MYRESEARCHCLAW_CODEX_BIN", "codex").strip() or "codex"
+CODEX_SEARCH = os.environ.get("MYRESEARCHCLAW_CODEX_SEARCH", "true").lower() not in ("0", "false", "no")
+CODEX_NETWORK = os.environ.get("MYRESEARCHCLAW_CODEX_NETWORK", "true").lower() not in ("0", "false", "no")
 PORT = int(os.environ.get("MYRESEARCHCLAW_PORT", "5678"))
 
 
-def resolve_claude_bin():
-    if os.path.isabs(CLAUDE_BIN) and os.path.exists(CLAUDE_BIN):
-        return CLAUDE_BIN
-    resolved = shutil.which(CLAUDE_BIN)
+def resolve_codex_bin():
+    if os.path.isabs(CODEX_BIN) and os.path.exists(CODEX_BIN):
+        return CODEX_BIN
+    resolved = shutil.which(CODEX_BIN)
     if resolved:
         return resolved
-    # Common npm-installed Claude Code locations
+    # Common Codex CLI locations
     for fallback in (
-        os.path.expanduser("~/.npm-global/bin/claude"),
-        "/home/wangmingke/.nvm/versions/node/v24.14.1/bin/claude",
-        "/usr/local/bin/claude",
+        os.path.expanduser("~/.local/bin/codex"),
+        "/opt/homebrew/bin/codex",
+        "/usr/local/bin/codex",
     ):
         if os.path.exists(fallback):
             return fallback
-    return CLAUDE_BIN
+    return CODEX_BIN
 
 
-RESOLVED_CLAUDE_BIN = resolve_claude_bin()
+RESOLVED_CODEX_BIN = resolve_codex_bin()
+
+
+def build_codex_command(prompt, model=None):
+    """Build one unattended Codex CLI invocation for a server task."""
+    cmd = [RESOLVED_CODEX_BIN]
+    if CODEX_SEARCH:
+        cmd.append("--search")
+    cmd.extend(["--sandbox", "workspace-write", "--ask-for-approval", "never"])
+    if CODEX_NETWORK:
+        cmd.extend(["--config", "sandbox_workspace_write.network_access=true"])
+    selected_model = (model or MODEL).strip()
+    if selected_model:
+        cmd.extend(["--model", selected_model])
+    cmd.extend([
+        "exec",
+        "--json",
+        "--ephemeral",
+        "--color", "never",
+        "--cd", ROOT,
+        prompt,
+    ])
+    return cmd
+
+
+def codex_env():
+    env = os.environ.copy()
+    codex_dir = os.path.dirname(RESOLVED_CODEX_BIN)
+    env["PATH"] = codex_dir + os.pathsep + env.get("PATH", "")
+    return env
+
+
+def codex_last_message(jsonl):
+    """Extract the final assistant message from `codex exec --json` output."""
+    answer = ""
+    for raw in jsonl.splitlines():
+        try:
+            event = json.loads(raw)
+        except Exception:
+            continue
+        if event.get("type") != "item.completed":
+            continue
+        item = event.get("item") or {}
+        if item.get("type") == "agent_message":
+            answer = (item.get("text") or "").strip()
+    return answer
 
 # paper_id → Popen, used by /api/cancel-read
 _active_readers: dict = {}
@@ -387,7 +431,7 @@ def run_chat_query(topic, page_type, message, history):
         role = item.get("role", "assistant").upper()
         history_lines.append(f"{role}: {item.get('content','')}")
     history_block = "\n".join(history_lines) if history_lines else "(empty)"
-    prompt = f"""You are Claude (Sonnet 4.6), the embedded assistant for a MyResearchClaw project page. You are NOT Codex, GPT, or any other model.
+    prompt = f"""You are the Codex-powered embedded assistant for a MyResearchClaw project page.
 
 Page topic: {topic}
 Page type: {page_type}
@@ -413,23 +457,8 @@ Instructions:
     with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8", suffix=".txt", delete=False) as output_file:
         output_path = output_file.name
 
-    cmd = [
-        RESOLVED_CLAUDE_BIN,
-        "-p",
-        prompt,
-        "--model",
-        MODEL,
-        "--permission-mode",
-        "bypassPermissions",
-        "--add-dir",
-        ROOT,
-        "--output-format",
-        "json",
-    ]
-
-    claude_dir = os.path.dirname(RESOLVED_CLAUDE_BIN)
-    env = os.environ.copy()
-    env["PATH"] = claude_dir + os.pathsep + env.get("PATH", "")
+    cmd = build_codex_command(prompt)
+    env = codex_env()
     try:
         proc = subprocess.run(
             cmd,
@@ -451,14 +480,9 @@ Instructions:
             )
         if proc.returncode != 0:
             raise RuntimeError(
-                (proc.stderr or proc.stdout).strip() or f"claude exited {proc.returncode}"
+                (proc.stderr or proc.stdout).strip() or f"codex exited {proc.returncode}"
             )
-        answer = ""
-        try:
-            payload = json.loads(proc.stdout)
-            answer = (payload.get("result") or "").strip()
-        except Exception:
-            answer = proc.stdout.strip()
+        answer = codex_last_message(proc.stdout) or proc.stdout.strip()
         return answer
     finally:
         try:
@@ -2140,7 +2164,7 @@ def append_token_usage(op_type, entity_id, title, usage):
 
 
 def parse_usage_from_log_file(log_path):
-    """Scan log file in reverse for the final stream-json result event containing usage stats."""
+    """Scan a Codex JSONL log for the final turn-completed usage event."""
     try:
         with open(log_path, encoding="utf-8", errors="ignore") as f:
             lines = f.readlines()
@@ -2150,12 +2174,15 @@ def parse_usage_from_log_file(log_path):
                 continue
             try:
                 obj = json.loads(line)
-                if isinstance(obj, dict) and obj.get("type") == "result":
+                if isinstance(obj, dict) and obj.get("type") in ("turn.completed", "result"):
                     usage = obj.get("usage") or {}
                     return {
                         "input_tokens": usage.get("input_tokens", 0),
                         "output_tokens": usage.get("output_tokens", 0),
-                        "cache_read_input_tokens": usage.get("cache_read_input_tokens", 0),
+                        "cache_read_input_tokens": usage.get(
+                            "cached_input_tokens",
+                            usage.get("cache_read_input_tokens", 0),
+                        ),
                         "cache_creation_input_tokens": usage.get("cache_creation_input_tokens", 0),
                         "cost_usd": obj.get("cost_usd", 0.0),
                         "duration_ms": obj.get("duration_ms", 0),
@@ -2357,6 +2384,23 @@ def _accumulate_run_stats(all_lines):
         except Exception:
             continue
         t = obj.get("type", "")
+        if t == "turn.completed":
+            usage = obj.get("usage") or {}
+            normalized = {
+                "input_tokens": usage.get("input_tokens", 0),
+                "output_tokens": usage.get("output_tokens", 0),
+                "cache_read_input_tokens": usage.get("cached_input_tokens", 0),
+                "cache_creation_input_tokens": 0,
+            }
+            if current_round not in rounds:
+                rounds[current_round] = {
+                    "turns": 0, "output_tokens": 0,
+                    "cache_create": 0, "cache_read": 0, "input_tokens": 0,
+                }
+            _add(rounds[current_round], normalized)
+            _add(totals, normalized)
+            result_data = {"num_turns": totals["turns"]}
+            continue
         if t == "result":
             result_data = {
                 "total_cost_usd": obj.get("total_cost_usd"),
@@ -2471,6 +2515,7 @@ def build_conference_scout_resume_prompt(checkpoint):
 
     ctx = (
         f"A Conference Scout run was interrupted after Round {last_round}. Resume from Round {resume_round}.\n\n"
+        "First read `skills/conference-scout/SKILL.md` and follow its workflow contract.\n\n"
         "## Context\n"
         f"- topic: {topic}\n"
         f"- description: {description}\n"
@@ -2645,7 +2690,7 @@ def build_conference_scout_phase2_prompt(topic, description, year_start, year_en
         "Round 6.5 (Token Usage), and Round 7 (Final Output) to completion.\n"
         "Only update `output/papers.json`. Do NOT write any .html or .py files — "
         "serve.py regenerates the dashboard HTML automatically.\n"
-        "Follow all instructions in the SKILL.md for these rounds.\n"
+        "Follow all instructions in `skills/conference-scout/SKILL.md` for these rounds.\n"
     )
 
 
@@ -2676,14 +2721,7 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
         status="running_phase1", phase=1, current_round=start_round,
         message=start_msg, candidates=[],
     )
-    cmd = [
-        RESOLVED_CLAUDE_BIN, "-p", prompt,
-        "--model", model or MODEL,
-        "--permission-mode", "bypassPermissions",
-        "--add-dir", ROOT,
-        "--output-format", "stream-json",
-        "--verbose",
-    ]
+    cmd = build_codex_command(prompt, model)
     _round_msgs_p1 = {
         0: "Round 0: 查询扩展中...",
         1: "Round 1: 发现阶段 — 搜索综述论文...",
@@ -2699,8 +2737,7 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
     phase1_started = datetime.now()
     all_lines_p1 = []
     try:
-        env = os.environ.copy()
-        env["PATH"] = os.path.dirname(RESOLVED_CLAUDE_BIN) + os.pathsep + env.get("PATH", "")
+        env = codex_env()
         with open(log_path, "a", encoding="utf-8") as lf:
             lf.write(f"\n=== {phase1_started.isoformat(timespec='seconds')} ===\nTopic: {topic}\nPhase: 1\n\n")
             lf.flush()
@@ -2737,7 +2774,7 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
                 lf.write(s + "\n"); logs.append(s); all_lines_p1.append(s)
             lf.flush(); logs = logs[-80:]
             if proc.returncode not in (0, -15):
-                raise RuntimeError("\n".join(logs[-20:]).strip() or f"claude exited {proc.returncode}")
+                raise RuntimeError("\n".join(logs[-20:]).strip() or f"codex exited {proc.returncode}")
 
         stats = _accumulate_run_stats(all_lines_p1)
         _write_run_stats(slug, 1, f"conference-scout/{topic}", stats, phase1_started)
@@ -2807,14 +2844,7 @@ def run_conference_scout_phase2_bg(topic, description, year_start, year_end, ven
         topic, description, year_start, year_end, venue_group,
         confirmed_papers, negative_patterns, constraint_terms
     )
-    cmd = [
-        RESOLVED_CLAUDE_BIN, "-p", prompt,
-        "--model", MODEL,
-        "--permission-mode", "bypassPermissions",
-        "--add-dir", ROOT,
-        "--output-format", "stream-json",
-        "--verbose",
-    ]
+    cmd = build_codex_command(prompt)
     _round_msgs_p2 = {
         5: "Round 5: 引用扩展中...",
         6: "Round 6: 组装时间线...",
@@ -2824,8 +2854,7 @@ def run_conference_scout_phase2_bg(topic, description, year_start, year_end, ven
     phase2_started = datetime.now()
     all_lines_p2 = []
     try:
-        env = os.environ.copy()
-        env["PATH"] = os.path.dirname(RESOLVED_CLAUDE_BIN) + os.pathsep + env.get("PATH", "")
+        env = codex_env()
         with open(log_path, "a", encoding="utf-8") as lf:
             lf.write(f"\n=== {phase2_started.isoformat(timespec='seconds')} ===\nTopic: {topic}\nPhase: 2\n\n")
             lf.flush()
@@ -2862,7 +2891,7 @@ def run_conference_scout_phase2_bg(topic, description, year_start, year_end, ven
                 lf.write(s + "\n"); logs.append(s); all_lines_p2.append(s)
             lf.flush(); logs = logs[-80:]
             if proc.returncode not in (0, -15):
-                raise RuntimeError("\n".join(logs[-20:]).strip() or f"claude exited {proc.returncode}")
+                raise RuntimeError("\n".join(logs[-20:]).strip() or f"codex exited {proc.returncode}")
 
         stats2 = _accumulate_run_stats(all_lines_p2)
         _write_run_stats(slug, 2, f"conference-scout/{topic}", stats2, phase2_started)
@@ -2894,7 +2923,7 @@ def latest_search_context():
 
 
 def build_engineering_prompt(topic, year_range, venues):
-    return f"""Use the project skill `engineering-scout` to investigate the same research topic from the engineering side.
+    return f"""Read `skills/engineering-scout/SKILL.md`, then follow that workflow to investigate the same research topic from the engineering side.
 
 Topic: {topic}
 Year range: {year_range}
@@ -2924,25 +2953,10 @@ def generate_engineering_bg(topic, year_range, venues):
     with tempfile.NamedTemporaryFile(mode="w+", encoding="utf-8", suffix=".txt", delete=False) as output_file:
         output_path = output_file.name
 
-    cmd = [
-        RESOLVED_CLAUDE_BIN,
-        "-p",
-        prompt,
-        "--model",
-        MODEL,
-        "--permission-mode",
-        "bypassPermissions",
-        "--add-dir",
-        ROOT,
-        "--output-format",
-        "stream-json",
-        "--verbose",
-    ]
+    cmd = build_codex_command(prompt)
 
     try:
-        claude_dir = os.path.dirname(RESOLVED_CLAUDE_BIN)
-        env = os.environ.copy()
-        env["PATH"] = claude_dir + os.pathsep + env.get("PATH", "")
+        env = codex_env()
         with open(log_path, "a", encoding="utf-8") as log_file:
             log_file.write(
                 f"\n=== {datetime.now().isoformat(timespec='seconds')} ===\n"
@@ -2977,7 +2991,7 @@ def generate_engineering_bg(topic, year_range, venues):
                             logs = logs[-80:]
                             last_output_at = time.time()
                 if os.path.exists(ENGINEERING_HTML) and time.time() - last_output_at >= 20:
-                    log_file.write("[serve.py] Engineering page exists and Claude CLI is idle; terminating process.\n")
+                    log_file.write("[serve.py] Engineering page exists and Codex CLI is idle; terminating process.\n")
                     log_file.flush()
                     proc.terminate()
                     try:
@@ -2997,7 +3011,7 @@ def generate_engineering_bg(topic, year_range, venues):
                 logs = logs[-80:]
 
             if proc.returncode not in (0, -15):
-                raise RuntimeError("\n".join(logs[-20:]).strip() or f"claude exited {proc.returncode}")
+                raise RuntimeError("\n".join(logs[-20:]).strip() or f"codex exited {proc.returncode}")
 
         if not os.path.exists(ENGINEERING_HTML):
             raise RuntimeError("engineering-scout completed but did not create output/engineering.html")
@@ -3020,7 +3034,7 @@ def generate_engineering_bg(topic, year_range, venues):
             last_updated=today_iso(),
             page_ready=os.path.exists(ENGINEERING_HTML),
         )
-        print(f"[serve.py] Engineering CLI error: {exc}", flush=True)
+        print(f"[serve.py] Codex engineering error: {exc}", flush=True)
     finally:
         try:
             os.unlink(output_path)
@@ -3408,9 +3422,9 @@ def _get_pipeline_step_progress(paper_id):
     # Ordered most-advanced → least-advanced; first match wins
     steps = [
         (f"{prefix}_write.json",                  100, "笔记已完成|Note complete"),
-        (f"{prefix}_note.md",                       94, "Claude 正在完善笔记...|Claude finalizing note..."),
-        (f"{prefix}_note.plan.json",                88, "Claude 正在撰写笔记...|Claude writing note..."),
-        (f"{prefix}_bundle.json",                   82, "Claude 正在规划笔记...|Claude planning note..."),
+        (f"{prefix}_note.md",                       94, "Codex 正在完善笔记...|Codex finalizing note..."),
+        (f"{prefix}_note.plan.json",                88, "Codex 正在撰写笔记...|Codex writing note..."),
+        (f"{prefix}_bundle.json",                   82, "Codex 正在规划笔记...|Codex planning note..."),
         (f"{prefix}_figure_table_decisions.json",   76, "正在构建分析包...|Building synthesis bundle..."),
         (f"{prefix}_figures.json",                  70, "正在规划图表决策...|Planning figure decisions..."),
         (f"{prefix}_assets.json",                   64, "正在规划图表...|Planning figures..."),
@@ -3448,20 +3462,7 @@ def read_paper_bg(paper_id, url, title, model=None):
     ) as output_file:
         output_path = output_file.name
 
-    cmd = [
-        RESOLVED_CLAUDE_BIN,
-        "-p",
-        prompt,
-        "--model",
-        model or MODEL,
-        "--permission-mode",
-        "bypassPermissions",
-        "--add-dir",
-        ROOT,
-        "--output-format",
-        "stream-json",
-        "--verbose",
-    ]
+    cmd = build_codex_command(prompt, model)
 
     reader_started = datetime.now()
     all_lines_reader = []
@@ -3470,9 +3471,7 @@ def read_paper_bg(paper_id, url, title, model=None):
             set_paper_fields(paper_id, progress=8, status="reading")
             regenerate_kanban()
 
-        claude_dir = os.path.dirname(RESOLVED_CLAUDE_BIN)
-        env = os.environ.copy()
-        env["PATH"] = claude_dir + os.pathsep + env.get("PATH", "")
+        env = codex_env()
         with open(log_path, "a", encoding="utf-8") as log_file:
             log_file.write(
                 f"\n=== {reader_started.isoformat(timespec='seconds')} ===\n"
@@ -3529,9 +3528,9 @@ def read_paper_bg(paper_id, url, title, model=None):
                         last_progress = pct
                     last_file_check = now
 
-                # Claude occasionally lingers after writing the note; treat long idle time as done.
+                # Codex occasionally lingers after writing the note; treat long idle time as done.
                 if os.path.exists(note_abspath) and now - last_output_at >= 20:
-                    log_file.write("[serve.py] Note exists and Claude CLI is idle; terminating process.\n")
+                    log_file.write("[serve.py] Note exists and Codex CLI is idle; terminating process.\n")
                     log_file.flush()
                     proc.terminate()
                     try:
@@ -3554,12 +3553,12 @@ def read_paper_bg(paper_id, url, title, model=None):
             with _active_readers_lock:
                 _active_readers.pop(paper_id, None)
             if proc.returncode not in (0, -15):
-                raise RuntimeError("\n".join(logs[-20:]).strip() or f"claude exited {proc.returncode}")
+                raise RuntimeError("\n".join(logs[-20:]).strip() or f"codex exited {proc.returncode}")
 
         if not finalize_read_result(paper_id):
             last_message = "\n".join(logs[-10:]).strip()
             raise RuntimeError(
-                "claude completed but did not create the expected note file"
+                "codex completed but did not create the expected note file"
                 + (f"\n{last_message}" if last_message else "")
             )
 
@@ -3568,12 +3567,12 @@ def read_paper_bg(paper_id, url, title, model=None):
         stats_r = _accumulate_run_stats(all_lines_reader)
         _write_run_stats(paper_id, 1, f"paper-reader/{title}", stats_r, reader_started)
         _build_run_report(all_lines_reader, paper_id, title, 1, f"Paper Reader: {title}", reader_started)
-        print(f"[serve.py] Complete via Claude CLI: {title[:60]}", flush=True)
+        print(f"[serve.py] Complete via Codex CLI: {title[:60]}", flush=True)
     except Exception as exc:
         with _active_readers_lock:
             _active_readers.pop(paper_id, None)
         exc_str = str(exc)
-        print(f"[serve.py] Claude CLI error: {exc_str}", flush=True)
+        print(f"[serve.py] Codex CLI error: {exc_str}", flush=True)
         # Detect error type from CLI output
         err_lower = exc_str.lower()
         if any(k in err_lower for k in ("rate limit", "429", "too many requests", "overloaded")):
@@ -3715,8 +3714,10 @@ class Handler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "model": MODEL,
-                    "provider": "claude-cli",
-                    "claude_bin": RESOLVED_CLAUDE_BIN,
+                    "provider": "codex-cli",
+                    "codex_bin": RESOLVED_CODEX_BIN,
+                    "search": CODEX_SEARCH,
+                    "network_access": CODEX_NETWORK,
                 }
             ).encode("utf-8")
             self.send_response(200)
@@ -4214,9 +4215,11 @@ if __name__ == "__main__":
         ensure_engineering_page()
     print("MyResearchClaw API server")
     print(f"  Listening on http://localhost:{PORT}")
-    print("  Provider: Claude CLI")
-    print(f"  Model: {MODEL}")
-    print(f"  Claude binary: {RESOLVED_CLAUDE_BIN}")
+    print("  Provider: Codex CLI")
+    print(f"  Model: {MODEL or 'Codex CLI default'}")
+    print(f"  Codex binary: {RESOLVED_CODEX_BIN}")
+    print(f"  Web search: {'enabled' if CODEX_SEARCH else 'disabled'}")
+    print(f"  Sandbox network: {'enabled' if CODEX_NETWORK else 'disabled'}")
     print(f"  Open http://localhost:{PORT}")
     print("  Ctrl+C to stop\n")
     server = HTTPServer(("localhost", PORT), Handler)

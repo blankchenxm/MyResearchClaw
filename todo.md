@@ -53,7 +53,7 @@
 ### 1.5 错误类型字段
 - 文件：`serve.py`
 - 在 paper 的 fields 里加 `read_error_type`：`"rate_limit"` / `"permanent"` / `"pdf_failed"`
-- 通过检测 claude CLI 输出里的关键词判断（`rate limit`, `429`, `quota`, `overload`）
+- 通过检测 Codex CLI 输出里的关键词判断（`rate limit`, `429`, `quota`, `overload`）
 - QRunner 只对 `rate_limit` 类型自动重试
 
 ---
@@ -102,7 +102,7 @@
 ### 2.5 错误类型字段
 - 文件：`serve.py`
 - `save_scout_status()` 增加 `error_type` 字段（同 Paper Reader 1.5）
-- 通过 claude CLI 输出检测：rate_limit / permanent
+- 通过 Codex CLI 输出检测：rate_limit / permanent
 
 ---
 
@@ -190,7 +190,7 @@
 ```
 
 ### 4.2 Rate limit 检测（serve.py）
-检测 claude CLI 输出中以下关键词，写入 `error_type`：
+检测 Codex CLI 输出中以下关键词，写入 `error_type`：
 - `"rate limit"` / `"429"` / `"too many requests"` → `"rate_limit"`
 - `"quota"` / `"usage limit"` / `"monthly"` → `"quota_exceeded"`（不自动重试）
 - 其他 → `"permanent"`（不自动重试，需人工排查）

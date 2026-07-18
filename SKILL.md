@@ -12,8 +12,8 @@ Turns one of "find papers on X" / "deep-read this paper" / "find engineering sig
 ```
                           HTML buttons                       chat
   output/projects/                                            ▼
-    {slug}/papers.html  ──┐         POST /api/read-paper      claude CLI
-                          ├──► serve.py ──► /api/chat ──────► (claude-sonnet-4-6)
+    {slug}/papers.html  ──┐         POST /api/read-paper      codex CLI
+                          ├──► serve.py ──► /api/chat ──────► (Codex default model)
     {slug}/engineering.html       /api/generate-engineering    │
                           │                                    │
   output/kanban.html  ────┘                                    │
@@ -68,7 +68,7 @@ The skill writes results to `output/papers.json` and renders `output/projects/{s
 **Two ways:**
 
 - HTML: click `📖 精读论文` on any paper card → `POST /api/read-paper` → serve.py spawns
-  `claude -p ... --model claude-sonnet-4-6` in the background. Progress shows on the kanban.
+  `codex --search exec --json ...` in the background. Progress shows on the kanban.
 - Chat: `精读 https://arxiv.org/abs/2603.02847`
 
 The pipeline has 15 steps (see `skills/paper-reader/SKILL.md`). Steps 1-9 are batched in one shot:
@@ -99,7 +99,7 @@ writes `output/projects/{slug}/engineering.html`.
 
 ### 6. Per-page chat
 
-Click the `💬` icon on a topic page → `POST /api/chat` → `claude -p ... --output-format json`
+Click the `💬` icon on a topic page → `POST /api/chat` → `codex --search exec --json`
 single-turn Q&A, anchored to the current topic context. Does not invoke any skill, does not write to disk.
 
 ## File layout
@@ -114,7 +114,7 @@ single-turn Q&A, anchored to the current topic context. Does not invoke any skil
 | `output/notes/{slug}/{paper_id}/note.md` | Final Chinese精读 note |
 | `output/notes/{slug}/{paper_id}/figures/` | Materialized figures referenced by the note |
 | `output/tmp/{paper_id}/` | Paper-reader pipeline intermediates (safe to delete) |
-| `output/logs/{paper_id}.log` | Claude CLI stdout for that paper's read run |
+| `output/logs/{paper_id}.log` | Codex CLI JSONL output for that paper's read run |
 
 ## Sub-skills
 
@@ -134,8 +134,10 @@ Don't reinvent these. All three sub-skills consult them:
 
 | Var | Default | Purpose |
 |---|---|---|
-| `MYRESEARCHCLAW_MODEL` | `claude-sonnet-4-6` | Model for HTML-triggered skill runs |
-| `MYRESEARCHCLAW_CLAUDE_BIN` | `claude` | Path to claude CLI |
+| `MYRESEARCHCLAW_MODEL` | unset | Optional override; unset uses the Codex CLI default model |
+| `MYRESEARCHCLAW_CODEX_BIN` | `codex` | Path to Codex CLI |
+| `MYRESEARCHCLAW_CODEX_SEARCH` | `true` | Enable native live web search |
+| `MYRESEARCHCLAW_CODEX_NETWORK` | `true` | Permit research scripts to access the network |
 | `CDP_PROXY_PORT` | `3456` | CDP proxy port (only for Google Scholar fallback) |
 
 S2 API Key strongly recommended — without it ~100 req/5min triggers 429 forcing fallback to DBLP. Get one at https://www.semanticscholar.org/product/api#api-key-form and pass it as `x-api-key` header.
@@ -145,7 +147,7 @@ S2 API Key strongly recommended — without it ~100 req/5min triggers 429 forcin
 | Symptom | Where to look |
 |---|---|
 | Paper card stuck on "⏳ 精读中... 20%" after restart | Check `papers.json`: if `pipeline_status=complete` and `note_path` exists, the card should auto-show "✅ 已完成" — `render_progress_state` reads `pipeline_status` first. If not, `write_note.py` didn't finish. |
-| "📖 精读论文" click does nothing | `output/logs/{paper_id}.log` — Claude CLI stdout |
+| "📖 精读论文" click does nothing | `output/logs/{paper_id}.log` — Codex CLI JSONL output |
 | Pipeline fails at Step 4 with `PyMuPDF is required` | The agent invoked `python` instead of the derm-vlm interpreter. `run_pipeline.py` should auto-switch — if it didn't, set `MYRESEARCHCLAW_NO_AUTO_SWITCH` is unset, then re-run. |
 | Conference scout can't find recent papers | Likely S2 429. Add API key, or wait 5 min. |
 | Google Scholar step blocked | Re-run `bash scripts/check-deps.sh` to bring up CDP Proxy. |

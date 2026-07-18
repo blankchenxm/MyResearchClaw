@@ -2,9 +2,9 @@
 
 > **Turn top-venue papers into structured intelligence — search, read, and map implementations, all from a single local server.**
 
-MyResearchClaw is an **AI-powered research workflow** built on top of Claude Code (claude-code CLI). You point it at a topic, and it hunts down the most relevant papers from the top conferences, deep-reads them into richly structured Chinese notes, and maps out real-world engineering implementations — all persisted to a clean web dashboard you open in your browser.
+MyResearchClaw is an **AI-powered research workflow** built on the OpenAI Codex CLI. You point it at a topic, and it hunts down the most relevant papers from the top conferences, deep-reads them into richly structured Chinese notes, and maps out real-world engineering implementations — all persisted to a clean web dashboard you open in your browser.
 
-No cloud account needed. No SaaS subscription. Just a local Python server and the Claude CLI.
+It runs through your authenticated Codex CLI session plus a local Python server.
 
 ---
 
@@ -150,7 +150,7 @@ If all 5 fail, the paper card shows a **drag-and-drop upload zone** — drop the
 
 Math renders in the note view via **KaTeX** (`$...$` inline, `$$...$$` display). Figures are cropped from the PDF and embedded as images directly in the note.
 
-**Real-time progress:** the dashboard shows file-based progress (not fake time ticks) — the bar advances as each pipeline artifact appears on disk: *正在获取 PDF... 38%* → *正在提取证据... 58%* → *Claude 正在撰写笔记... 88%* → done.
+**Real-time progress:** the dashboard shows file-based progress (not fake time ticks) — the bar advances as each pipeline artifact appears on disk: *正在获取 PDF... 38%* → *正在提取证据... 58%* → *Codex 正在撰写笔记... 88%* → done.
 
 ---
 
@@ -177,7 +177,7 @@ It produces a **Technology Readiness** level (`research_only` → `early_prototy
 ### Requirements
 
 - Python 3.10+
-- [Claude Code CLI](https://claude.ai/code) (`claude` binary in `PATH`)
+- [OpenAI Codex CLI](https://developers.openai.com/codex/cli/) (`codex` binary in `PATH`, authenticated with `codex login`)
 - Conda environment with PyMuPDF (for PDF text extraction):
 
 ```bash
@@ -220,7 +220,7 @@ If automatic PDF fetch fails (paywalled, anti-bot blocked), the paper card shows
 
 ```
 serve.py                          local HTTP server + all workflow orchestration
-SKILL.md                          project-level skill index for Claude Code
+SKILL.md                          project-level skill index for Codex
 skills/
   conference-scout/
     SKILL.md                      7-round search protocol
@@ -283,8 +283,10 @@ Paper lifecycle: `unread` → `reading` (with live %-progress and step label) �
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `MYRESEARCHCLAW_MODEL` | `claude-sonnet-4-6` | Claude model for all agentic steps |
-| `MYRESEARCHCLAW_CLAUDE_BIN` | `claude` | Path to the Claude Code binary |
+| `MYRESEARCHCLAW_MODEL` | unset | Optional override; unset uses the current Codex CLI default model |
+| `MYRESEARCHCLAW_CODEX_BIN` | `codex` | Path to the Codex CLI binary |
+| `MYRESEARCHCLAW_CODEX_SEARCH` | `true` | Add `--search` to every Codex run |
+| `MYRESEARCHCLAW_CODEX_NETWORK` | `true` | Allow sandboxed research commands to access network APIs |
 | `MYRESEARCHCLAW_PORT` | `5678` | HTTP server port |
 
 ---
