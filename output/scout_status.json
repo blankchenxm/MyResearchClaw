@@ -1,5 +1,5 @@
 {
-  "status": "done",
+  "status": "idle",
   "topic": "IC Datasheet extracter",
   "slug": "ic-datasheet-extracter",
   "description": "我现在希望你帮我搜索一些论文，看一下：\n\n1. 比如对于像电子元件这种 datasheet 的信息，能否有效地提取？尤其是里面图片IC信息\n2. 如果实在没有针对电子元件的，那么对于普通 PDF 里面图片和文字的信息，应该怎么有效地提取？\n\n尤其是图片。比如在 IC datasheet 中，可能一共有几百页，信息非常多，如何只定位有用的信息？\n\n以及，有用的信息可能在图片里面，如何对图片内部进行精确的定位？而且图片里有时候它的引脚等数字都很小，在这种情况下应该如何进行定位？",
@@ -7,7 +7,7 @@
   "year_end": 2026,
   "venue_group": "ai_ml,iot_systems,eda_hardware",
   "specific_venues": [],
-  "message": "调研完成：8 篇论文已写入 papers.json",
+  "message": "",
   "current_round": 7,
   "phase": 1,
   "last_updated": "2026-07-17",
