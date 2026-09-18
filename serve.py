@@ -18,8 +18,8 @@ Optional environment variables (or set in .env file next to serve.py):
 """
 import json
 import os
+import queue
 import re
-import select
 import shutil
 import subprocess
 import sys
@@ -103,11 +103,26 @@ RESOLVED_CODEX_BIN = resolve_codex_bin()
 def build_codex_command(prompt, model=None):
     """Build one unattended Codex CLI invocation for a server task."""
     cmd = [RESOLVED_CODEX_BIN]
+    # On Windows, invoking the npm .CMD shim can mangle long prompts that
+    # contain CJK text, newlines, and JSON quotes. Call the Node entrypoint
+    # directly so the prompt reaches Codex as one argument.
+    if os.name == "nt" and RESOLVED_CODEX_BIN.lower().endswith((".cmd", ".bat")):
+        npm_dir = os.path.dirname(RESOLVED_CODEX_BIN)
+        node_bin = os.path.join(npm_dir, "node.exe")
+        if not os.path.exists(node_bin):
+            node_bin = shutil.which("node") or node_bin
+        codex_js = os.path.join(npm_dir, "node_modules", "@openai", "codex", "bin", "codex.js")
+        if os.path.exists(node_bin) and os.path.exists(codex_js):
+            cmd = [node_bin, codex_js]
     if CODEX_SEARCH:
         cmd.append("--search")
     cmd.extend(["--sandbox", "workspace-write", "--ask-for-approval", "never"])
     if CODEX_NETWORK:
         cmd.extend(["--config", "sandbox_workspace_write.network_access=true"])
+    if os.name == "nt":
+        # The bundled Windows code-mode host can hang on model-generated
+        # PowerShell commands. Codex's regular command executor works here.
+        cmd.extend(["--disable", "code_mode_host"])
     selected_model = (model or MODEL).strip()
     if selected_model:
         cmd.extend(["--model", selected_model])
@@ -143,6 +158,46 @@ def codex_last_message(jsonl):
         if item.get("type") == "agent_message":
             answer = (item.get("text") or "").strip()
     return answer
+
+
+def _stream_process_output(proc, on_line, on_poll=None, poll_interval=0.5):
+    """Stream a child process's text output without using ``select``.
+
+    Windows anonymous pipes are not sockets and cannot be passed to
+    ``select.select``. A daemon reader thread keeps the pipe draining while
+    the caller remains free to run periodic checks on every poll.
+    """
+    output_queue = queue.Queue()
+
+    def read_output():
+        try:
+            if proc.stdout is not None:
+                for line in iter(proc.stdout.readline, ""):
+                    output_queue.put(line)
+        finally:
+            output_queue.put(None)
+
+    reader = threading.Thread(
+        target=read_output,
+        name="codex-output-reader",
+        daemon=True,
+    )
+    reader.start()
+
+    while True:
+        try:
+            line = output_queue.get(timeout=poll_interval)
+        except queue.Empty:
+            line = ""
+
+        if line is None:
+            break
+        if line:
+            on_line(line)
+        if on_poll:
+            on_poll()
+
+    reader.join(timeout=1)
 
 # paper_id → Popen, used by /api/cancel-read
 _active_readers: dict = {}
@@ -2610,7 +2665,14 @@ def build_conference_scout_phase1_prompt(topic, description, year_start, year_en
     today = today_iso()
     candidates_rel = f"output/tmp/scout_{slug}/candidates_r4.json"
     return (
-        "Read `skills/conference-scout/SKILL.md` and follow its instructions to search for papers.\n\n"
+        "Execute this fully specified research task immediately; do not ask the user for missing inputs. "
+        "The parameters below are authoritative. Do not run shell or PowerShell commands to inspect the repository "
+        "or read local Markdown before starting Round 0; use the workflow requirements embedded here.\n"
+        "Workflow: Round 0 query expansion; Round 1 surveys and seed papers; Round 2 anchors, exclusions, and "
+        "constraints; Round 3 precise searches; Round 4 relevance gates; Round 4.5 candidate JSON and table; "
+        "Round 5 citation expansion; Round 6 timeline; Round 6.5 usage; Round 7 final papers.json. "
+        "Prefer DBLP, then Semantic Scholar, then arXiv, with Google Scholar as fallback. "
+        "Use web search for discovery and continue through all rounds without pausing.\n\n"
         "## Inputs\n"
         f"- topic: {topic}\n"
         f"- description: {description}\n"
@@ -2748,30 +2810,27 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
                 text=True, bufsize=1,
             )
             logs = []
-            while proc.poll() is None:
-                if proc.stdout:
-                    ready, _, _ = select.select([proc.stdout], [], [], 0.5)
-                    if ready:
-                        line = proc.stdout.readline()
-                        if line:
-                            s = line.rstrip()
-                            lf.write(s + "\n"); lf.flush()
-                            logs.append(s); logs = logs[-80:]
-                            all_lines_p1.append(s)
-                            m = _ROUND_RE.search(s)
-                            if m:
-                                try:
-                                    rn = float(m.group(1))
-                                    save_scout_status(
-                                        current_round=rn,
-                                        message=_round_msgs_p1.get(rn, f"Round {rn}: 处理中...")
-                                    )
-                                except ValueError:
-                                    pass
-            rem = proc.stdout.read() if proc.stdout else ""
-            for raw in rem.splitlines():
-                s = raw.rstrip()
-                lf.write(s + "\n"); logs.append(s); all_lines_p1.append(s)
+
+            def handle_line(line):
+                s = line.rstrip()
+                lf.write(s + "\n"); lf.flush()
+                logs.append(s); logs[:] = logs[-80:]
+                all_lines_p1.append(s)
+                m = _ROUND_RE.search(s)
+                if m:
+                    try:
+                        rn = float(m.group(1))
+                        save_scout_status(
+                            current_round=rn,
+                            message=_round_msgs_p1.get(rn, f"Round {rn}: 处理中...")
+                        )
+                    except ValueError:
+                        pass
+
+            _stream_process_output(proc, handle_line)
+            proc.wait()
+            if proc.stdout is not None:
+                proc.stdout.close()
             lf.flush(); logs = logs[-80:]
             if proc.returncode not in (0, -15):
                 raise RuntimeError("\n".join(logs[-20:]).strip() or f"codex exited {proc.returncode}")
@@ -2865,30 +2924,27 @@ def run_conference_scout_phase2_bg(topic, description, year_start, year_end, ven
                 text=True, bufsize=1,
             )
             logs = []
-            while proc.poll() is None:
-                if proc.stdout:
-                    ready, _, _ = select.select([proc.stdout], [], [], 0.5)
-                    if ready:
-                        line = proc.stdout.readline()
-                        if line:
-                            s = line.rstrip()
-                            lf.write(s + "\n"); lf.flush()
-                            logs.append(s); logs = logs[-80:]
-                            all_lines_p2.append(s)
-                            m = _ROUND_RE.search(s)
-                            if m:
-                                try:
-                                    rn = float(m.group(1))
-                                    save_scout_status(
-                                        current_round=rn,
-                                        message=_round_msgs_p2.get(rn, f"Round {rn}: 处理中...")
-                                    )
-                                except ValueError:
-                                    pass
-            rem = proc.stdout.read() if proc.stdout else ""
-            for raw in rem.splitlines():
-                s = raw.rstrip()
-                lf.write(s + "\n"); logs.append(s); all_lines_p2.append(s)
+
+            def handle_line(line):
+                s = line.rstrip()
+                lf.write(s + "\n"); lf.flush()
+                logs.append(s); logs[:] = logs[-80:]
+                all_lines_p2.append(s)
+                m = _ROUND_RE.search(s)
+                if m:
+                    try:
+                        rn = float(m.group(1))
+                        save_scout_status(
+                            current_round=rn,
+                            message=_round_msgs_p2.get(rn, f"Round {rn}: 处理中...")
+                        )
+                    except ValueError:
+                        pass
+
+            _stream_process_output(proc, handle_line)
+            proc.wait()
+            if proc.stdout is not None:
+                proc.stdout.close()
             lf.flush(); logs = logs[-80:]
             if proc.returncode not in (0, -15):
                 raise RuntimeError("\n".join(logs[-20:]).strip() or f"codex exited {proc.returncode}")
@@ -2978,19 +3034,22 @@ def generate_engineering_bg(topic, year_range, venues):
 
             logs = []
             last_output_at = time.time()
-            while proc.poll() is None:
-                if proc.stdout:
-                    ready, _, _ = select.select([proc.stdout], [], [], 0.5)
-                    if ready:
-                        line = proc.stdout.readline()
-                        if line:
-                            stripped = line.rstrip()
-                            log_file.write(stripped + "\n")
-                            log_file.flush()
-                            logs.append(stripped)
-                            logs = logs[-80:]
-                            last_output_at = time.time()
-                if os.path.exists(ENGINEERING_HTML) and time.time() - last_output_at >= 20:
+            idle_terminated = False
+
+            def handle_line(line):
+                nonlocal last_output_at
+                stripped = line.rstrip()
+                log_file.write(stripped + "\n")
+                log_file.flush()
+                logs.append(stripped)
+                logs[:] = logs[-80:]
+                last_output_at = time.time()
+
+            def check_idle():
+                nonlocal idle_terminated
+                if (not idle_terminated and os.path.exists(ENGINEERING_HTML)
+                        and time.time() - last_output_at >= 20):
+                    idle_terminated = True
                     log_file.write("[serve.py] Engineering page exists and Codex CLI is idle; terminating process.\n")
                     log_file.flush()
                     proc.terminate()
@@ -2999,16 +3058,12 @@ def generate_engineering_bg(topic, year_range, venues):
                     except subprocess.TimeoutExpired:
                         proc.kill()
                         proc.wait(timeout=5)
-                    break
 
-            remainder = proc.stdout.read() if proc.stdout else ""
-            if remainder:
-                for raw_line in remainder.splitlines():
-                    stripped = raw_line.rstrip()
-                    log_file.write(stripped + "\n")
-                    logs.append(stripped)
-                log_file.flush()
-                logs = logs[-80:]
+            _stream_process_output(proc, handle_line, check_idle)
+            proc.wait()
+            if proc.stdout is not None:
+                proc.stdout.close()
+            log_file.flush()
 
             if proc.returncode not in (0, -15):
                 raise RuntimeError("\n".join(logs[-20:]).strip() or f"codex exited {proc.returncode}")
@@ -3500,22 +3555,21 @@ def read_paper_bg(paper_id, url, title, model=None):
             last_output_at = time.time()
             logs = []
             note_abspath = os.path.join(ROOT, paper_note_relpath(paper_id))
+            idle_terminated = False
 
-            while proc.poll() is None:
+            def handle_line(line):
+                nonlocal last_output_at
+                stripped = line.rstrip()
+                log_file.write(stripped + "\n")
+                log_file.flush()
+                logs.append(stripped)
+                all_lines_reader.append(stripped)
+                logs[:] = logs[-60:]
+                last_output_at = time.time()
+
+            def check_periodic():
+                nonlocal last_file_check, last_progress, idle_terminated
                 now = time.time()
-                if proc.stdout:
-                    ready, _, _ = select.select([proc.stdout], [], [], 0.5)
-                    if ready:
-                        line = proc.stdout.readline()
-                        if line:
-                            stripped = line.rstrip()
-                            log_file.write(stripped + "\n")
-                            log_file.flush()
-                            logs.append(stripped)
-                            all_lines_reader.append(stripped)
-                            if len(logs) > 60:
-                                logs = logs[-60:]
-                            last_output_at = time.time()
 
                 # File-based progress: check every 2 seconds
                 if now - last_file_check >= 2:
@@ -3529,7 +3583,9 @@ def read_paper_bg(paper_id, url, title, model=None):
                     last_file_check = now
 
                 # Codex occasionally lingers after writing the note; treat long idle time as done.
-                if os.path.exists(note_abspath) and now - last_output_at >= 20:
+                if (not idle_terminated and os.path.exists(note_abspath)
+                        and now - last_output_at >= 20):
+                    idle_terminated = True
                     log_file.write("[serve.py] Note exists and Codex CLI is idle; terminating process.\n")
                     log_file.flush()
                     proc.terminate()
@@ -3538,17 +3594,12 @@ def read_paper_bg(paper_id, url, title, model=None):
                     except subprocess.TimeoutExpired:
                         proc.kill()
                         proc.wait(timeout=5)
-                    break
 
-            remainder = proc.stdout.read() if proc.stdout else ""
-            if remainder:
-                for raw_line in remainder.splitlines():
-                    stripped = raw_line.rstrip()
-                    log_file.write(stripped + "\n")
-                    logs.append(stripped)
-                    all_lines_reader.append(stripped)
-                log_file.flush()
-                logs = logs[-60:]
+            _stream_process_output(proc, handle_line, check_periodic)
+            proc.wait()
+            if proc.stdout is not None:
+                proc.stdout.close()
+            log_file.flush()
 
             with _active_readers_lock:
                 _active_readers.pop(paper_id, None)

@@ -9,6 +9,10 @@ Turns one of "find papers on X" / "deep-read this paper" / "find engineering sig
 
 ## Architecture
 
+Windows runtime note: the server embeds the conference-scout workflow requirements in its job prompt.
+Avoid streaming a whole SKILL.md through PowerShell in one command; large text returns can hang the
+Codex command executor on Windows. Use the embedded workflow and targeted file reads instead.
+
 ```
                           HTML buttons                       chat
   output/projects/                                            ▼

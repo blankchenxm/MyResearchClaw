@@ -6,6 +6,9 @@ agentic server jobs are orchestrated by `serve.py`.
 ## Workflow routing
 
 - Paper discovery: read and follow `skills/conference-scout/SKILL.md`.
+- On Windows, do not dump full SKILL files through `powershell.exe -Command Get-Content -Raw`;
+  the server prompt embeds the required conference-scout workflow, and targeted reads or web search
+  should be used instead to avoid a large PowerShell-to-Codex output hang.
 - Deep reading: read and follow `skills/paper-reader/SKILL.md`.
 - Engineering intelligence: read and follow `skills/engineering-scout/SKILL.md`.
 - Shared architecture and dashboard behavior: consult the root `SKILL.md`.
