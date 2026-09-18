@@ -9,6 +9,11 @@ Turns one of "find papers on X" / "deep-read this paper" / "find engineering sig
 
 ## Architecture
 
+Windows runtime note: the server embeds the complete conference-scout workflow in its job prompt.
+The conference-scout server job must not read local Markdown through PowerShell; use the embedded
+workflow and targeted data/API commands instead. This keeps a one-shot Windows run from blocking
+while streaming instruction files through the Codex command executor.
+
 ```
                           HTML buttons                       chat
   output/projects/                                            ▼
@@ -18,8 +23,8 @@ Turns one of "find papers on X" / "deep-read this paper" / "find engineering sig
                           │                                    │
   output/kanban.html  ────┘                                    │
                                                                ▼
-                                                     reads SKILL.md +
-                                                     skills/{name}/SKILL.md
+                                                     receives embedded workflow
+                                                     (server jobs on Windows)
                                                                │
                                               ┌────────────────┼────────────────┐
                                               ▼                ▼                ▼

@@ -18,8 +18,8 @@ Optional environment variables (or set in .env file next to serve.py):
 """
 import json
 import os
+import queue
 import re
-import select
 import shutil
 import subprocess
 import sys
@@ -67,6 +67,11 @@ TOKEN_USAGE_JSON = os.path.join(OUTPUT_DIR, "token_usage.json")
 RUN_STATS_DIR = os.path.join(OUTPUT_DIR, "run_stats")
 
 _ROUND_RE = re.compile(r"\bRound\s+(\d+(?:\.\d+)?)\b", re.IGNORECASE)
+_ROUND_HEADER_RE = re.compile(
+    r"^\s*(?:#+\s*)?(?:starting\s+|beginning\s+|entering\s+)?"
+    r"round\s+(\d+(?:\.\d+)?)(?:\b|\s*[:—-])",
+    re.IGNORECASE,
+)
 SKILLS_DIR = os.path.join(ROOT, "skills")
 KANBAN_TEMPLATE = os.path.join(SKILLS_DIR, "conference-scout", "assets", "kanban.html")
 KANBAN_HTML = os.path.join(OUTPUT_DIR, "kanban.html")
@@ -103,16 +108,27 @@ RESOLVED_CODEX_BIN = resolve_codex_bin()
 def build_codex_command(prompt, model=None):
     """Build one unattended Codex CLI invocation for a server task."""
     cmd = [RESOLVED_CODEX_BIN]
+    # On Windows, invoking the npm .CMD shim can mangle long prompts that
+    # contain CJK text, newlines, and JSON quotes. Call the Node entrypoint
+    # directly so the prompt reaches Codex as one argument.
+    if os.name == "nt" and RESOLVED_CODEX_BIN.lower().endswith((".cmd", ".bat")):
+        npm_dir = os.path.dirname(RESOLVED_CODEX_BIN)
+        node_bin = os.path.join(npm_dir, "node.exe")
+        if not os.path.exists(node_bin):
+            node_bin = shutil.which("node") or node_bin
+        codex_js = os.path.join(npm_dir, "node_modules", "@openai", "codex", "bin", "codex.js")
+        if os.path.exists(node_bin) and os.path.exists(codex_js):
+            cmd = [node_bin, codex_js]
     if CODEX_SEARCH:
         cmd.append("--search")
     cmd.extend(["--sandbox", "workspace-write", "--ask-for-approval", "never"])
     if CODEX_NETWORK:
         cmd.extend(["--config", "sandbox_workspace_write.network_access=true"])
     selected_model = (model or MODEL).strip()
+    cmd.append("exec")
     if selected_model:
         cmd.extend(["--model", selected_model])
     cmd.extend([
-        "exec",
         "--json",
         "--ephemeral",
         "--color", "never",
@@ -126,6 +142,11 @@ def codex_env():
     env = os.environ.copy()
     codex_dir = os.path.dirname(RESOLVED_CODEX_BIN)
     env["PATH"] = codex_dir + os.pathsep + env.get("PATH", "")
+    # Keep Python-based helper commands launched by Codex in UTF-8 mode on
+    # Windows.  This does not change PowerShell's native-pipe encoding, so the
+    # scout prompt also contains an explicit rule for Unicode here-strings.
+    env.setdefault("PYTHONUTF8", "1")
+    env.setdefault("PYTHONIOENCODING", "utf-8")
     return env
 
 
@@ -144,6 +165,66 @@ def codex_last_message(jsonl):
             answer = (item.get("text") or "").strip()
     return answer
 
+
+def _round_from_codex_line(raw_line):
+    """Return a formal round marker, ignoring future-round mentions in prose."""
+    try:
+        event = json.loads(raw_line)
+    except Exception:
+        return None
+    item = event.get("item") or {}
+    if item.get("type") != "agent_message":
+        return None
+    text = item.get("text") or ""
+    for line in text.splitlines():
+        match = _ROUND_HEADER_RE.search(line)
+        if match:
+            try:
+                return float(match.group(1))
+            except ValueError:
+                return None
+    return None
+
+
+def _stream_process_output(proc, on_line, on_poll=None, poll_interval=0.5):
+    """Stream a child process's text output without using ``select``.
+
+    Windows anonymous pipes are not sockets and cannot be passed to
+    ``select.select``. A daemon reader thread keeps the pipe draining while
+    the caller remains free to run periodic checks on every poll.
+    """
+    output_queue = queue.Queue()
+
+    def read_output():
+        try:
+            if proc.stdout is not None:
+                for line in iter(proc.stdout.readline, ""):
+                    output_queue.put(line)
+        finally:
+            output_queue.put(None)
+
+    reader = threading.Thread(
+        target=read_output,
+        name="codex-output-reader",
+        daemon=True,
+    )
+    reader.start()
+
+    while True:
+        try:
+            line = output_queue.get(timeout=poll_interval)
+        except queue.Empty:
+            line = ""
+
+        if line is None:
+            break
+        if line:
+            on_line(line)
+        if on_poll:
+            on_poll()
+
+    reader.join(timeout=1)
+
 # paper_id → Popen, used by /api/cancel-read
 _active_readers: dict = {}
 _active_readers_lock = __import__("threading").Lock()
@@ -160,7 +241,10 @@ READER_QUEUE_JSON = os.path.join(OUTPUT_DIR, "reader_queue.json")
 
 
 def load_papers():
-    with open(PAPERS_JSON, encoding="utf-8") as f:
+    # Windows PowerShell 5.1 may write a UTF-8 BOM when a scout creates JSON.
+    # Accept both BOM and BOM-less UTF-8 so a valid artifact is never treated
+    # as missing merely because it came from a PowerShell command.
+    with open(PAPERS_JSON, encoding="utf-8-sig") as f:
         return json.load(f)
 
 
@@ -311,7 +395,9 @@ def load_json_file(path, default):
     if not os.path.exists(path):
         return default
     try:
-        with open(path, encoding="utf-8") as f:
+        # PowerShell's Windows UTF-8 output may include a BOM; accept both
+        # BOM and BOM-less JSON so generated scout artifacts are counted.
+        with open(path, encoding="utf-8-sig") as f:
             return json.load(f)
     except Exception:
         return default
@@ -2243,6 +2329,8 @@ def load_scout_status():
 def save_scout_status(**kwargs):
     current = load_scout_status()
     current.update(kwargs)
+    if kwargs.get("status") in ("idle", "running_phase1", "running_phase2", "done"):
+        current["error_type"] = ""
     current["last_updated"] = today_iso()
     save_json_file(SCOUT_STATUS_JSON, current)
 
@@ -2515,7 +2603,8 @@ def build_conference_scout_resume_prompt(checkpoint):
 
     ctx = (
         f"A Conference Scout run was interrupted after Round {last_round}. Resume from Round {resume_round}.\n\n"
-        "First read `skills/conference-scout/SKILL.md` and follow its workflow contract.\n\n"
+        "This is a Windows server job. Follow the workflow contract supplied in this prompt. Do not run shell or "
+        "PowerShell commands to read SKILL.md, AGENTS.md, README.md, or any other local Markdown.\n\n"
         "## Context\n"
         f"- topic: {topic}\n"
         f"- description: {description}\n"
@@ -2610,7 +2699,36 @@ def build_conference_scout_phase1_prompt(topic, description, year_start, year_en
     today = today_iso()
     candidates_rel = f"output/tmp/scout_{slug}/candidates_r4.json"
     return (
-        "Read `skills/conference-scout/SKILL.md` and follow its instructions to search for papers.\n\n"
+        "Execute this fully specified research task immediately; do not ask the user for missing inputs. "
+        "The parameters below are authoritative. This is a Windows server job. "
+        "The complete conference-scout contract is supplied below in compact form. Do not run shell or PowerShell commands to "
+        "read SKILL.md, AGENTS.md, README.md, or any other local Markdown at any point in this task. "
+        "Do not use Get-Content, type, cat, rg, find, or recursive repository inspection to obtain instructions. "
+        "Do not call MCP tools, CUA/browser/computer-use tools, code-mode tools, or any tool other than web_search and "
+        "the minimal targeted file commands needed for the required JSON artifacts. "
+        "Use the supplied contract, web search, and only targeted commands needed to produce the required artifacts.\n"
+        "## Windows UTF-8 rule — IMPORTANT\n"
+        "This job runs under Windows PowerShell. Never pipe a Unicode here-string directly into a native process such as "
+        "`@'...'@ | node` or `@'...'@ | python`: PowerShell's default `$OutputEncoding` can silently replace CJK text with literal `?`. "
+        "Before any such pipeline, set `$OutputEncoding = [System.Text.UTF8Encoding]::new($false)`, or write the content with a "
+        "PowerShell UTF-8 file command and have the program read that file. After writing JSON, validate it as UTF-8 and check that "
+        "Chinese `description`, `timeline_reason_zh`, and `summary_zh` values contain real CJK characters rather than runs of `?`. "
+        "Do not declare Round 7 complete if that validation fails.\n"
+        "Workflow: Round 0 query expansion; Round 1 surveys and seed papers; Round 2 anchors, exclusions, and "
+        "constraints; Round 3 precise searches; Round 4 relevance gates; Round 4.5 candidate JSON and table; "
+        "Round 5 citation expansion; Round 6 timeline; Round 6.5 usage; Round 7 final papers.json. "
+        "Prefer DBLP, then Semantic Scholar, then arXiv, with Google Scholar as fallback. "
+        "Use web search for discovery and continue through all rounds without pausing. "
+        "Keep the discovery batch compact: use exactly one web_search tool call for the initial evidence batch, then do not call web_search again; "
+        "use the returned sources for all later rounds instead of expanding the context further. "
+        "Your first tool action must be web search, not a progress-only message and not a shell command. "
+        "Run exactly one initial web_search call containing these three queries:\n"
+        f"1. {topic} proactive interaction wearable smart glasses HCI\n"
+        f"2. {topic} anticipatory context-aware assistance egocentric vision\n"
+        f"3. {topic} CHI UIST IMWUT UbiComp paper\n\n"
+        "## Server-supplied conference-scout contract\n"
+        "The workflow, round order, inputs, and output schema below are the complete contract for this run. "
+        "Never read a local instruction file to replace or supplement it.\n\n"
         "## Inputs\n"
         f"- topic: {topic}\n"
         f"- description: {description}\n"
@@ -2620,7 +2738,8 @@ def build_conference_scout_phase1_prompt(topic, description, year_start, year_en
         f"- specific_venues: {venues_str}\n\n"
         "## Scope\n"
         "Run all Rounds 0 through 7 in sequence without stopping.\n"
-        "At Round 4.5: write the candidates JSON, print the table, then continue to Round 5 immediately.\n\n"
+        "At Round 4.5: your very next tool action must be one targeted file-write command that creates the candidates JSON; "
+        "do not run another search or send another progress-only message first. After that write, print the table and continue to Round 5 immediately.\n\n"
         "## Required output at Round 4.5\n"
         f"Create directory `output/tmp/scout_{slug}/` and write the candidate list to:\n"
         f"  `{candidates_rel}`\n\n"
@@ -2655,7 +2774,10 @@ def build_conference_scout_phase1_prompt(topic, description, year_start, year_en
         "## Round 7 constraint — IMPORTANT\n"
         "Only update `output/papers.json`. "
         "Do NOT write any .html or .py files. "
-        "serve.py regenerates the dashboard HTML automatically after papers.json is written.\n"
+        "serve.py regenerates the dashboard HTML automatically after papers.json is written. "
+        "After the successful papers.json write, do not run any additional Python or PowerShell command "
+        "to inspect, summarize, or print papers.json or other local files. Immediately emit a formal message "
+        "starting with `Round 7:` and finish the task.\n"
     )
 
 
@@ -2745,36 +2867,38 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
                 cmd, cwd=ROOT, env=env,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                text=True, bufsize=1,
+                text=True, encoding="utf-8", errors="replace", bufsize=1,
             )
             logs = []
-            while proc.poll() is None:
-                if proc.stdout:
-                    ready, _, _ = select.select([proc.stdout], [], [], 0.5)
-                    if ready:
-                        line = proc.stdout.readline()
-                        if line:
-                            s = line.rstrip()
-                            lf.write(s + "\n"); lf.flush()
-                            logs.append(s); logs = logs[-80:]
-                            all_lines_p1.append(s)
-                            m = _ROUND_RE.search(s)
-                            if m:
-                                try:
-                                    rn = float(m.group(1))
-                                    save_scout_status(
-                                        current_round=rn,
-                                        message=_round_msgs_p1.get(rn, f"Round {rn}: 处理中...")
-                                    )
-                                except ValueError:
-                                    pass
-            rem = proc.stdout.read() if proc.stdout else ""
-            for raw in rem.splitlines():
-                s = raw.rstrip()
-                lf.write(s + "\n"); logs.append(s); all_lines_p1.append(s)
+
+            def handle_line(line):
+                s = line.rstrip()
+                lf.write(s + "\n"); lf.flush()
+                logs.append(s); logs[:] = logs[-80:]
+                all_lines_p1.append(s)
+                rn = _round_from_codex_line(s)
+                if rn is not None:
+                    try:
+                        save_scout_status(
+                            current_round=rn,
+                            message=_round_msgs_p1.get(rn, f"Round {rn}: 处理中...")
+                        )
+                    except ValueError:
+                        pass
+
+            _stream_process_output(proc, handle_line)
+            proc.wait()
+            if proc.stdout is not None:
+                proc.stdout.close()
             lf.flush(); logs = logs[-80:]
             if proc.returncode not in (0, -15):
                 raise RuntimeError("\n".join(logs[-20:]).strip() or f"codex exited {proc.returncode}")
+            if not any(_round_from_codex_line(line) == 7 for line in all_lines_p1):
+                raise RuntimeError("Codex exited without a formal Round 7 completion marker")
+            if not checkpoint:
+                candidate_path = _candidates_path(slug)
+                if not os.path.exists(candidate_path) or os.path.getmtime(candidate_path) < phase1_started.timestamp():
+                    raise RuntimeError("Round 4.5 candidate artifact was not written during this run")
 
         stats = _accumulate_run_stats(all_lines_p1)
         _write_run_stats(slug, 1, f"conference-scout/{topic}", stats, phase1_started)
@@ -2862,33 +2986,29 @@ def run_conference_scout_phase2_bg(topic, description, year_start, year_end, ven
                 cmd, cwd=ROOT, env=env,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                text=True, bufsize=1,
+                text=True, encoding="utf-8", errors="replace", bufsize=1,
             )
             logs = []
-            while proc.poll() is None:
-                if proc.stdout:
-                    ready, _, _ = select.select([proc.stdout], [], [], 0.5)
-                    if ready:
-                        line = proc.stdout.readline()
-                        if line:
-                            s = line.rstrip()
-                            lf.write(s + "\n"); lf.flush()
-                            logs.append(s); logs = logs[-80:]
-                            all_lines_p2.append(s)
-                            m = _ROUND_RE.search(s)
-                            if m:
-                                try:
-                                    rn = float(m.group(1))
-                                    save_scout_status(
-                                        current_round=rn,
-                                        message=_round_msgs_p2.get(rn, f"Round {rn}: 处理中...")
-                                    )
-                                except ValueError:
-                                    pass
-            rem = proc.stdout.read() if proc.stdout else ""
-            for raw in rem.splitlines():
-                s = raw.rstrip()
-                lf.write(s + "\n"); logs.append(s); all_lines_p2.append(s)
+
+            def handle_line(line):
+                s = line.rstrip()
+                lf.write(s + "\n"); lf.flush()
+                logs.append(s); logs[:] = logs[-80:]
+                all_lines_p2.append(s)
+                rn = _round_from_codex_line(s)
+                if rn is not None:
+                    try:
+                        save_scout_status(
+                            current_round=rn,
+                            message=_round_msgs_p2.get(rn, f"Round {rn}: 处理中...")
+                        )
+                    except ValueError:
+                        pass
+
+            _stream_process_output(proc, handle_line)
+            proc.wait()
+            if proc.stdout is not None:
+                proc.stdout.close()
             lf.flush(); logs = logs[-80:]
             if proc.returncode not in (0, -15):
                 raise RuntimeError("\n".join(logs[-20:]).strip() or f"codex exited {proc.returncode}")
@@ -2973,24 +3093,29 @@ def generate_engineering_bg(topic, year_range, venues):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 bufsize=1,
             )
 
             logs = []
             last_output_at = time.time()
-            while proc.poll() is None:
-                if proc.stdout:
-                    ready, _, _ = select.select([proc.stdout], [], [], 0.5)
-                    if ready:
-                        line = proc.stdout.readline()
-                        if line:
-                            stripped = line.rstrip()
-                            log_file.write(stripped + "\n")
-                            log_file.flush()
-                            logs.append(stripped)
-                            logs = logs[-80:]
-                            last_output_at = time.time()
-                if os.path.exists(ENGINEERING_HTML) and time.time() - last_output_at >= 20:
+            idle_terminated = False
+
+            def handle_line(line):
+                nonlocal last_output_at
+                stripped = line.rstrip()
+                log_file.write(stripped + "\n")
+                log_file.flush()
+                logs.append(stripped)
+                logs[:] = logs[-80:]
+                last_output_at = time.time()
+
+            def check_idle():
+                nonlocal idle_terminated
+                if (not idle_terminated and os.path.exists(ENGINEERING_HTML)
+                        and time.time() - last_output_at >= 20):
+                    idle_terminated = True
                     log_file.write("[serve.py] Engineering page exists and Codex CLI is idle; terminating process.\n")
                     log_file.flush()
                     proc.terminate()
@@ -2999,16 +3124,12 @@ def generate_engineering_bg(topic, year_range, venues):
                     except subprocess.TimeoutExpired:
                         proc.kill()
                         proc.wait(timeout=5)
-                    break
 
-            remainder = proc.stdout.read() if proc.stdout else ""
-            if remainder:
-                for raw_line in remainder.splitlines():
-                    stripped = raw_line.rstrip()
-                    log_file.write(stripped + "\n")
-                    logs.append(stripped)
-                log_file.flush()
-                logs = logs[-80:]
+            _stream_process_output(proc, handle_line, check_idle)
+            proc.wait()
+            if proc.stdout is not None:
+                proc.stdout.close()
+            log_file.flush()
 
             if proc.returncode not in (0, -15):
                 raise RuntimeError("\n".join(logs[-20:]).strip() or f"codex exited {proc.returncode}")
@@ -3490,6 +3611,8 @@ def read_paper_bg(paper_id, url, title, model=None):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 bufsize=1,
             )
             with _active_readers_lock:
@@ -3500,22 +3623,21 @@ def read_paper_bg(paper_id, url, title, model=None):
             last_output_at = time.time()
             logs = []
             note_abspath = os.path.join(ROOT, paper_note_relpath(paper_id))
+            idle_terminated = False
 
-            while proc.poll() is None:
+            def handle_line(line):
+                nonlocal last_output_at
+                stripped = line.rstrip()
+                log_file.write(stripped + "\n")
+                log_file.flush()
+                logs.append(stripped)
+                all_lines_reader.append(stripped)
+                logs[:] = logs[-60:]
+                last_output_at = time.time()
+
+            def check_periodic():
+                nonlocal last_file_check, last_progress, idle_terminated
                 now = time.time()
-                if proc.stdout:
-                    ready, _, _ = select.select([proc.stdout], [], [], 0.5)
-                    if ready:
-                        line = proc.stdout.readline()
-                        if line:
-                            stripped = line.rstrip()
-                            log_file.write(stripped + "\n")
-                            log_file.flush()
-                            logs.append(stripped)
-                            all_lines_reader.append(stripped)
-                            if len(logs) > 60:
-                                logs = logs[-60:]
-                            last_output_at = time.time()
 
                 # File-based progress: check every 2 seconds
                 if now - last_file_check >= 2:
@@ -3529,7 +3651,9 @@ def read_paper_bg(paper_id, url, title, model=None):
                     last_file_check = now
 
                 # Codex occasionally lingers after writing the note; treat long idle time as done.
-                if os.path.exists(note_abspath) and now - last_output_at >= 20:
+                if (not idle_terminated and os.path.exists(note_abspath)
+                        and now - last_output_at >= 20):
+                    idle_terminated = True
                     log_file.write("[serve.py] Note exists and Codex CLI is idle; terminating process.\n")
                     log_file.flush()
                     proc.terminate()
@@ -3538,17 +3662,12 @@ def read_paper_bg(paper_id, url, title, model=None):
                     except subprocess.TimeoutExpired:
                         proc.kill()
                         proc.wait(timeout=5)
-                    break
 
-            remainder = proc.stdout.read() if proc.stdout else ""
-            if remainder:
-                for raw_line in remainder.splitlines():
-                    stripped = raw_line.rstrip()
-                    log_file.write(stripped + "\n")
-                    logs.append(stripped)
-                    all_lines_reader.append(stripped)
-                log_file.flush()
-                logs = logs[-60:]
+            _stream_process_output(proc, handle_line, check_periodic)
+            proc.wait()
+            if proc.stdout is not None:
+                proc.stdout.close()
+            log_file.flush()
 
             with _active_readers_lock:
                 _active_readers.pop(paper_id, None)
