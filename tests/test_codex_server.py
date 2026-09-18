@@ -54,6 +54,35 @@ class CodexServerTests(unittest.TestCase):
         self.assertIn("Do not call MCP tools, CUA/browser/computer-use tools", prompt)
         self.assertIn("After the successful papers.json write", prompt)
 
+    def test_conference_scout_prompt_protects_windows_unicode_pipes(self):
+        prompt = serve.build_conference_scout_phase1_prompt(
+            "test topic", "中文描述", 2021, 2026, "hci", []
+        )
+        self.assertIn("Windows UTF-8 rule", prompt)
+        self.assertIn("$OutputEncoding", prompt)
+        self.assertIn("literal `?`", prompt)
+        self.assertIn("Do not declare Round 7 complete", prompt)
+
+    def test_papers_json_round_trip_preserves_unicode(self):
+        old_path = serve.PAPERS_JSON
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = os.path.join(temp_dir, "papers.json")
+            serve.PAPERS_JSON = path
+            value = {
+                "searches": [{"description": "中文研究描述"}],
+                "papers": [{
+                    "timeline_reason_zh": "主动视觉辅助",
+                    "summary_zh": "系统根据环境上下文主动提醒用户。",
+                }],
+            }
+            try:
+                serve.save_papers(value)
+                with open(path, "rb") as stream:
+                    self.assertNotIn(b"?", stream.read())
+                self.assertEqual(serve.load_papers(), value)
+            finally:
+                serve.PAPERS_JSON = old_path
+
     def test_round_parser_ignores_future_round_mentions(self):
         prose = json.dumps({
             "type": "item.completed",

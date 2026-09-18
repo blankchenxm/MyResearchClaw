@@ -142,6 +142,11 @@ def codex_env():
     env = os.environ.copy()
     codex_dir = os.path.dirname(RESOLVED_CODEX_BIN)
     env["PATH"] = codex_dir + os.pathsep + env.get("PATH", "")
+    # Keep Python-based helper commands launched by Codex in UTF-8 mode on
+    # Windows.  This does not change PowerShell's native-pipe encoding, so the
+    # scout prompt also contains an explicit rule for Unicode here-strings.
+    env.setdefault("PYTHONUTF8", "1")
+    env.setdefault("PYTHONIOENCODING", "utf-8")
     return env
 
 
@@ -236,7 +241,10 @@ READER_QUEUE_JSON = os.path.join(OUTPUT_DIR, "reader_queue.json")
 
 
 def load_papers():
-    with open(PAPERS_JSON, encoding="utf-8") as f:
+    # Windows PowerShell 5.1 may write a UTF-8 BOM when a scout creates JSON.
+    # Accept both BOM and BOM-less UTF-8 so a valid artifact is never treated
+    # as missing merely because it came from a PowerShell command.
+    with open(PAPERS_JSON, encoding="utf-8-sig") as f:
         return json.load(f)
 
 
@@ -2699,6 +2707,13 @@ def build_conference_scout_phase1_prompt(topic, description, year_start, year_en
         "Do not call MCP tools, CUA/browser/computer-use tools, code-mode tools, or any tool other than web_search and "
         "the minimal targeted file commands needed for the required JSON artifacts. "
         "Use the supplied contract, web search, and only targeted commands needed to produce the required artifacts.\n"
+        "## Windows UTF-8 rule — IMPORTANT\n"
+        "This job runs under Windows PowerShell. Never pipe a Unicode here-string directly into a native process such as "
+        "`@'...'@ | node` or `@'...'@ | python`: PowerShell's default `$OutputEncoding` can silently replace CJK text with literal `?`. "
+        "Before any such pipeline, set `$OutputEncoding = [System.Text.UTF8Encoding]::new($false)`, or write the content with a "
+        "PowerShell UTF-8 file command and have the program read that file. After writing JSON, validate it as UTF-8 and check that "
+        "Chinese `description`, `timeline_reason_zh`, and `summary_zh` values contain real CJK characters rather than runs of `?`. "
+        "Do not declare Round 7 complete if that validation fails.\n"
         "Workflow: Round 0 query expansion; Round 1 surveys and seed papers; Round 2 anchors, exclusions, and "
         "constraints; Round 3 precise searches; Round 4 relevance gates; Round 4.5 candidate JSON and table; "
         "Round 5 citation expansion; Round 6 timeline; Round 6.5 usage; Round 7 final papers.json. "
