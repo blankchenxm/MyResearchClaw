@@ -5,16 +5,19 @@ agentic server jobs are orchestrated by `serve.py`.
 
 ## Workflow routing
 
-- Paper discovery: read and follow `skills/conference-scout/SKILL.md`.
-- On Windows, do not dump full SKILL files through `powershell.exe -Command Get-Content -Raw`;
-  the server prompt embeds the required conference-scout workflow, and targeted reads or web search
-  should be used instead to avoid a large PowerShell-to-Codex output hang.
+- Paper discovery server jobs: `serve.py` embeds the complete `conference-scout` contract in the
+  initial Codex prompt. Follow that embedded contract; do not read repository Markdown through a
+  shell command during the job.
+- On Windows, never use `Get-Content`, `type`, `cat`, `rg`, `find`, or recursive repository
+  inspection to load `SKILL.md`, `AGENTS.md`, `README.md`, or other local Markdown for a
+  conference-scout server job. This avoids a PowerShell-to-Codex output hang.
 - Deep reading: read and follow `skills/paper-reader/SKILL.md`.
 - Engineering intelligence: read and follow `skills/engineering-scout/SKILL.md`.
 - Shared architecture and dashboard behavior: consult the root `SKILL.md`.
 
-Do not assume that a repository-local skill is installed globally. Read the
-specific `SKILL.md` path named by the task before executing its workflow.
+For manually launched jobs outside `serve.py`, the caller may read the specific local skill file
+named by the task. This does not apply to the server-run conference-scout path above, where the
+contract is already embedded.
 
 ## Runtime
 

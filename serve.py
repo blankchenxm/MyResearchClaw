@@ -67,6 +67,11 @@ TOKEN_USAGE_JSON = os.path.join(OUTPUT_DIR, "token_usage.json")
 RUN_STATS_DIR = os.path.join(OUTPUT_DIR, "run_stats")
 
 _ROUND_RE = re.compile(r"\bRound\s+(\d+(?:\.\d+)?)\b", re.IGNORECASE)
+_ROUND_HEADER_RE = re.compile(
+    r"^\s*(?:#+\s*)?(?:starting\s+|beginning\s+|entering\s+)?"
+    r"round\s+(\d+(?:\.\d+)?)(?:\b|\s*[:—-])",
+    re.IGNORECASE,
+)
 SKILLS_DIR = os.path.join(ROOT, "skills")
 KANBAN_TEMPLATE = os.path.join(SKILLS_DIR, "conference-scout", "assets", "kanban.html")
 KANBAN_HTML = os.path.join(OUTPUT_DIR, "kanban.html")
@@ -119,15 +124,11 @@ def build_codex_command(prompt, model=None):
     cmd.extend(["--sandbox", "workspace-write", "--ask-for-approval", "never"])
     if CODEX_NETWORK:
         cmd.extend(["--config", "sandbox_workspace_write.network_access=true"])
-    if os.name == "nt":
-        # The bundled Windows code-mode host can hang on model-generated
-        # PowerShell commands. Codex's regular command executor works here.
-        cmd.extend(["--disable", "code_mode_host"])
     selected_model = (model or MODEL).strip()
+    cmd.append("exec")
     if selected_model:
         cmd.extend(["--model", selected_model])
     cmd.extend([
-        "exec",
         "--json",
         "--ephemeral",
         "--color", "never",
@@ -158,6 +159,26 @@ def codex_last_message(jsonl):
         if item.get("type") == "agent_message":
             answer = (item.get("text") or "").strip()
     return answer
+
+
+def _round_from_codex_line(raw_line):
+    """Return a formal round marker, ignoring future-round mentions in prose."""
+    try:
+        event = json.loads(raw_line)
+    except Exception:
+        return None
+    item = event.get("item") or {}
+    if item.get("type") != "agent_message":
+        return None
+    text = item.get("text") or ""
+    for line in text.splitlines():
+        match = _ROUND_HEADER_RE.search(line)
+        if match:
+            try:
+                return float(match.group(1))
+            except ValueError:
+                return None
+    return None
 
 
 def _stream_process_output(proc, on_line, on_poll=None, poll_interval=0.5):
@@ -366,7 +387,9 @@ def load_json_file(path, default):
     if not os.path.exists(path):
         return default
     try:
-        with open(path, encoding="utf-8") as f:
+        # PowerShell's Windows UTF-8 output may include a BOM; accept both
+        # BOM and BOM-less JSON so generated scout artifacts are counted.
+        with open(path, encoding="utf-8-sig") as f:
             return json.load(f)
     except Exception:
         return default
@@ -2298,6 +2321,8 @@ def load_scout_status():
 def save_scout_status(**kwargs):
     current = load_scout_status()
     current.update(kwargs)
+    if kwargs.get("status") in ("idle", "running_phase1", "running_phase2", "done"):
+        current["error_type"] = ""
     current["last_updated"] = today_iso()
     save_json_file(SCOUT_STATUS_JSON, current)
 
@@ -2570,7 +2595,8 @@ def build_conference_scout_resume_prompt(checkpoint):
 
     ctx = (
         f"A Conference Scout run was interrupted after Round {last_round}. Resume from Round {resume_round}.\n\n"
-        "First read `skills/conference-scout/SKILL.md` and follow its workflow contract.\n\n"
+        "This is a Windows server job. Follow the workflow contract supplied in this prompt. Do not run shell or "
+        "PowerShell commands to read SKILL.md, AGENTS.md, README.md, or any other local Markdown.\n\n"
         "## Context\n"
         f"- topic: {topic}\n"
         f"- description: {description}\n"
@@ -2666,13 +2692,28 @@ def build_conference_scout_phase1_prompt(topic, description, year_start, year_en
     candidates_rel = f"output/tmp/scout_{slug}/candidates_r4.json"
     return (
         "Execute this fully specified research task immediately; do not ask the user for missing inputs. "
-        "The parameters below are authoritative. Do not run shell or PowerShell commands to inspect the repository "
-        "or read local Markdown before starting Round 0; use the workflow requirements embedded here.\n"
+        "The parameters below are authoritative. This is a Windows server job. "
+        "The complete conference-scout contract is supplied below in compact form. Do not run shell or PowerShell commands to "
+        "read SKILL.md, AGENTS.md, README.md, or any other local Markdown at any point in this task. "
+        "Do not use Get-Content, type, cat, rg, find, or recursive repository inspection to obtain instructions. "
+        "Do not call MCP tools, CUA/browser/computer-use tools, code-mode tools, or any tool other than web_search and "
+        "the minimal targeted file commands needed for the required JSON artifacts. "
+        "Use the supplied contract, web search, and only targeted commands needed to produce the required artifacts.\n"
         "Workflow: Round 0 query expansion; Round 1 surveys and seed papers; Round 2 anchors, exclusions, and "
         "constraints; Round 3 precise searches; Round 4 relevance gates; Round 4.5 candidate JSON and table; "
         "Round 5 citation expansion; Round 6 timeline; Round 6.5 usage; Round 7 final papers.json. "
         "Prefer DBLP, then Semantic Scholar, then arXiv, with Google Scholar as fallback. "
-        "Use web search for discovery and continue through all rounds without pausing.\n\n"
+        "Use web search for discovery and continue through all rounds without pausing. "
+        "Keep the discovery batch compact: use exactly one web_search tool call for the initial evidence batch, then do not call web_search again; "
+        "use the returned sources for all later rounds instead of expanding the context further. "
+        "Your first tool action must be web search, not a progress-only message and not a shell command. "
+        "Run exactly one initial web_search call containing these three queries:\n"
+        f"1. {topic} proactive interaction wearable smart glasses HCI\n"
+        f"2. {topic} anticipatory context-aware assistance egocentric vision\n"
+        f"3. {topic} CHI UIST IMWUT UbiComp paper\n\n"
+        "## Server-supplied conference-scout contract\n"
+        "The workflow, round order, inputs, and output schema below are the complete contract for this run. "
+        "Never read a local instruction file to replace or supplement it.\n\n"
         "## Inputs\n"
         f"- topic: {topic}\n"
         f"- description: {description}\n"
@@ -2682,7 +2723,8 @@ def build_conference_scout_phase1_prompt(topic, description, year_start, year_en
         f"- specific_venues: {venues_str}\n\n"
         "## Scope\n"
         "Run all Rounds 0 through 7 in sequence without stopping.\n"
-        "At Round 4.5: write the candidates JSON, print the table, then continue to Round 5 immediately.\n\n"
+        "At Round 4.5: your very next tool action must be one targeted file-write command that creates the candidates JSON; "
+        "do not run another search or send another progress-only message first. After that write, print the table and continue to Round 5 immediately.\n\n"
         "## Required output at Round 4.5\n"
         f"Create directory `output/tmp/scout_{slug}/` and write the candidate list to:\n"
         f"  `{candidates_rel}`\n\n"
@@ -2717,7 +2759,10 @@ def build_conference_scout_phase1_prompt(topic, description, year_start, year_en
         "## Round 7 constraint — IMPORTANT\n"
         "Only update `output/papers.json`. "
         "Do NOT write any .html or .py files. "
-        "serve.py regenerates the dashboard HTML automatically after papers.json is written.\n"
+        "serve.py regenerates the dashboard HTML automatically after papers.json is written. "
+        "After the successful papers.json write, do not run any additional Python or PowerShell command "
+        "to inspect, summarize, or print papers.json or other local files. Immediately emit a formal message "
+        "starting with `Round 7:` and finish the task.\n"
     )
 
 
@@ -2807,7 +2852,7 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
                 cmd, cwd=ROOT, env=env,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                text=True, bufsize=1,
+                text=True, encoding="utf-8", errors="replace", bufsize=1,
             )
             logs = []
 
@@ -2816,10 +2861,9 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
                 lf.write(s + "\n"); lf.flush()
                 logs.append(s); logs[:] = logs[-80:]
                 all_lines_p1.append(s)
-                m = _ROUND_RE.search(s)
-                if m:
+                rn = _round_from_codex_line(s)
+                if rn is not None:
                     try:
-                        rn = float(m.group(1))
                         save_scout_status(
                             current_round=rn,
                             message=_round_msgs_p1.get(rn, f"Round {rn}: 处理中...")
@@ -2834,6 +2878,12 @@ def run_conference_scout_phase1_bg(topic, description, year_start, year_end, ven
             lf.flush(); logs = logs[-80:]
             if proc.returncode not in (0, -15):
                 raise RuntimeError("\n".join(logs[-20:]).strip() or f"codex exited {proc.returncode}")
+            if not any(_round_from_codex_line(line) == 7 for line in all_lines_p1):
+                raise RuntimeError("Codex exited without a formal Round 7 completion marker")
+            if not checkpoint:
+                candidate_path = _candidates_path(slug)
+                if not os.path.exists(candidate_path) or os.path.getmtime(candidate_path) < phase1_started.timestamp():
+                    raise RuntimeError("Round 4.5 candidate artifact was not written during this run")
 
         stats = _accumulate_run_stats(all_lines_p1)
         _write_run_stats(slug, 1, f"conference-scout/{topic}", stats, phase1_started)
@@ -2921,7 +2971,7 @@ def run_conference_scout_phase2_bg(topic, description, year_start, year_end, ven
                 cmd, cwd=ROOT, env=env,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                text=True, bufsize=1,
+                text=True, encoding="utf-8", errors="replace", bufsize=1,
             )
             logs = []
 
@@ -2930,10 +2980,9 @@ def run_conference_scout_phase2_bg(topic, description, year_start, year_end, ven
                 lf.write(s + "\n"); lf.flush()
                 logs.append(s); logs[:] = logs[-80:]
                 all_lines_p2.append(s)
-                m = _ROUND_RE.search(s)
-                if m:
+                rn = _round_from_codex_line(s)
+                if rn is not None:
                     try:
-                        rn = float(m.group(1))
                         save_scout_status(
                             current_round=rn,
                             message=_round_msgs_p2.get(rn, f"Round {rn}: 处理中...")
@@ -3029,6 +3078,8 @@ def generate_engineering_bg(topic, year_range, venues):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 bufsize=1,
             )
 
@@ -3545,6 +3596,8 @@ def read_paper_bg(paper_id, url, title, model=None):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 bufsize=1,
             )
             with _active_readers_lock:

@@ -9,9 +9,10 @@ Turns one of "find papers on X" / "deep-read this paper" / "find engineering sig
 
 ## Architecture
 
-Windows runtime note: the server embeds the conference-scout workflow requirements in its job prompt.
-Avoid streaming a whole SKILL.md through PowerShell in one command; large text returns can hang the
-Codex command executor on Windows. Use the embedded workflow and targeted file reads instead.
+Windows runtime note: the server embeds the complete conference-scout workflow in its job prompt.
+The conference-scout server job must not read local Markdown through PowerShell; use the embedded
+workflow and targeted data/API commands instead. This keeps a one-shot Windows run from blocking
+while streaming instruction files through the Codex command executor.
 
 ```
                           HTML buttons                       chat
@@ -22,8 +23,8 @@ Codex command executor on Windows. Use the embedded workflow and targeted file r
                           │                                    │
   output/kanban.html  ────┘                                    │
                                                                ▼
-                                                     reads SKILL.md +
-                                                     skills/{name}/SKILL.md
+                                                     receives embedded workflow
+                                                     (server jobs on Windows)
                                                                │
                                               ┌────────────────┼────────────────┐
                                               ▼                ▼                ▼
